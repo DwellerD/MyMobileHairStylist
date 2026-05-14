@@ -46,6 +46,37 @@ flutter run --dart-define=SUPABASE_URL=YOUR_URL --dart-define=SUPABASE_ANON_KEY=
 
 If the dart defines are missing, the app still boots but Supabase-backed flows remain unavailable.
 
+## Current Supabase Project
+
+This workspace is prepared to run against:
+
+- Project URL: `https://xdykcrwbkupevoanunto.supabase.co`
+- Public key: configured in [.vscode/launch.json](.vscode/launch.json) for local development only
+
+From VS Code, you can launch the app with the `Flutter (Supabase Project)` run configuration.
+
+Important:
+
+- This only wires the app to the Supabase project.
+- The database still needs the SQL migrations applied before auth, booking, stylist, and admin flows can work.
+- Never put a `service_role` key in the Flutter app.
+
+## First Run In Supabase
+
+Apply these files in order inside the Supabase SQL Editor:
+
+1. `supabase/migrations/20260513_001_initial_hair_salon_schema.sql`
+2. `supabase/migrations/20260513_002_auth_profile_bootstrap.sql`
+3. `supabase/migrations/20260513_003_seed_launch_market_and_services.sql`
+4. `supabase/migrations/20260513_004_booking_request_fields.sql`
+5. `supabase/migrations/20260513_005_appointment_photo_bucket.sql`
+6. `supabase/migrations/20260513_006_stylist_mvp_operational_updates.sql`
+7. `supabase/migrations/20260513_007_admin_confirmed_status.sql`
+8. `supabase/migrations/20260513_008_booking_payment_placeholders.sql`
+9. `supabase/migrations/20260513_009_harden_appointment_photo_storage.sql`
+10. `supabase/migrations/20260513_010_harden_appointment_updates.sql`
+11. `supabase/migrations/20260513_011_harden_appointment_line_item_policies.sql`
+
 ## Validation
 
 ```powershell
