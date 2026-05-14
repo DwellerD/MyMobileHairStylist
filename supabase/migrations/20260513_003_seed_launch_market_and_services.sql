@@ -10,13 +10,13 @@ insert into public.markets (
 )
 select
   gen_random_uuid(),
-  'Charlotte Launch Market',
-  'charlotte-launch',
+  'Utah County Launch Market',
+  'utah-county-launch',
   'active',
-  'America/New_York',
+  'America/Denver',
   'US'
 where not exists (
-  select 1 from public.markets where slug = 'charlotte-launch'
+  select 1 from public.markets where slug = 'utah-county-launch'
 );
 
 insert into public.service_categories (
@@ -35,7 +35,7 @@ cross join (
     ('Kids', 'Family-friendly haircut services including sensory-friendly options.', 3),
     ('Family', 'Bundled household appointment blocks for multiple participants.', 4)
 ) as seed(category_name, category_description, sort_order)
-where m.slug = 'charlotte-launch'
+where m.slug = 'utah-county-launch'
   and not exists (
     select 1
     from public.service_categories sc
@@ -77,7 +77,7 @@ join (
     ('Family', 'Family Appointment Block', 'A bundled household visit for multiple participants under one request.', 120, 0, true)
 ) as seed(category_name, service_name, service_description, duration_minutes, base_price_cents, allows_multiple_participants)
   on sc.name = seed.category_name
-where sc.market_id = (select id from public.markets where slug = 'charlotte-launch' limit 1)
+where sc.market_id = (select id from public.markets where slug = 'utah-county-launch' limit 1)
   and not exists (
     select 1
     from public.services s

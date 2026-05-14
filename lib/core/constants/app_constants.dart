@@ -14,14 +14,30 @@ abstract final class AppConstants {
   /// the booking flow to feel real. Later this can move fully into territories
   /// and server-side coverage logic.
   static const List<String> supportedServiceZipCodes = <String>[
-    '28202',
-    '28203',
-    '28204',
-    '28205',
-    '28207',
-    '28209',
-    '28210',
-    '28211',
+    '84003',
+    '84004',
+    '84005',
+    '84013',
+    '84042',
+    '84043',
+    '84045',
+    '84057',
+    '84058',
+    '84059',
+    '84062',
+    '84601',
+    '84602',
+    '84603',
+    '84604',
+    '84606',
+    '84626',
+    '84633',
+    '84651',
+    '84653',
+    '84655',
+    '84660',
+    '84663',
+    '84664',
   ];
 
   /// Version string written into policy acceptance rows during booking.

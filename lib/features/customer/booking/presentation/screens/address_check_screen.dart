@@ -44,11 +44,35 @@ class _AddressCheckScreenState extends ConsumerState<AddressCheckScreen> {
     if (bookingState == null) {
       if (bookingAsync.hasError) {
         return Center(
-          child: FilledButton(
-            onPressed: () => ref
-                .read(bookingFlowControllerProvider.notifier)
-                .retryLoad(),
-            child: const Text('Retry booking setup'),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.pagePadding),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 560),
+              child: AppCard(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Could not load booking setup',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      bookingAsync.error.toString().replaceFirst('Exception: ', ''),
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    FilledButton(
+                      onPressed: () => ref
+                          .read(bookingFlowControllerProvider.notifier)
+                          .retryLoad(),
+                      child: const Text('Retry booking setup'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         );
       }

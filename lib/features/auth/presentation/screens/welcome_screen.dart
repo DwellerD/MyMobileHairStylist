@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_secondary_button.dart';
@@ -13,11 +15,13 @@ import '../../../../shared/widgets/service_card.dart';
 ///
 /// In the real product this will become the polished marketing-style entry
 /// point before users log in or create an account.
-class WelcomeScreen extends StatelessWidget {
+class WelcomeScreen extends ConsumerWidget {
   const WelcomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isConfigured = ref.watch(supabaseConfiguredProvider);
+
     return AppScaffoldShell(
       title: 'Premium in-home hair care',
       subtitle: AppConstants.appTagline,
@@ -58,17 +62,19 @@ class WelcomeScreen extends StatelessWidget {
             priceLabel: 'MVP mock',
             badgeLabel: 'Family',
           ),
-          const SizedBox(height: AppSpacing.sectionGap),
-          const AppSectionHeader(
-            title: 'Developer shortcut',
-            subtitle: AppConstants.mockAuthNote,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          AppSecondaryButton(
-            onPressed: () => context.go('/role-gate'),
-            label: 'Open role switcher',
-            icon: Icons.admin_panel_settings_outlined,
-          ),
+          if (!isConfigured) ...[
+            const SizedBox(height: AppSpacing.sectionGap),
+            const AppSectionHeader(
+              title: 'Developer shortcut',
+              subtitle: AppConstants.mockAuthNote,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            AppSecondaryButton(
+              onPressed: () => context.go('/role-gate'),
+              label: 'Open role switcher',
+              icon: Icons.admin_panel_settings_outlined,
+            ),
+          ],
         ],
       ),
     );

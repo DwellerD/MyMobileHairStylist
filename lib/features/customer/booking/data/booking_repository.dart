@@ -353,20 +353,20 @@ class BookingRepository {
     }
 
     final createdHousehold = await _requireClient()
-        .from('households')
-        .insert({
-          'market_id': appUser.defaultMarketId,
-          'territory_id': appUser.defaultTerritoryId,
-          'created_by_user_profile_id': appUser.profileId,
-          'name': '${appUser.displayName} Household',
-          'status': 'active',
-        })
-        .select('id, name')
+        .rpc(
+          'provision_customer_household',
+          params: {
+            'target_user_profile_id': appUser.profileId,
+            'target_market_id': appUser.defaultMarketId,
+            'target_territory_id': appUser.defaultTerritoryId,
+            'requested_household_name': '${appUser.displayName} Household',
+          },
+        )
         .single();
 
     return _HouseholdRecord(
-      id: createdHousehold['id'] as String,
-      name: createdHousehold['name'] as String,
+      id: createdHousehold['household_id'] as String,
+      name: createdHousehold['household_name'] as String,
     );
   }
 
