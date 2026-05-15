@@ -200,14 +200,17 @@ class BookingReviewScreen extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.sm),
                 Text(AppConstants.inHomeBookingPolicySummary),
                 const SizedBox(height: AppSpacing.md),
-                CheckboxListTile(
-                  contentPadding: EdgeInsets.zero,
-                  value: bookingState.acceptedPolicy,
-                  onChanged: (value) => ref
-                      .read(bookingFlowControllerProvider.notifier)
-                      .setPolicyAccepted(value ?? false),
-                  title: const Text(
-                    'I accept the in-home service and cancellation policy for this request.',
+                Material(
+                  color: Colors.transparent,
+                  child: CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: bookingState.acceptedPolicy,
+                    onChanged: (value) => ref
+                        .read(bookingFlowControllerProvider.notifier)
+                        .setPolicyAccepted(value ?? false),
+                    title: const Text(
+                      'I accept the in-home service and cancellation policy for this request.',
+                    ),
                   ),
                 ),
               ],

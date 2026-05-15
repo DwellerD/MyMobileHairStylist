@@ -25,7 +25,7 @@ class BookingPhotoUploadScreen extends ConsumerWidget {
 
     return BookingStepScaffold(
       stepNumber: 5,
-      totalSteps: 7,
+      totalSteps: 8,
       title: 'Add reference photos',
       subtitle:
           'Photos are optional, but they help admin and stylists prepare for color work, hair goals, or sensory-aware planning.',

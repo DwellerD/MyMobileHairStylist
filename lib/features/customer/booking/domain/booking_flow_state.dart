@@ -2,6 +2,8 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
+import 'service_area_validation.dart';
+
 /// Simple address option used throughout the booking request flow.
 class BookingAddressOption {
   const BookingAddressOption({
@@ -28,7 +30,12 @@ class BookingAddressOption {
 
   String get shortAddress => '$line1, $city, $state $postalCode';
 
-  bool get isServiceable => serviceAreaStatus == 'serviceable';
+  bool get isServiceable =>
+      resolveServiceAreaStatus(
+        postalCode: postalCode,
+        storedStatus: serviceAreaStatus,
+      ) ==
+      'serviceable';
 }
 
 /// Household member option available for family or individual appointments.

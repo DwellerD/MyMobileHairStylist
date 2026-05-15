@@ -5,6 +5,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../../auth/domain/app_user.dart';
 import '../domain/booking_flow_state.dart';
+import '../domain/service_area_validation.dart';
 
 /// Exposes the booking repository for the customer request flow.
 final bookingRepositoryProvider = Provider<BookingRepository>((ref) {
@@ -50,20 +51,25 @@ class BookingRepository {
       householdName: household.name,
       addresses: (addressesResponse as List<dynamic>)
           .map(
-            (dynamic row) => BookingAddressOption(
-              id: row['id'] as String,
-              marketId: row['market_id'] as String?,
-              territoryId: row['territory_id'] as String?,
-              label: (row['label'] as String?)?.trim().isNotEmpty == true
-                  ? row['label'] as String
-                  : 'Saved address',
-              line1: row['line1'] as String,
-              city: row['city'] as String,
-              state: row['state'] as String,
-              postalCode: row['postal_code'] as String,
-              serviceAreaStatus:
-                  (row['service_area_status'] as String?) ?? 'pending_review',
-            ),
+            (dynamic row) {
+              final rawPostalCode = row['postal_code'] as String;
+              return BookingAddressOption(
+                id: row['id'] as String,
+                marketId: row['market_id'] as String?,
+                territoryId: row['territory_id'] as String?,
+                label: (row['label'] as String?)?.trim().isNotEmpty == true
+                    ? row['label'] as String
+                    : 'Saved address',
+                line1: row['line1'] as String,
+                city: row['city'] as String,
+                state: row['state'] as String,
+                postalCode: normalizeServiceAreaPostalCode(rawPostalCode),
+                serviceAreaStatus: resolveServiceAreaStatus(
+                  postalCode: rawPostalCode,
+                  storedStatus: row['service_area_status'] as String?,
+                ),
+              );
+            },
           )
           .toList(growable: false),
       householdMembers: (membersResponse as List<dynamic>)
@@ -106,7 +112,7 @@ class BookingRepository {
     required String state,
     required String postalCode,
   }) async {
-    final normalizedZip = postalCode.trim();
+    final normalizedZip = normalizeServiceAreaPostalCode(postalCode);
     final addressResponse = await _requireClient()
         .from('addresses')
         .insert({
@@ -118,10 +124,7 @@ class BookingRepository {
           'city': city.trim(),
           'state': state.trim().toUpperCase(),
           'postal_code': normalizedZip,
-          'service_area_status':
-              AppConstants.supportedServiceZipCodes.contains(normalizedZip)
-                  ? 'serviceable'
-                  : 'out_of_area',
+          'service_area_status': resolveServiceAreaStatus(postalCode: normalizedZip),
         })
         .select(
           'id, market_id, territory_id, label, line1, city, state, postal_code, service_area_status',
@@ -136,8 +139,11 @@ class BookingRepository {
       line1: addressResponse['line1'] as String,
       city: addressResponse['city'] as String,
       state: addressResponse['state'] as String,
-      postalCode: addressResponse['postal_code'] as String,
-      serviceAreaStatus: addressResponse['service_area_status'] as String,
+      postalCode: normalizeServiceAreaPostalCode(addressResponse['postal_code'] as String),
+      serviceAreaStatus: resolveServiceAreaStatus(
+        postalCode: addressResponse['postal_code'] as String,
+        storedStatus: addressResponse['service_area_status'] as String?,
+      ),
     );
   }
 

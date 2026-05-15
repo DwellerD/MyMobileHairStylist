@@ -43,6 +43,9 @@ dependencies:
   # File selection powers optional reference photo uploads in the booking flow.
   file_picker: ^10.1.9
 
+  # Google Fonts helps the public landing page carry a more editorial brand tone.
+  google_fonts: ^6.3.0
+
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8

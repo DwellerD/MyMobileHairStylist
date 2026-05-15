@@ -50,7 +50,7 @@ class _HouseholdMemberSelectionScreenState
 
     return BookingStepScaffold(
       stepNumber: 2,
-      totalSteps: 7,
+      totalSteps: 8,
       title: 'Who is this appointment for?',
       subtitle:
           'Select one or more household members. You can also add a new child, partner, or family member now.',
