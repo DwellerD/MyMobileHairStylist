@@ -276,6 +276,146 @@ user_profile:user_profiles!stylist_profiles_user_profile_id_fkey(first_name, las
         .toList(growable: false);
   }
 
+  Future<List<AdminStylistApplicationSummary>> loadStylistApplications() async {
+    final applications = await _requireClient().from('stylist_applications').select('''
+id,
+status,
+phone,
+city,
+state,
+years_experience,
+specialties,
+reviewer_notes,
+created_at,
+market_id,
+territory_id,
+user_profile:user_profiles!stylist_applications_user_profile_id_fkey(first_name, last_name, email)
+''').order('created_at', ascending: false);
+    final markets = await _requireClient().from('markets').select('id, name');
+    final territories = await _requireClient().from('territories').select('id, name');
+
+    final marketNames = <String, String>{
+      for (final dynamic raw in (markets as List<dynamic>))
+        (raw as Map<String, dynamic>)['id'] as String: raw['name'] as String,
+    };
+    final territoryNames = <String, String>{
+      for (final dynamic raw in (territories as List<dynamic>))
+        (raw as Map<String, dynamic>)['id'] as String: raw['name'] as String,
+    };
+
+    return (applications as List<dynamic>)
+        .map((dynamic raw) {
+          final row = raw as Map<String, dynamic>;
+          final userProfile = row['user_profile'] as Map<String, dynamic>?;
+          return AdminStylistApplicationSummary(
+            id: row['id'] as String,
+            applicantName: _joinName(
+              userProfile?['first_name'] as String?,
+              userProfile?['last_name'] as String?,
+            ),
+            email: (userProfile?['email'] as String?) ?? 'No email',
+            phone: row['phone'] as String?,
+            city: row['city'] as String?,
+            stateCode: row['state'] as String?,
+            status: row['status'] as String,
+            marketName: marketNames[row['market_id'] as String? ?? ''],
+            territoryName: territoryNames[row['territory_id'] as String? ?? ''],
+            specialties: ((row['specialties'] as List<dynamic>?) ?? const <dynamic>[])
+                .map((dynamic value) => value.toString())
+                .toList(growable: false),
+            yearsExperience: row['years_experience'] as int?,
+            submittedAt: _parseDateTime(row['created_at'] as String),
+            reviewerNotes: row['reviewer_notes'] as String?,
+          );
+        })
+        .toList(growable: false);
+  }
+
+  Future<List<AdminUserAccessSummary>> loadUserAccessDirectory() async {
+    final markets = await _requireClient().from('markets').select('id, name');
+    final territories = await _requireClient().from('territories').select('id, name');
+    final userProfiles = await _requireClient().from('user_profiles').select('''
+id,
+email,
+first_name,
+last_name,
+user_roles(id, role, status, is_primary, market_id, territory_id)
+''');
+
+    final marketNames = <String, String>{
+      for (final dynamic raw in (markets as List<dynamic>))
+        (raw as Map<String, dynamic>)['id'] as String: raw['name'] as String,
+    };
+    final territoryNames = <String, String>{
+      for (final dynamic raw in (territories as List<dynamic>))
+        (raw as Map<String, dynamic>)['id'] as String: raw['name'] as String,
+    };
+
+    final users = (userProfiles as List<dynamic>)
+        .map((dynamic raw) {
+          final row = raw as Map<String, dynamic>;
+          final roles = ((row['user_roles'] as List<dynamic>?) ?? const <dynamic>[])
+              .map((dynamic rawRole) {
+                final roleRow = rawRole as Map<String, dynamic>;
+                return AdminUserRoleAssignment(
+                  id: roleRow['id'] as String,
+                  role: roleRow['role'] as String,
+                  status: roleRow['status'] as String,
+                  isPrimary: (roleRow['is_primary'] as bool?) ?? false,
+                  marketName: marketNames[roleRow['market_id'] as String? ?? ''],
+                  territoryName:
+                      territoryNames[roleRow['territory_id'] as String? ?? ''],
+                );
+              })
+              .toList(growable: false)
+            ..sort((left, right) => left.role.compareTo(right.role));
+
+          return AdminUserAccessSummary(
+            userProfileId: row['id'] as String,
+            name: _joinName(
+              row['first_name'] as String?,
+              row['last_name'] as String?,
+            ),
+            email: row['email'] as String,
+            roles: roles,
+          );
+        })
+        .toList(growable: false)
+      ..sort((left, right) => left.name.compareTo(right.name));
+
+    return users;
+  }
+
+  Future<List<AdminScopeOption>> loadMarketOptions() async {
+    final response = await _requireClient().from('markets').select('id, name').order('name');
+    return (response as List<dynamic>)
+        .map(
+          (dynamic raw) => AdminScopeOption(
+            id: (raw as Map<String, dynamic>)['id'] as String,
+            name: raw['name'] as String,
+          ),
+        )
+        .toList(growable: false);
+  }
+
+  Future<List<AdminScopeOption>> loadTerritoryOptions({String? marketId}) async {
+    final response = marketId == null
+        ? await _requireClient().from('territories').select('id, name').order('name')
+        : await _requireClient()
+            .from('territories')
+            .select('id, name')
+            .eq('market_id', marketId)
+            .order('name');
+    return (response as List<dynamic>)
+        .map(
+          (dynamic raw) => AdminScopeOption(
+            id: (raw as Map<String, dynamic>)['id'] as String,
+            name: raw['name'] as String,
+          ),
+        )
+        .toList(growable: false);
+  }
+
   Future<List<AdminServiceCategoryGroup>> loadServiceCategoriesWithServices() async {
     final categories = await _requireClient()
         .from('service_categories')
@@ -403,6 +543,57 @@ user_profile:user_profiles!stylist_profiles_user_profile_id_fkey(first_name, las
     await _requireClient().from('services').update({
       'status': enable ? 'active' : 'inactive',
     }).eq('id', serviceId);
+  }
+
+  Future<void> approveStylistApplication({
+    required String applicationId,
+    String? territoryId,
+    String? reviewerNotes,
+  }) async {
+    await _requireClient().rpc(
+      'approve_stylist_application',
+      params: <String, dynamic>{
+        'p_application_id': applicationId,
+        'p_territory_id': territoryId,
+        'p_reviewer_notes': reviewerNotes?.trim().isEmpty == true
+            ? null
+            : reviewerNotes?.trim(),
+      },
+    );
+  }
+
+  Future<void> rejectStylistApplication({
+    required String applicationId,
+    String? reviewerNotes,
+  }) async {
+    await _requireClient().rpc(
+      'reject_stylist_application',
+      params: <String, dynamic>{
+        'p_application_id': applicationId,
+        'p_reviewer_notes': reviewerNotes?.trim().isEmpty == true
+            ? null
+            : reviewerNotes?.trim(),
+      },
+    );
+  }
+
+  Future<void> grantAdminAccess({
+    required String userProfileId,
+    required String role,
+    String? marketId,
+    String? territoryId,
+    required bool makePrimary,
+  }) async {
+    await _requireClient().rpc(
+      'grant_admin_access',
+      params: <String, dynamic>{
+        'p_target_user_profile_id': userProfileId,
+        'p_role': role,
+        'p_market_id': marketId,
+        'p_territory_id': territoryId,
+        'p_make_primary': makePrimary,
+      },
+    );
   }
 
   Future<List<AdminAppointmentSummary>> _loadAppointments() async {

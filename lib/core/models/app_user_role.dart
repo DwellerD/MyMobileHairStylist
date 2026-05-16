@@ -50,7 +50,8 @@ extension AppUserRoleX on AppUserRole {
   bool get isSupportedInApp {
     return this == AppUserRole.customer ||
         this == AppUserRole.stylist ||
-        this == AppUserRole.admin;
+        this == AppUserRole.admin ||
+        this == AppUserRole.corporateAdmin;
   }
 
   String? get homeLocation {
@@ -60,9 +61,9 @@ extension AppUserRoleX on AppUserRole {
       case AppUserRole.stylist:
         return '/stylist/home';
       case AppUserRole.admin:
+      case AppUserRole.corporateAdmin:
         return '/admin/home';
       case AppUserRole.franchisee:
-      case AppUserRole.corporateAdmin:
         return null;
     }
   }

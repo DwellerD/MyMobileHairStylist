@@ -136,6 +136,80 @@ class AdminStylistSummary {
   final int assignedAppointmentCount;
 }
 
+class AdminStylistApplicationSummary {
+  const AdminStylistApplicationSummary({
+    required this.id,
+    required this.applicantName,
+    required this.email,
+    required this.phone,
+    required this.city,
+    required this.stateCode,
+    required this.status,
+    required this.marketName,
+    required this.territoryName,
+    required this.specialties,
+    required this.yearsExperience,
+    required this.submittedAt,
+    required this.reviewerNotes,
+  });
+
+  final String id;
+  final String applicantName;
+  final String email;
+  final String? phone;
+  final String? city;
+  final String? stateCode;
+  final String status;
+  final String? marketName;
+  final String? territoryName;
+  final List<String> specialties;
+  final int? yearsExperience;
+  final DateTime submittedAt;
+  final String? reviewerNotes;
+}
+
+class AdminUserAccessSummary {
+  const AdminUserAccessSummary({
+    required this.userProfileId,
+    required this.name,
+    required this.email,
+    required this.roles,
+  });
+
+  final String userProfileId;
+  final String name;
+  final String email;
+  final List<AdminUserRoleAssignment> roles;
+}
+
+class AdminUserRoleAssignment {
+  const AdminUserRoleAssignment({
+    required this.id,
+    required this.role,
+    required this.status,
+    required this.isPrimary,
+    required this.marketName,
+    required this.territoryName,
+  });
+
+  final String id;
+  final String role;
+  final String status;
+  final bool isPrimary;
+  final String? marketName;
+  final String? territoryName;
+}
+
+class AdminScopeOption {
+  const AdminScopeOption({
+    required this.id,
+    required this.name,
+  });
+
+  final String id;
+  final String name;
+}
+
 /// Service category plus the services beneath it.
 class AdminServiceCategoryGroup {
   const AdminServiceCategoryGroup({

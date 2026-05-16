@@ -78,43 +78,50 @@ class CustomerHomeScreen extends StatelessWidget {
                     ],
                   ),
                 const SizedBox(height: 24),
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: const Color(0xCCFFFDF9),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: const Color(0xFFE7D8CB)),
-                  ),
-                  child: Wrap(
-                    spacing: 16,
-                    runSpacing: 16,
-                    alignment: WrapAlignment.spaceBetween,
-                    children: const [
-                      _ProcessTile(
-                        step: '01',
-                        icon: Icons.photo_camera_outlined,
-                        title: 'Upload your hair',
-                        description: 'Share clear front, back, and side photos.',
+                Align(
+                  alignment: Alignment.center,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: isWide ? 960 : 520),
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xCCFFFDF9),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: const Color(0xFFE7D8CB)),
                       ),
-                      _ProcessTile(
-                        step: '02',
-                        icon: Icons.favorite_border,
-                        title: 'Add inspiration',
-                        description: 'Show styles, cuts, or colour references.',
+                      child: Wrap(
+                        spacing: 16,
+                        runSpacing: 16,
+                        alignment: WrapAlignment.center,
+                        runAlignment: WrapAlignment.center,
+                        children: const [
+                          _ProcessTile(
+                            step: '01',
+                            icon: Icons.photo_camera_outlined,
+                            title: 'Upload your hair',
+                            description: 'Share clear front, back, and side photos.',
+                          ),
+                          _ProcessTile(
+                            step: '02',
+                            icon: Icons.favorite_border,
+                            title: 'Add inspiration',
+                            description: 'Show styles, cuts, or colour references.',
+                          ),
+                          _ProcessTile(
+                            step: '03',
+                            icon: Icons.chat_bubble_outline,
+                            title: 'Tell me more',
+                            description: 'Include your goals, likes, and dislikes.',
+                          ),
+                          _ProcessTile(
+                            step: '04',
+                            icon: Icons.event_available_outlined,
+                            title: 'I come prepared',
+                            description: 'Everything gets reviewed before arrival.',
+                          ),
+                        ],
                       ),
-                      _ProcessTile(
-                        step: '03',
-                        icon: Icons.chat_bubble_outline,
-                        title: 'Tell me more',
-                        description: 'Include your goals, likes, and dislikes.',
-                      ),
-                      _ProcessTile(
-                        step: '04',
-                        icon: Icons.event_available_outlined,
-                        title: 'I come prepared',
-                        description: 'Everything gets reviewed before arrival.',
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ],

@@ -37,6 +37,30 @@ final adminStylistsProvider = FutureProvider<List<AdminStylistSummary>>((ref) as
   return repository.loadStylists();
 });
 
+final adminStylistApplicationsProvider =
+    FutureProvider<List<AdminStylistApplicationSummary>>((ref) async {
+  final repository = ref.watch(adminRepositoryProvider);
+  return repository.loadStylistApplications();
+});
+
+final adminUserAccessDirectoryProvider =
+    FutureProvider<List<AdminUserAccessSummary>>((ref) async {
+  final repository = ref.watch(adminRepositoryProvider);
+  return repository.loadUserAccessDirectory();
+});
+
+final adminMarketOptionsProvider =
+    FutureProvider<List<AdminScopeOption>>((ref) async {
+  final repository = ref.watch(adminRepositoryProvider);
+  return repository.loadMarketOptions();
+});
+
+final adminTerritoryOptionsProvider =
+    FutureProvider.family<List<AdminScopeOption>, String?>((ref, marketId) async {
+  final repository = ref.watch(adminRepositoryProvider);
+  return repository.loadTerritoryOptions(marketId: marketId);
+});
+
 /// Loads service categories and service records for admin management.
 final adminServiceCatalogProvider = FutureProvider<List<AdminServiceCategoryGroup>>((ref) async {
   final repository = ref.watch(adminRepositoryProvider);
@@ -88,6 +112,53 @@ class AdminActionController extends AsyncNotifier<void> {
             stylistProfileId: stylistProfileId,
           );
       _refreshAppointments(ref, appointmentId);
+    });
+  }
+
+  Future<void> approveStylistApplication({
+    required String applicationId,
+    String? territoryId,
+    String? reviewerNotes,
+  }) async {
+    await _runAction(() async {
+      await ref.read(adminRepositoryProvider).approveStylistApplication(
+            applicationId: applicationId,
+            territoryId: territoryId,
+            reviewerNotes: reviewerNotes,
+          );
+      _refreshStaff(ref);
+    });
+  }
+
+  Future<void> rejectStylistApplication({
+    required String applicationId,
+    String? reviewerNotes,
+  }) async {
+    await _runAction(() async {
+      await ref.read(adminRepositoryProvider).rejectStylistApplication(
+            applicationId: applicationId,
+            reviewerNotes: reviewerNotes,
+          );
+      _refreshStaff(ref);
+    });
+  }
+
+  Future<void> grantAdminAccess({
+    required String userProfileId,
+    required String role,
+    String? marketId,
+    String? territoryId,
+    required bool makePrimary,
+  }) async {
+    await _runAction(() async {
+      await ref.read(adminRepositoryProvider).grantAdminAccess(
+            userProfileId: userProfileId,
+            role: role,
+            marketId: marketId,
+            territoryId: territoryId,
+            makePrimary: makePrimary,
+          );
+      _refreshStaff(ref);
     });
   }
 
@@ -155,4 +226,11 @@ void _refreshAppointments(Ref ref, String appointmentId) {
   ref.invalidate(adminAppointmentDetailProvider(appointmentId));
   ref.invalidate(adminCustomersProvider);
   ref.invalidate(adminStylistsProvider);
+}
+
+void _refreshStaff(Ref ref) {
+  ref.invalidate(adminDashboardSummaryProvider);
+  ref.invalidate(adminStylistsProvider);
+  ref.invalidate(adminStylistApplicationsProvider);
+  ref.invalidate(adminUserAccessDirectoryProvider);
 }

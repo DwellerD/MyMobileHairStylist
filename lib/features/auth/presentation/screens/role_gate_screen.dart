@@ -110,7 +110,7 @@ class RoleGateScreen extends ConsumerWidget {
   }
 
   String _unsupportedRoleMessage(AppUser appUser) {
-    return 'Your account role is ${appUser.role?.label ?? 'unknown'}. Customer, stylist, and admin routes are ready now. Franchise and corporate flows can be added later.';
+    return 'Your account role is ${appUser.role?.label ?? 'unknown'}. Customer, stylist, admin, and corporate admin routes are ready now. Franchise-specific workflows can be added later.';
   }
 }
 

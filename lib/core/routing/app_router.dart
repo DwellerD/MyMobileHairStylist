@@ -28,7 +28,9 @@ import '../../features/customer/presentation/screens/customer_profile_screen.dar
 import '../../features/customer/presentation/screens/family_screen.dart';
 import '../../features/stylist/presentation/screens/stylist_earnings_screen.dart';
 import '../../features/stylist/presentation/screens/stylist_appointment_detail_screen.dart';
+import '../../features/stylist/presentation/screens/stylist_application_screen.dart';
 import '../../features/stylist/presentation/screens/stylist_home_screen.dart';
+import '../../features/stylist/presentation/screens/stylist_portal_screen.dart';
 import '../../features/stylist/presentation/screens/stylist_profile_screen.dart';
 import '../../features/stylist/presentation/screens/stylist_safety_screen.dart';
 import '../../features/stylist/presentation/screens/stylist_schedule_screen.dart';
@@ -49,7 +51,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final location = state.uri.path;
       final isWelcome = location == '/';
-      final isPublicRoute = isWelcome || location == '/login' || location == '/signup';
+      final isStylistPortal = location == '/stylist/portal';
+      final isStylistLogin = location == '/stylist/login';
+      final isAdminLogin = location == '/admin/login';
+      final isStylistApply = location == '/stylist/apply';
+      final isPublicRoute =
+          isWelcome ||
+          location == '/login' ||
+          location == '/signup' ||
+          isStylistPortal ||
+          isStylistLogin ||
+          isAdminLogin ||
+          isStylistApply;
       final isRoleGate = location == '/role-gate';
 
       if (session == null) {
@@ -58,6 +71,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         }
 
         return '/login';
+      }
+
+      if (isStylistApply) {
+        return null;
       }
 
       if (isPublicRoute) {
@@ -92,8 +109,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             return appUser.supportedHomeLocation;
           }
           break;
-        case AppUserRole.franchisee:
         case AppUserRole.corporateAdmin:
+          if (!location.startsWith('/admin')) {
+            return appUser.supportedHomeLocation;
+          }
+          break;
+        case AppUserRole.franchisee:
           return '/role-gate';
       }
 
@@ -107,6 +128,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/login',
         builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/stylist/portal',
+        builder: (context, state) => const StylistPortalScreen(),
+      ),
+      GoRoute(
+        path: '/stylist/login',
+        builder: (context, state) => const LoginScreen.stylist(),
+      ),
+      GoRoute(
+        path: '/admin/login',
+        builder: (context, state) => const LoginScreen.admin(),
+      ),
+      GoRoute(
+        path: '/stylist/apply',
+        builder: (context, state) => const StylistApplicationScreen(),
       ),
       GoRoute(
         path: '/signup',

@@ -198,6 +198,14 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                                   icon: const Icon(Icons.login),
                                                   label: const Text('Log In'),
                                                 ),
+                                                TextButton.icon(
+                                                  onPressed: () =>
+                                                      context.go('/stylist/portal'),
+                                                  icon: const Icon(
+                                                    Icons.content_cut_outlined,
+                                                  ),
+                                                  label: const Text('Stylist Portal'),
+                                                ),
                                               ],
                                             ),
                                             const SizedBox(height: 26),
