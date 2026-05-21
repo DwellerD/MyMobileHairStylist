@@ -49,15 +49,14 @@ class _HouseholdMemberSelectionScreenState
     final isBusy = bookingAsync.isLoading;
 
     return BookingStepScaffold(
-      stepNumber: 2,
-      totalSteps: 8,
+      displayStep: 1,
+      stepNumber: 1,
+      totalSteps: 5,
       title: 'Who is this appointment for?',
       subtitle:
           'Select one or more household members. You can also add a new child, partner, or family member now.',
       errorMessage: bookingErrorMessage(bookingAsync),
       isBusy: isBusy,
-      secondaryLabel: 'Back to address',
-      onSecondaryPressed: () => context.go('/customer/book'),
       primaryLabel: 'Continue to services',
       primaryIcon: Icons.arrow_forward,
       onPrimaryPressed: bookingState.selectedMemberIds.isNotEmpty

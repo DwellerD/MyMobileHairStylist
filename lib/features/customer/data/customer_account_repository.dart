@@ -42,7 +42,7 @@ class CustomerAccountRepository {
       memberRows = ((await _requireClient()
                   .from('household_members')
                   .select(
-                    'household_id, first_name, last_name, relationship_to_household, general_notes, sensory_notes, hair_notes',
+                    'id, household_id, first_name, last_name, relationship_to_household, general_notes, sensory_notes, hair_notes',
                   )
                   .inFilter('household_id', householdIds)
                   .order('created_at'))
@@ -66,6 +66,7 @@ class CustomerAccountRepository {
       email: appUser.email,
       marketName: marketName,
       primaryHouseholdName: householdRows.isEmpty ? null : householdRows.first['name'] as String,
+      primaryHouseholdId: householdRows.isEmpty ? null : householdRows.first['id'] as String,
       householdCount: householdRows.length,
       householdMemberCount: memberRows.length,
       addressCount: addressRows.length,
@@ -74,6 +75,7 @@ class CustomerAccountRepository {
       householdMembers: memberRows
           .map(
             (row) => CustomerHouseholdMemberSummary(
+              id: row['id'] as String,
               name: _joinName(
                 row['first_name'] as String?,
                 row['last_name'] as String?,
@@ -145,6 +147,45 @@ class CustomerAccountRepository {
     }
 
     return _relationshipLabel(row['relationship_to_household'] as String? ?? 'other');
+  }
+
+  Future<void> updateHouseholdMember({
+    required String memberId,
+    required String firstName,
+    String? lastName,
+    DateTime? dateOfBirth,
+    String? generalNotes,
+    String? sensoryNotes,
+    String? hairNotes,
+  }) async {
+    await _requireClient().from('household_members').update({
+      'first_name': firstName,
+      if (lastName != null) 'last_name': lastName,
+      if (dateOfBirth != null) 'date_of_birth': dateOfBirth.toIso8601String(),
+      if (generalNotes != null) 'general_notes': generalNotes,
+      if (sensoryNotes != null) 'sensory_notes': sensoryNotes,
+      if (hairNotes != null) 'hair_notes': hairNotes,
+    }).eq('id', memberId);
+  }
+
+  Future<void> createHouseholdMember({
+    required String householdId,
+    required String firstName,
+    String? lastName,
+    DateTime? dateOfBirth,
+    String? generalNotes,
+    String? sensoryNotes,
+    String? hairNotes,
+  }) async {
+    await _requireClient().from('household_members').insert({
+      'household_id': householdId,
+      'first_name': firstName,
+      if (lastName != null) 'last_name': lastName,
+      if (dateOfBirth != null) 'date_of_birth': dateOfBirth.toIso8601String(),
+      if (generalNotes != null) 'general_notes': generalNotes,
+      if (sensoryNotes != null) 'sensory_notes': sensoryNotes,
+      if (hairNotes != null) 'hair_notes': hairNotes,
+    });
   }
 
   SupabaseClient _requireClient() {

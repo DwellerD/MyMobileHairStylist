@@ -587,37 +587,19 @@ class _HeroVisual extends StatelessWidget {
           colors: [Color(0xFFF9F2EA), Color(0xFFE9D8CA)],
         ),
       ),
-      child: Stack(
-        children: [
-          Positioned(
-            top: 34,
-            left: 34,
-            child: _PlantIllustration(isLarge: isTablet),
-          ),
-          const Positioned(
-            top: 22,
-            right: 22,
-            child: _MirrorAccent(),
-          ),
-          Positioned(
-            right: isTablet ? 26 : 12,
-            bottom: 24,
-            child: _BagIllustration(isLarge: isTablet),
-          ),
-          Positioned(
-            left: 24,
-            bottom: 24,
-            child: Row(
-              children: const [
-                _ToolAccent(width: 82),
-                SizedBox(width: 10),
-                _ToolAccent(width: 58),
-                SizedBox(width: 10),
-                _ToolAccent(width: 98),
-              ],
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: FractionallySizedBox(
+          widthFactor: 0.5,
+          heightFactor: 1.0,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Image.asset(
+              'assets/images/logo.png',
+              fit: BoxFit.contain,
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -705,67 +687,13 @@ class _BagIllustration extends StatelessWidget {
     final width = isLarge ? 280.0 : 200.0;
     final height = isLarge ? 212.0 : 156.0;
 
-    return Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        color: const Color(0xFF222124),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x22000000),
-            blurRadius: 30,
-            offset: Offset(0, 18),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            top: 14,
-            left: 34,
-            right: 34,
-            child: Container(
-              height: 14,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: const Color(0xFF444247), width: 3),
-              ),
-            ),
-          ),
-          Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'My',
-                  style: GoogleFonts.parisienne(
-                    fontSize: isLarge ? 34 : 26,
-                    color: const Color(0xFFD5B2A5),
-                  ),
-                ),
-                Text(
-                  'MOBILE',
-                  style: GoogleFonts.cormorantGaramond(
-                    fontSize: isLarge ? 42 : 30,
-                    color: const Color(0xFFE2C8B9),
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 1.5,
-                  ),
-                ),
-                Text(
-                  'HAIR STYLIST',
-                  style: GoogleFonts.manrope(
-                    fontSize: isLarge ? 11 : 9,
-                    color: const Color(0xFFD5B2A5),
-                    letterSpacing: 3,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: Image.asset(
+        'assets/images/logo.png',
+        width: width,
+        height: height,
+        fit: BoxFit.contain,
       ),
     );
   }

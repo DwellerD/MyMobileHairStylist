@@ -13,15 +13,16 @@ import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/role_gate_screen.dart';
 import '../../features/auth/presentation/screens/sign_up_screen.dart';
 import '../../features/auth/presentation/screens/welcome_screen.dart';
-import '../../features/customer/booking/presentation/screens/address_check_screen.dart';
 import '../../features/customer/booking/presentation/screens/booking_notes_screen.dart';
 import '../../features/customer/booking/presentation/screens/booking_payment_placeholder_screen.dart';
 import '../../features/customer/booking/presentation/screens/booking_photo_upload_screen.dart';
 import '../../features/customer/booking/presentation/screens/booking_review_screen.dart';
 import '../../features/customer/booking/presentation/screens/booking_submitted_screen.dart';
+import '../../features/customer/booking/presentation/screens/customer_details_screen.dart';
 import '../../features/customer/booking/presentation/screens/household_member_selection_screen.dart';
-import '../../features/customer/booking/presentation/screens/preferred_time_screen.dart';
+import '../../features/customer/booking/presentation/screens/available_slots_screen.dart';
 import '../../features/customer/booking/presentation/screens/service_selection_screen.dart';
+import '../../features/customer/booking/presentation/screens/stylist_selection_screen.dart';
 import '../../features/customer/presentation/screens/customer_appointments_screen.dart';
 import '../../features/customer/presentation/screens/customer_home_screen.dart';
 import '../../features/customer/presentation/screens/customer_profile_screen.dart';
@@ -33,6 +34,7 @@ import '../../features/stylist/presentation/screens/stylist_home_screen.dart';
 import '../../features/stylist/presentation/screens/stylist_portal_screen.dart';
 import '../../features/stylist/presentation/screens/stylist_profile_screen.dart';
 import '../../features/stylist/presentation/screens/stylist_safety_screen.dart';
+import '../../features/stylist/presentation/screens/stylist_availability_screen.dart';
 import '../../features/stylist/presentation/screens/stylist_schedule_screen.dart';
 import '../../shared/widgets/role_shell.dart';
 
@@ -74,6 +76,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       }
 
       if (isStylistApply) {
+        if (!appUserAsync.isLoading && appUser?.role == AppUserRole.stylist) {
+          return appUser?.supportedHomeLocation;
+        }
+
         return null;
       }
 
@@ -184,16 +190,35 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/customer/book',
-                builder: (context, state) => const AddressCheckScreen(),
+                builder: (context, state) =>
+                    const HouseholdMemberSelectionScreen(),
                 routes: [
+                  GoRoute(
+                    path: 'services',
+                    builder: (context, state) => const ServiceSelectionScreen(),
+                  ),
+                  GoRoute(
+                    path: 'time',
+                    builder: (context, state) => const AvailableSlotsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'details',
+                    builder: (context, state) =>
+                        const CustomerDetailsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'review',
+                    builder: (context, state) => const BookingReviewScreen(),
+                  ),
+                  GoRoute(
+                    path: 'submitted',
+                    builder: (context, state) => const BookingSubmittedScreen(),
+                  ),
+                  // Legacy routes kept for backward compatibility
                   GoRoute(
                     path: 'household-members',
                     builder: (context, state) =>
                         const HouseholdMemberSelectionScreen(),
-                  ),
-                  GoRoute(
-                    path: 'services',
-                    builder: (context, state) => const ServiceSelectionScreen(),
                   ),
                   GoRoute(
                     path: 'notes',
@@ -205,21 +230,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                         const BookingPhotoUploadScreen(),
                   ),
                   GoRoute(
-                    path: 'time',
-                    builder: (context, state) => const PreferredTimeScreen(),
+                    path: 'stylist',
+                    builder: (context, state) =>
+                        const StylistSelectionScreen(),
                   ),
                   GoRoute(
                     path: 'payment',
                     builder: (context, state) =>
                         const BookingPaymentPlaceholderScreen(),
-                  ),
-                  GoRoute(
-                    path: 'review',
-                    builder: (context, state) => const BookingReviewScreen(),
-                  ),
-                  GoRoute(
-                    path: 'submitted',
-                    builder: (context, state) => const BookingSubmittedScreen(),
                   ),
                 ],
               ),
@@ -269,6 +287,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/stylist/schedule',
                 builder: (context, state) => const StylistScheduleScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'availability',
+                    builder: (context, state) =>
+                        const StylistAvailabilityScreen(),
+                  ),
+                ],
               ),
             ],
           ),

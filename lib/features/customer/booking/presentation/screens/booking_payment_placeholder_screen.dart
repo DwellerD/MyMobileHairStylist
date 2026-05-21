@@ -23,14 +23,14 @@ class BookingPaymentPlaceholderScreen extends ConsumerWidget {
     }
 
     return BookingStepScaffold(
-      stepNumber: 7,
-      totalSteps: 8,
+      stepNumber: 8,
+      totalSteps: 9,
       title: 'Payment placeholder',
       subtitle:
           'This step reserves the future Stripe deposit experience without processing any live payments in the MVP.',
       errorMessage: bookingErrorMessage(bookingAsync),
       isBusy: bookingAsync.isLoading,
-      secondaryLabel: 'Back to preferred time',
+      secondaryLabel: 'Back to available times',
       onSecondaryPressed: () => context.go('/customer/book/time'),
       primaryLabel: 'Continue without payment for MVP',
       primaryIcon: Icons.arrow_forward,

@@ -25,6 +25,12 @@ class StylistScheduleScreen extends ConsumerWidget {
               title: 'Schedule',
               subtitle: 'All assigned appointments, ordered by arrival time for field operations.',
             ),
+            const SizedBox(height: AppSpacing.sm),
+            OutlinedButton.icon(
+              icon: const Icon(Icons.calendar_month_outlined),
+              label: const Text('Manage my availability'),
+              onPressed: () => context.go('/stylist/schedule/availability'),
+            ),
             const SizedBox(height: AppSpacing.sectionGap),
             if (appointments.isEmpty)
               EmptyState(

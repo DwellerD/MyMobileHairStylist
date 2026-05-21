@@ -1,9 +1,16 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../core/models/app_user_role.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_scaffold_shell.dart';
+import '../../../auth/data/auth_repository.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/presentation/screens/login_screen.dart';
 import '../../domain/stylist_application.dart';
@@ -19,6 +26,8 @@ class StylistApplicationScreen extends ConsumerStatefulWidget {
 
 class _StylistApplicationScreenState
     extends ConsumerState<StylistApplicationScreen> {
+  static const _draftStorageKey = 'stylist_application_draft_v1';
+
   final _formKey = GlobalKey<FormState>();
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
@@ -34,9 +43,21 @@ class _StylistApplicationScreenState
   final _motivationController = TextEditingController();
 
   String? _localError;
+  bool _draftWasRestored = false;
+  bool _draftRestoreChecked = false;
+  bool _autoSubmitTriggered = false;
+  bool _isRefreshingStatus = false;
+  Timer? _statusRefreshTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _restoreDraft();
+  }
 
   @override
   void dispose() {
+    _statusRefreshTimer?.cancel();
     _firstNameController.dispose();
     _lastNameController.dispose();
     _emailController.dispose();
@@ -50,6 +71,126 @@ class _StylistApplicationScreenState
     _portfolioController.dispose();
     _motivationController.dispose();
     super.dispose();
+  }
+
+  Future<void> _restoreDraft() async {
+    final prefs = await SharedPreferences.getInstance();
+    final rawDraft = prefs.getString(_draftStorageKey);
+    _draftRestoreChecked = true;
+    if (rawDraft == null || rawDraft.isEmpty) {
+      return;
+    }
+
+    final draft = jsonDecode(rawDraft) as Map<String, dynamic>;
+    _firstNameController.text = (draft['firstName'] as String?) ?? '';
+    _lastNameController.text = (draft['lastName'] as String?) ?? '';
+    _emailController.text = (draft['email'] as String?) ?? '';
+    _phoneController.text = (draft['phone'] as String?) ?? '';
+    _cityController.text = (draft['city'] as String?) ?? '';
+    _stateController.text = (draft['stateCode'] as String?) ?? '';
+    _licenseController.text = (draft['licenseNumber'] as String?) ?? '';
+    _yearsExperienceController.text =
+        (draft['yearsExperience'] as String?) ?? '';
+    _specialtiesController.text = (draft['specialties'] as String?) ?? '';
+    _portfolioController.text = (draft['portfolioUrl'] as String?) ?? '';
+    _motivationController.text = (draft['motivation'] as String?) ?? '';
+    _draftWasRestored = true;
+
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('We restored your saved stylist application draft.'),
+      ),
+    );
+  }
+
+  Future<void> _persistDraft() async {
+    final prefs = await SharedPreferences.getInstance();
+    final draft = <String, String>{
+      'firstName': _firstNameController.text.trim(),
+      'lastName': _lastNameController.text.trim(),
+      'email': _emailController.text.trim(),
+      'phone': _phoneController.text.trim(),
+      'city': _cityController.text.trim(),
+      'stateCode': _stateController.text.trim(),
+      'licenseNumber': _licenseController.text.trim(),
+      'yearsExperience': _yearsExperienceController.text.trim(),
+      'specialties': _specialtiesController.text.trim(),
+      'portfolioUrl': _portfolioController.text.trim(),
+      'motivation': _motivationController.text.trim(),
+    };
+    await prefs.setString(_draftStorageKey, jsonEncode(draft));
+  }
+
+  Future<void> _clearDraft() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_draftStorageKey);
+    _draftWasRestored = false;
+    _autoSubmitTriggered = false;
+  }
+
+  void _configureStatusRefresh({required bool shouldPoll}) {
+    if (!shouldPoll) {
+      _statusRefreshTimer?.cancel();
+      _statusRefreshTimer = null;
+      return;
+    }
+
+    _statusRefreshTimer ??= Timer.periodic(
+      const Duration(seconds: 10),
+      (_) => _refreshApplicationStatus(),
+    );
+  }
+
+  Future<void> _refreshApplicationStatus() async {
+    if (_isRefreshingStatus) {
+      return;
+    }
+
+    _isRefreshingStatus = true;
+    ref.invalidate(currentAppUserProvider);
+    ref.invalidate(currentStylistApplicationProvider);
+
+    try {
+      await ref.read(currentAppUserProvider.future);
+      await ref.read(currentStylistApplicationProvider.future);
+    } catch (_) {
+      // Keep the last visible state and try again on the next refresh cycle.
+    } finally {
+      _isRefreshingStatus = false;
+    }
+  }
+
+  void _maybeAutoSubmitRestoredDraft({
+    required bool hasSession,
+    required bool hasAppUser,
+    required bool applicationResolved,
+    required bool hasApplication,
+    required bool isBusy,
+  }) {
+    if (!hasSession || !hasAppUser || !applicationResolved || hasApplication) {
+      return;
+    }
+
+    if (!_draftRestoreChecked || !_draftWasRestored || _autoSubmitTriggered || isBusy) {
+      return;
+    }
+
+    _autoSubmitTriggered = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) {
+        return;
+      }
+
+      try {
+        await _submit();
+      } catch (_) {
+        _autoSubmitTriggered = false;
+      }
+    });
   }
 
   @override
@@ -69,8 +210,35 @@ class _StylistApplicationScreenState
       body: appUserAsync.when(
         data: (appUser) {
           final application = applicationAsync.valueOrNull;
+          _configureStatusRefresh(
+            shouldPoll:
+                session != null &&
+                appUser != null &&
+                application?.status == 'pending',
+          );
+
+          if (appUser?.role == AppUserRole.stylist) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                context.go('/stylist/home');
+              }
+            });
+            return const SizedBox.shrink();
+          }
+
+          _maybeAutoSubmitRestoredDraft(
+            hasSession: session != null,
+            hasAppUser: appUser != null,
+            applicationResolved: !applicationAsync.isLoading && !applicationAsync.hasError,
+            hasApplication: application != null,
+            isBusy: isBusy,
+          );
+
           if (appUser != null && application != null) {
-            return _ApplicationStatusView(application: application);
+            return _ApplicationStatusView(
+              application: application,
+              onRefresh: _refreshApplicationStatus,
+            );
           }
 
           return Form(
@@ -227,15 +395,24 @@ class _StylistApplicationScreenState
       return;
     }
 
-    if (ref.read(currentSessionProvider) == null) {
-      await ref.read(authActionControllerProvider.notifier).signUpCustomer(
-            email: _emailController.text,
-            password: _passwordController.text,
-            firstName: _firstNameController.text,
-            lastName: _lastNameController.text,
-          );
+    await _persistDraft();
 
-      final appUser = await ref.refresh(currentAppUserProvider.future);
+    if (ref.read(currentSessionProvider) == null) {
+      try {
+        await _authenticateApplicant();
+      } catch (error) {
+        if (!mounted) {
+          return;
+        }
+
+        setState(() {
+          _localError = error.toString();
+        });
+        return;
+      }
+
+      ref.invalidate(currentAppUserProvider);
+      final appUser = await ref.read(authRepositoryProvider).getCurrentAppUser();
       if (appUser == null) {
         if (!mounted) {
           return;
@@ -249,20 +426,31 @@ class _StylistApplicationScreenState
       }
     }
 
-    await ref.read(stylistApplicationActionControllerProvider.notifier).submitApplication(
-          phone: _phoneController.text,
-          city: _cityController.text,
-          stateCode: _stateController.text,
-          licenseNumber: _licenseController.text,
-          yearsExperience: int.tryParse(_yearsExperienceController.text.trim()),
-          specialties: _specialtiesController.text
-              .split(',')
-              .map((value) => value.trim())
-              .where((value) => value.isNotEmpty)
-              .toList(growable: false),
-          portfolioUrl: _portfolioController.text,
-          motivation: _motivationController.text,
-        );
+    try {
+      await ref.read(stylistApplicationActionControllerProvider.notifier).submitApplication(
+            phone: _phoneController.text,
+            city: _cityController.text,
+            stateCode: _stateController.text,
+            licenseNumber: _licenseController.text,
+            yearsExperience: int.tryParse(_yearsExperienceController.text.trim()),
+            specialties: _specialtiesController.text
+                .split(',')
+                .map((value) => value.trim())
+                .where((value) => value.isNotEmpty)
+                .toList(growable: false),
+            portfolioUrl: _portfolioController.text,
+            motivation: _motivationController.text,
+          );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _localError = error.toString();
+      });
+      return;
+    }
 
     if (!mounted) {
       return;
@@ -273,6 +461,8 @@ class _StylistApplicationScreenState
         content: Text('Your stylist application has been submitted.'),
       ),
     );
+
+    await _clearDraft();
   }
 
   String? _required(String? value, String label) {
@@ -282,12 +472,74 @@ class _StylistApplicationScreenState
 
     return null;
   }
+
+  Future<void> _authenticateApplicant() async {
+    final email = _emailController.text;
+    final password = _passwordController.text;
+
+    try {
+      await ref.read(authActionControllerProvider.notifier).signIn(
+            email: email,
+            password: password,
+          );
+      return;
+    } catch (error) {
+      final message = error.toString();
+      if (message != 'The email or password is incorrect.') {
+        rethrow;
+      }
+    }
+
+    try {
+      final signUpOutcome = await ref.read(authActionControllerProvider.notifier).signUpCustomer(
+            email: email,
+            password: password,
+            firstName: _firstNameController.text,
+            lastName: _lastNameController.text,
+            additionalData: <String, dynamic>{
+              'pending_stylist_application': true,
+              'stylist_phone': _phoneController.text.trim(),
+              'stylist_city': _cityController.text.trim(),
+              'stylist_state': _stateController.text.trim().toUpperCase(),
+              'stylist_license_number': _licenseController.text.trim(),
+              'stylist_years_experience': int.tryParse(
+                _yearsExperienceController.text.trim(),
+              ),
+              'stylist_specialties': _specialtiesController.text
+                  .split(',')
+                  .map((value) => value.trim())
+                  .where((value) => value.isNotEmpty)
+                  .toList(growable: false),
+              'stylist_portfolio_url': _portfolioController.text.trim(),
+              'stylist_motivation': _motivationController.text.trim(),
+            },
+          );
+
+      if (signUpOutcome == SignUpOutcome.confirmationRequired) {
+        throw const AuthRepositoryException(
+          'Your account was created, but email confirmation is required before we can submit your stylist application. Check your email, confirm the account, then sign in and submit the application.',
+        );
+      }
+    } catch (error) {
+      final message = error.toString();
+      if (message == 'An account with that email already exists.') {
+        throw const AuthRepositoryException(
+          'This email already has an account. Log in with the existing password, then submit the stylist application.',
+        );
+      }
+      rethrow;
+    }
+  }
 }
 
 class _ApplicationStatusView extends StatelessWidget {
-  const _ApplicationStatusView({required this.application});
+  const _ApplicationStatusView({
+    required this.application,
+    required this.onRefresh,
+  });
 
   final StylistApplication application;
+  final Future<void> Function() onRefresh;
 
   @override
   Widget build(BuildContext context) {
@@ -320,6 +572,11 @@ class _ApplicationStatusView extends StatelessWidget {
           application.specialties.isEmpty
               ? 'No specialties listed'
               : 'Specialties: ${application.specialties.join(', ')}',
+        ),
+        const SizedBox(height: AppSpacing.md),
+        OutlinedButton(
+          onPressed: onRefresh,
+          child: const Text('Refresh application status'),
         ),
         if (application.reviewerNotes?.trim().isNotEmpty == true) ...[
           const SizedBox(height: AppSpacing.md),

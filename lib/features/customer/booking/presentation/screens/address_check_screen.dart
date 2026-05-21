@@ -89,7 +89,7 @@ class _AddressCheckScreenState extends ConsumerState<AddressCheckScreen> {
 
     return BookingStepScaffold(
       stepNumber: 1,
-      totalSteps: 8,
+      totalSteps: 9,
       title: 'Choose your service address',
       subtitle:
           'Choose a saved address or add a new one. We check ZIP coverage first so your in-home appointment starts with the right location details.',

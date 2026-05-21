@@ -48,31 +48,37 @@ class StylistApplicationRepository {
     required String? portfolioUrl,
     required String motivation,
   }) async {
-    final response = await _requireClient()
-        .from('stylist_applications')
-        .insert({
-          'user_profile_id': appUser.profileId,
-          'market_id': appUser.defaultMarketId,
-          'territory_id': appUser.defaultTerritoryId,
-          'phone': _nullableText(phone),
-          'city': _nullableText(city),
-          'state': _nullableText(stateCode)?.toUpperCase(),
-          'license_number': _nullableText(licenseNumber),
-          'years_experience': yearsExperience,
-          'specialties': specialties,
-          'portfolio_url': _nullableText(portfolioUrl),
-          'motivation': motivation.trim(),
-        })
-        .select(
-          'id, user_profile_id, phone, city, state, license_number, years_experience, specialties, portfolio_url, motivation, status, market_id, territory_id, created_at, reviewed_at, reviewer_notes',
-        )
-        .single();
+    final payload = <String, dynamic>{
+      'user_profile_id': appUser.profileId,
+      'market_id': appUser.defaultMarketId,
+      'territory_id': appUser.defaultTerritoryId,
+      'phone': _nullableText(phone),
+      'city': _nullableText(city),
+      'state': _nullableText(stateCode)?.toUpperCase(),
+      'license_number': _nullableText(licenseNumber),
+      'years_experience': yearsExperience,
+      'specialties': specialties,
+      'portfolio_url': _nullableText(portfolioUrl),
+      'motivation': motivation.trim(),
+    };
 
-    return _mapApplication(
-      response,
-      applicantName: appUser.displayName,
-      email: appUser.email,
-    );
+    try {
+      final response = await _requireClient()
+          .from('stylist_applications')
+          .insert(payload)
+          .select(
+            'id, user_profile_id, phone, city, state, license_number, years_experience, specialties, portfolio_url, motivation, status, market_id, territory_id, created_at, reviewed_at, reviewer_notes',
+          )
+          .single();
+
+      return _mapApplication(
+        response,
+        applicantName: appUser.displayName,
+        email: appUser.email,
+      );
+    } on PostgrestException {
+      rethrow;
+    }
   }
 
   SupabaseClient _requireClient() {

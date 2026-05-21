@@ -90,6 +90,8 @@ class _AdminAppointmentDetailScreenState
                     _DetailRow(label: 'Preferred window', value: detail.preferredTimeWindow ?? 'No preferred time window provided'),
                     _DetailRow(label: 'Estimated total', value: formatMoneyCents(detail.estimatedTotalCents)),
                     _DetailRow(label: 'Assigned stylist', value: detail.assignedStylistName ?? 'Unassigned'),
+                    if (detail.requestedStylistName != null)
+                      _DetailRow(label: 'Requested stylist', value: detail.requestedStylistName!),
                   ],
                 ),
               ),

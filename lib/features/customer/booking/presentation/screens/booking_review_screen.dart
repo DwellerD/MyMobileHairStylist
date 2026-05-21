@@ -22,18 +22,17 @@ class BookingReviewScreen extends ConsumerWidget {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final selectedWindow = findBookingTimeWindow(bookingState.preferredTimeWindow);
-
     return BookingStepScaffold(
-      stepNumber: 8,
-      totalSteps: 8,
+      displayStep: 5,
+      stepNumber: 5,
+      totalSteps: 5,
       title: 'Review your request',
       subtitle:
           'This request will be saved in Supabase, then reviewed by admin before a stylist is confirmed.',
       errorMessage: bookingErrorMessage(bookingAsync),
       isBusy: bookingAsync.isLoading,
-      secondaryLabel: 'Back to payment',
-      onSecondaryPressed: () => context.go('/customer/book/payment'),
+      secondaryLabel: 'Back to details',
+      onSecondaryPressed: () => context.go('/customer/book/details'),
       primaryLabel: 'Submit booking request',
       primaryIcon: Icons.send_outlined,
       onPrimaryPressed: bookingState.acceptedPolicy
@@ -97,11 +96,15 @@ class BookingReviewScreen extends ConsumerWidget {
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: AppSpacing.xs),
-                ...bookingState.selectedServices.map(
-                  (service) => Padding(
+                ...bookingState.serviceItems.map(
+                  (item) => Padding(
                     padding: const EdgeInsets.only(bottom: AppSpacing.xxs),
                     child: Text(
-                      '${service.name} • ${service.durationMinutes} min • ${service.priceLabel}',
+                      '${item.service.name} • ${item.service.durationMinutes} min • ${item.service.priceLabel}'  +
+                      (item.assignedMemberId != null
+                          ? '\nFor: ${bookingState.householdMembers.firstWhere((m) => m.id == item.assignedMemberId, orElse: () => bookingState.householdMembers.first).displayName}'
+                          : '') +
+                      (item.notes.isNotEmpty ? '\n${item.notes}' : ''),
                     ),
                   ),
                 ),
@@ -120,19 +123,25 @@ class BookingReviewScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Preferred timing',
+                  'Appointment time',
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: AppSpacing.xs),
-                Text(
-                  bookingState.preferredDate == null
-                      ? 'No date selected'
-                      : '${bookingState.preferredDate!.month}/${bookingState.preferredDate!.day}/${bookingState.preferredDate!.year}',
-                ),
-                if (selectedWindow != null) ...[
-                  const SizedBox(height: AppSpacing.xxs),
-                  Text(selectedWindow.label),
-                ],
+                if (bookingState.selectedSlotStartAt != null)
+                  Text(
+                    '${bookingState.preferredDate!.month}/${bookingState.preferredDate!.day}/${bookingState.preferredDate!.year}  •  ${bookingState.preferredTimeWindow}',
+                  )
+                else
+                  Text(
+                    bookingState.preferredDate == null
+                        ? 'No date selected'
+                        : '${bookingState.preferredDate!.month}/${bookingState.preferredDate!.day}/${bookingState.preferredDate!.year}',
+                  ),
+                const SizedBox(height: AppSpacing.xxs),
+                if (bookingState.requestedStylistName != null)
+                  Text('Preferred stylist: ${bookingState.requestedStylistName}')
+                else
+                  const Text('No stylist preference — we will assign the best match.'),
               ],
             ),
           ),
@@ -153,6 +162,22 @@ class BookingReviewScreen extends ConsumerWidget {
             ),
           if (bookingState.customerNotes.trim().isNotEmpty)
             const SizedBox(height: AppSpacing.sm),
+          if (bookingState.customerPhone != null)
+            AppCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Contact',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text('Phone: ${bookingState.customerPhone}'),
+                ],
+              ),
+            ),
+          if (bookingState.customerPhone != null)
+            const SizedBox(height: AppSpacing.sm),
           AppCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -171,24 +196,6 @@ class BookingReviewScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.sectionGap),
-          AppCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Payment',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  'Status: ${bookingState.paymentStatus == 'not_started' ? 'Continue without payment for MVP' : bookingState.paymentStatus}',
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(AppConstants.bookingPaymentDisclaimer),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
           AppCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

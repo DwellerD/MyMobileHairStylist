@@ -203,7 +203,7 @@ class BookingRepository {
       throw Exception('Choose at least one household member for this request.');
     }
 
-    if (bookingState.selectedServices.isEmpty) {
+    if (bookingState.serviceItems.isEmpty) {
       throw Exception('Choose at least one service before submitting.');
     }
 
@@ -212,15 +212,24 @@ class BookingRepository {
       throw Exception('Choose a preferred date and arrival window first.');
     }
 
-    if (bookingState.paymentStatus != 'not_started') {
-      throw Exception('This MVP payment step should remain in placeholder mode only.');
-    }
-
     final customerProfileId = await _loadCustomerProfileId(appUser.profileId);
-    final requestedWindow = _windowBounds(
-      bookingState.preferredDate!,
-      bookingState.preferredTimeWindow!,
-    );
+
+    // When the customer selected a specific slot, use exact times. Otherwise
+    // fall back to the generic preferred-window range that admin dispatchers
+    // use when scheduling.
+    final _RequestedWindow requestedWindow;
+    if (bookingState.selectedSlotStartAt != null) {
+      final slotStart = bookingState.selectedSlotStartAt!;
+      final slotEnd = slotStart.add(
+        Duration(minutes: bookingState.estimatedDurationMinutes),
+      );
+      requestedWindow = _RequestedWindow(start: slotStart, end: slotEnd);
+    } else {
+      requestedWindow = _windowBounds(
+        bookingState.preferredDate!,
+        bookingState.preferredTimeWindow!,
+      );
+    }
 
     final appointment = await _requireClient()
         .from('appointments')
@@ -239,7 +248,10 @@ class BookingRepository {
           'estimated_total_cents': bookingState.estimatedTotalCents,
           'estimated_duration_minutes': bookingState.estimatedDurationMinutes,
           'customer_notes': _nullableText(bookingState.customerNotes),
+          'customer_phone': _nullableText(bookingState.customerPhone),
           'source': 'mobile_app',
+          if (bookingState.requestedStylistId != null)
+            'requested_stylist_profile_id': bookingState.requestedStylistId,
         })
         .select('id, market_id, territory_id')
         .single();
@@ -256,7 +268,7 @@ class BookingRepository {
                 (member) => <String, dynamic>{
                   'appointment_id': appointmentId,
                   'household_member_id': member.id,
-                  'status': 'requested',
+                  'status': 'planned',
                 },
               )
               .toList(growable: false),
@@ -268,23 +280,19 @@ class BookingRepository {
         row['household_member_id'] as String: row['id'] as String,
     };
 
-    final singleParticipantId = bookingState.selectedMembers.length == 1
-        ? participantIdByMemberId[bookingState.selectedMembers.first.id]
-        : null;
-
     await _requireClient().from('appointment_services').insert(
-          bookingState.selectedServices
+          bookingState.serviceItems
               .map(
-                (service) => <String, dynamic>{
+                (item) => <String, dynamic>{
                   'appointment_id': appointmentId,
-                  'appointment_participant_id': singleParticipantId,
-                  'service_id': service.id,
-                  'quantity': 1,
-                  'duration_snapshot_minutes': service.durationMinutes,
-                  'price_snapshot_cents': service.basePriceCents,
-                  'line_notes': bookingState.selectedMembers.length > 1
-                      ? 'Submitted as a family request. Admin will confirm participant-to-service matching.'
+                  'appointment_participant_id': item.assignedMemberId != null
+                      ? participantIdByMemberId[item.assignedMemberId]
                       : null,
+                  'service_id': item.service.id,
+                  'quantity': 1,
+                  'duration_snapshot_minutes': item.service.durationMinutes,
+                  'price_snapshot_cents': item.service.basePriceCents,
+                  'line_notes': _nullableText(item.notes),
                 },
               )
               .toList(growable: false),

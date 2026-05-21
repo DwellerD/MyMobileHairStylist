@@ -290,88 +290,14 @@ class _HeroScene extends StatelessWidget {
           colors: [Color(0xFFF8EFE7), Color(0xFFE9D8CA)],
         ),
       ),
-      child: Stack(
-        children: [
-          const Positioned(top: 26, left: 24, child: _MiniPlant()),
-          Positioned(
-            right: 18,
-            top: 18,
-            child: Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFFD8B89C), width: 6),
-                gradient: const RadialGradient(
-                  colors: [Color(0xFFFFFBF6), Color(0xFFEDE2D7)],
-                ),
-              ),
-            ),
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(40),
+          child: Image.asset(
+            'assets/images/logo.png',
+            fit: BoxFit.contain,
           ),
-          Positioned(
-            right: 22,
-            bottom: 20,
-            child: Container(
-              width: 208,
-              height: 154,
-              decoration: BoxDecoration(
-                color: const Color(0xFF202024),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x22000000),
-                    blurRadius: 28,
-                    offset: Offset(0, 16),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'My',
-                      style: GoogleFonts.parisienne(
-                        fontSize: 28,
-                        color: const Color(0xFFD8B4A4),
-                      ),
-                    ),
-                    Text(
-                      'MOBILE',
-                      style: GoogleFonts.cormorantGaramond(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFFE4CCBD),
-                      ),
-                    ),
-                    Text(
-                      'HAIR STYLIST',
-                      style: GoogleFonts.manrope(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 3,
-                        color: const Color(0xFFD8B4A4),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            left: 24,
-            bottom: 24,
-            child: Row(
-              children: const [
-                _ToolStrip(width: 78),
-                SizedBox(width: 10),
-                _ToolStrip(width: 54),
-                SizedBox(width: 10),
-                _ToolStrip(width: 96),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -632,12 +558,42 @@ class _BookingPreview extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Flex(
-            direction: isWide ? Axis.horizontal : Axis.vertical,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: _UploadCard(
+          if (isWide)
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: _UploadCard(
+                    title: 'Upload photos of your hair',
+                    subtitle: 'Add clear photos in natural light.',
+                    footer: const [
+                      _MiniShot(label: 'Front'),
+                      _MiniShot(label: 'Back'),
+                      _MiniShot(label: 'Left'),
+                      _MiniShot(label: 'Right'),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _UploadCard(
+                    title: 'Add inspiration photos',
+                    subtitle: 'Upload any styles, cuts, or colours you love.',
+                    footer: const [
+                      _RefTile(tone: Color(0xFF886851)),
+                      _RefTile(tone: Color(0xFFB28768)),
+                      _RefTile(tone: Color(0xFF6B5142)),
+                      _RefTile(tone: Color(0xFFCAA27E)),
+                    ],
+                  ),
+                ),
+              ],
+            )
+          else
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _UploadCard(
                   title: 'Upload photos of your hair',
                   subtitle: 'Add clear photos in natural light.',
                   footer: const [
@@ -647,10 +603,8 @@ class _BookingPreview extends StatelessWidget {
                     _MiniShot(label: 'Right'),
                   ],
                 ),
-              ),
-              SizedBox(width: isWide ? 16 : 0, height: isWide ? 0 : 16),
-              Expanded(
-                child: _UploadCard(
+                const SizedBox(height: 16),
+                _UploadCard(
                   title: 'Add inspiration photos',
                   subtitle: 'Upload any styles, cuts, or colours you love.',
                   footer: const [
@@ -660,9 +614,8 @@ class _BookingPreview extends StatelessWidget {
                     _RefTile(tone: Color(0xFFCAA27E)),
                   ],
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
           const SizedBox(height: 18),
           Wrap(
             spacing: 14,

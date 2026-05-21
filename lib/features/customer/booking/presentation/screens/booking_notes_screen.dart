@@ -48,7 +48,7 @@ class _BookingNotesScreenState extends ConsumerState<BookingNotesScreen> {
 
     return BookingStepScaffold(
       stepNumber: 4,
-      totalSteps: 8,
+      totalSteps: 9,
       title: 'Add visit notes',
       subtitle:
           'Share anything helpful for the in-home visit, such as parking, entry instructions, or desired outcome notes.',

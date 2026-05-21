@@ -3,16 +3,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/app_spacing.dart';
-import '../../../../../shared/widgets/app_card.dart';
-import '../../../../../shared/widgets/empty_state.dart';
 import '../../domain/booking_service_catalog.dart';
 import '../../domain/booking_flow_state.dart';
 import '../providers/booking_flow_controller.dart';
 import '../widgets/booking_step_scaffold.dart';
 
-/// Step where customers choose the services they want included in the request.
+// Matches the booking-flow primary defined in booking_step_scaffold.dart
+const Color _kPrimary    = Color(0xFF8B3838);
+const Color _kTextDark   = Color(0xFF1A1212);
+const Color _kTextMid    = Color(0xFF6B6260);
+const Color _kHeroBg     = Color(0xFFF5EDE4);
+const Color _kPlaceImg   = Color(0xFFE0D8D0);
+const Color _kDivider    = Color(0xFFF0EAE4);
+
+// ─────────────────────────────────────────────────────────────────────────────
 class ServiceSelectionScreen extends ConsumerStatefulWidget {
   const ServiceSelectionScreen({super.key});
 
@@ -21,8 +25,39 @@ class ServiceSelectionScreen extends ConsumerStatefulWidget {
       _ServiceSelectionScreenState();
 }
 
-class _ServiceSelectionScreenState extends ConsumerState<ServiceSelectionScreen> {
+class _ServiceSelectionScreenState
+    extends ConsumerState<ServiceSelectionScreen> {
   BookingServiceCategory _selectedCategory = BookingServiceCategory.women;
+
+  void _openServiceModal(
+      BuildContext context, BookingFlowState bookingState, BookingServiceOption service) {
+    final existingItems = bookingState.serviceItems
+        .where((i) => i.service.id == service.id)
+        .toList();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => _ServiceModal(
+        service: service,
+        existingItems: existingItems,
+        householdMembers: bookingState.householdMembers,
+        onAdd: (String? memberId, String notes) {
+          ref
+              .read(bookingFlowControllerProvider.notifier)
+              .addServiceItem(service: service, assignedMemberId: memberId, notes: notes);
+        },
+        onRemove: (String itemId) {
+          ref
+              .read(bookingFlowControllerProvider.notifier)
+              .removeServiceItem(itemId);
+        },
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,261 +65,303 @@ class _ServiceSelectionScreenState extends ConsumerState<ServiceSelectionScreen>
     final bookingState = bookingAsync.valueOrNull;
 
     if (bookingState == null) {
-      return const Center(child: CircularProgressIndicator());
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
 
-    final servicesByCategory = <BookingServiceCategory, List<BookingServiceOption>>{
-      for (final category in BookingServiceCategory.values)
-        category: bookingState.services
-            .where((service) => _categorizeService(service) == category)
+    // Build per-category lists preserving catalog sort order
+    final servicesByCategory =
+        <BookingServiceCategory, List<BookingServiceOption>>{
+      for (final cat in BookingServiceCategory.values)
+        cat: bookingState.services
+            .where((s) => _categorizeService(s) == cat)
             .toList(growable: false)
           ..sort(_compareServicesWithinCategory),
     };
+
     final activeServices = servicesByCategory[_selectedCategory] ?? const [];
-    final width = MediaQuery.sizeOf(context).width;
-    final isWide = width >= 900;
+    final hasSelection = bookingState.serviceItems.isNotEmpty;
 
     return BookingStepScaffold(
-      stepNumber: 3,
-      totalSteps: 8,
-      title: 'Choose your service',
-      subtitle:
-          'Select the service you would like to book. The visuals now match the mobile direction more closely while still using the real booking state and navigation.',
+      displayStep: 2,
+      stepNumber: 2,
+      totalSteps: 5,
+      title: 'Choose your services',
+      subtitle: 'Tap a service to add it. You can add multiple services.',
+      heroWidget: Image.asset(
+        'assets/images/topservicesbanner.png',
+        width: double.infinity,
+        fit: BoxFit.fitWidth,
+      ),
       errorMessage: bookingErrorMessage(bookingAsync),
       isBusy: bookingAsync.isLoading,
-      secondaryLabel: 'Back to household',
-      onSecondaryPressed: () => context.go('/customer/book/household-members'),
-      primaryLabel: 'Continue to notes',
-      primaryIcon: Icons.arrow_forward,
-      onPrimaryPressed: bookingState.selectedServiceIds.isNotEmpty
-          ? () => context.go('/customer/book/notes')
-          : null,
+      secondaryLabel: 'Back',
+      onSecondaryPressed: () => context.go('/customer/book'),
+      primaryLabel: 'CONTINUE',
+      onPrimaryPressed:
+          hasSelection ? () => context.go('/customer/book/time') : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ── Category filter pills ──────────────────────────────────────
+          _CategoryPillsBar(
+            selectedCategory: _selectedCategory,
+            onCategoryTap: (cat) => setState(() => _selectedCategory = cat),
+          ),
+          const SizedBox(height: 20),
+
+          // ── Service list ───────────────────────────────────────────────
           if (bookingState.services.isEmpty)
-            const EmptyState(
-              title: 'No services are published yet',
-              description:
-                  'Run the seed migration or add services in Supabase so customers can request appointments.',
-              icon: Icons.content_cut_outlined,
-            )
-          else ...[
-            TextButton.icon(
-              onPressed: () => context.go('/customer/book/household-members'),
-              icon: const Icon(Icons.arrow_back, size: 18),
-              label: const Text('Back to household'),
+            const _EmptyCatalog()
+          else if (activeServices.isEmpty)
+            _EmptyCategory(category: _selectedCategory)
+          else
+            Column(
+              children: [
+                for (int i = 0; i < activeServices.length; i++)
+                  _ServiceTile(
+                    service: activeServices[i],
+                    addedCount: bookingState.serviceItems
+                        .where((item) => item.service.id == activeServices[i].id)
+                        .length,
+                    showDivider: i < activeServices.length - 1,
+                    onTap: () => _openServiceModal(
+                        context, bookingState, activeServices[i]),
+                  ),
+              ],
             ),
-            const SizedBox(height: 8),
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(28),
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFFFFFBF8), Color(0xFFF1E4D9)],
-                ),
-                border: Border.all(color: const Color(0xFFE7D8CB)),
-              ),
-              child: Padding(
-                padding: EdgeInsets.all(isWide ? 22 : 16),
-                child: isWide
-                    ? Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: _ServiceHeroCopy(category: _selectedCategory),
-                          ),
-                          const SizedBox(width: 18),
-                          Expanded(
-                            child: _ServiceHeroVisual(category: _selectedCategory),
-                          ),
-                        ],
-                      )
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _ServiceHeroCopy(category: _selectedCategory),
-                          const SizedBox(height: 16),
-                          _ServiceHeroVisual(category: _selectedCategory),
-                        ],
-                      ),
-              ),
+
+          const SizedBox(height: 28),
+
+          // ── Selected summary (if any) ──────────────────────────────────
+          if (hasSelection)
+            _ServiceItemsSummary(
+              serviceItems: bookingState.serviceItems,
+              memberNames: {
+                for (final m in bookingState.householdMembers)
+                  m.id: m.displayName,
+              },
+              onRemove: (itemId) => ref
+                  .read(bookingFlowControllerProvider.notifier)
+                  .removeServiceItem(itemId),
             ),
-            const SizedBox(height: 18),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFFBF7),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: const Color(0xFFE7D8CB)),
-              ),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (final category in BookingServiceCategory.values)
-                    _CategoryChip(
-                      label: category.label,
-                      isSelected: _selectedCategory == category,
-                      onTap: () {
-                        setState(() {
-                          _selectedCategory = category;
-                        });
-                      },
-                    ),
-                ],
-              ),
+
+          const SizedBox(height: 20),
+
+          // ── Support section ────────────────────────────────────────────
+          const _SupportSection(),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Service add/edit modal
+// ─────────────────────────────────────────────────────────────────────────────
+class _ServiceModal extends StatefulWidget {
+  const _ServiceModal({
+    required this.service,
+    required this.existingItems,
+    required this.householdMembers,
+    required this.onAdd,
+    required this.onRemove,
+  });
+
+  final BookingServiceOption service;
+  final List<BookingServiceItem> existingItems;
+  final List<BookingHouseholdMemberOption> householdMembers;
+  final void Function(String? memberId, String notes) onAdd;
+  final void Function(String itemId) onRemove;
+
+  @override
+  State<_ServiceModal> createState() => _ServiceModalState();
+}
+
+class _ServiceModalState extends State<_ServiceModal> {
+  String? _selectedMemberId;
+  final _notesController = TextEditingController();
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20, 24, 20, 24 + bottomPadding),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title
+          Text(
+            'Add ${widget.service.name}',
+            style: GoogleFonts.manrope(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: _kTextDark,
             ),
-            const SizedBox(height: 18),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${widget.service.durationMinutes} min  ·  Starting at ${widget.service.priceLabel}',
+            style: GoogleFonts.manrope(fontSize: 13, color: _kTextMid),
+          ),
+          const SizedBox(height: 20),
+
+          // For whom?
+          if (widget.householdMembers.isNotEmpty) ...[
             Text(
-              _selectedCategory.label,
-              style: GoogleFonts.cormorantGaramond(
-                fontSize: 34,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
+              'For whom?',
+              style: GoogleFonts.manrope(
+                  fontSize: 13, fontWeight: FontWeight.w700, color: _kTextDark),
             ),
-            const SizedBox(height: 12),
-            if (activeServices.isEmpty)
-              AppCard(
-                child: Text(
-                  'No ${_selectedCategory.label.toLowerCase()} services are currently available. Try another category or publish more services.',
-                ),
-              )
-            else
-              Column(
-                children: activeServices
-                    .map(
-                      (service) => Padding(
-                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                        child: _ServiceListCard(
-                          service: service,
-                          isSelected: bookingState.selectedServiceIds.contains(service.id),
-                          onTap: () => ref
-                              .read(bookingFlowControllerProvider.notifier)
-                              .toggleService(service.id),
-                          category: _selectedCategory,
-                        ),
-                      ),
-                    )
-                    .toList(growable: false),
-              ),
-          ],
-          const SizedBox(height: AppSpacing.sectionGap),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final stackSummary = constraints.maxWidth < 720;
-
-              final summaryDetails = bookingState.selectedServiceIds.isEmpty
-                  ? _SupportPrompt(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Select a service or continue to notes if you want to describe what you need.',
-                            ),
-                          ),
-                        );
-                      },
-                    )
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Selected services',
-                          style: GoogleFonts.manrope(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        ...bookingState.selectedServices.map(
-                          (service) => Padding(
-                            padding: const EdgeInsets.only(bottom: 4),
-                            child: Text(
-                              '${service.name} • ${service.durationMinutes} min • ${service.priceLabel}',
-                              style: GoogleFonts.manrope(
-                                fontSize: 13,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-
-              final estimateCard = Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF7EFE6),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Starting estimate',
-                      style: GoogleFonts.manrope(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textSecondary,
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: widget.householdMembers.map((m) {
+                final selected = _selectedMemberId == m.id;
+                return GestureDetector(
+                  onTap: () =>
+                      setState(() => _selectedMemberId = selected ? null : m.id),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: selected ? _kPrimary : Colors.white,
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(
+                        color: selected ? _kPrimary : const Color(0xFFD0C8C0),
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      bookingState.selectedServiceIds.isEmpty
-                          ? 'Choose'
-                          : '${bookingState.estimatedDurationMinutes} min',
-                      style: GoogleFonts.cormorantGaramond(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    Text(
-                      bookingState.selectedServiceIds.isEmpty
-                          ? 'Starting at -'
-                          : bookingState.estimatedTotalCents == 0
-                              ? 'Custom quote'
-                              : 'Total ${formatPriceCents(bookingState.estimatedTotalCents)}',
+                    child: Text(
+                      m.displayName,
                       style: GoogleFonts.manrope(
                         fontSize: 13,
-                        color: AppColors.accent,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
+                        color: selected ? Colors.white : _kTextDark,
                       ),
                     ),
-                  ],
-                ),
-              );
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 20),
+          ],
 
-              return Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFFCF8),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: const Color(0xFFE7D8CB)),
-                ),
-                child: stackSummary
-                    ? Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          summaryDetails,
-                          const SizedBox(height: 16),
-                          estimateCard,
-                        ],
-                      )
-                    : Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(child: summaryDetails),
-                          const SizedBox(width: 18),
-                          estimateCard,
-                        ],
+          // Notes
+          Text(
+            'Notes (optional)',
+            style: GoogleFonts.manrope(
+                fontSize: 13, fontWeight: FontWeight.w700, color: _kTextDark),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _notesController,
+            maxLines: 3,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: InputDecoration(
+              hintText: 'Length preferences, allergies, inspiration photos…',
+              hintStyle: GoogleFonts.manrope(fontSize: 13, color: _kTextMid),
+              filled: true,
+              fillColor: _kHeroBg,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            ),
+            style: GoogleFonts.manrope(fontSize: 13, color: _kTextDark),
+          ),
+          const SizedBox(height: 20),
+
+          // Existing items with remove
+          if (widget.existingItems.isNotEmpty) ...[
+            Text(
+              'Already added',
+              style: GoogleFonts.manrope(
+                  fontSize: 13, fontWeight: FontWeight.w700, color: _kTextDark),
+            ),
+            const SizedBox(height: 8),
+            ...widget.existingItems.map((item) => Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.check_circle,
+                          size: 16, color: _kPrimary),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          item.notes.isEmpty
+                              ? widget.service.name
+                              : '${widget.service.name} — ${item.notes}',
+                          style: GoogleFonts.manrope(
+                              fontSize: 12, color: _kTextMid),
+                        ),
                       ),
-              );
-            },
+                      GestureDetector(
+                        onTap: () {
+                          widget.onRemove(item.id);
+                          Navigator.of(context).pop();
+                        },
+                        child: const Icon(Icons.close,
+                            size: 18, color: _kTextMid),
+                      ),
+                    ],
+                  ),
+                )),
+            const SizedBox(height: 12),
+          ],
+
+          // Buttons
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: _kPrimary),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: Text('Cancel',
+                      style: GoogleFonts.manrope(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: _kPrimary)),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 2,
+                child: ElevatedButton(
+                  onPressed: () {
+                    widget.onAdd(_selectedMemberId, _notesController.text.trim());
+                    Navigator.of(context).pop();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _kPrimary,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: Text('Add service',
+                      style: GoogleFonts.manrope(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white)),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -292,12 +369,471 @@ class _ServiceSelectionScreenState extends ConsumerState<ServiceSelectionScreen>
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Category pills
+// ─────────────────────────────────────────────────────────────────────────────
+class _CategoryPillsBar extends StatelessWidget {
+  const _CategoryPillsBar({
+    required this.selectedCategory,
+    required this.onCategoryTap,
+  });
+
+  final BookingServiceCategory selectedCategory;
+  final ValueChanged<BookingServiceCategory> onCategoryTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      clipBehavior: Clip.none,
+      child: Row(
+        children: [
+          for (final cat in BookingServiceCategory.values) ...[
+            _CategoryPill(
+              icon: _categoryIcon(cat),
+              label: _displayLabel(cat),
+              isSelected: selectedCategory == cat,
+              onTap: () => onCategoryTap(cat),
+            ),
+            const SizedBox(width: 8),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _CategoryPill extends StatelessWidget {
+  const _CategoryPill({
+    required this.icon,
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? _kPrimary : Colors.white,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: isSelected ? _kPrimary : const Color(0xFFD0C8C0),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon,
+                size: 14,
+                color: isSelected ? Colors.white : const Color(0xFF8B8178)),
+            const SizedBox(width: 5),
+            Text(
+              label,
+              style: GoogleFonts.manrope(
+                fontSize: 12,
+                fontWeight:
+                    isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: isSelected ? Colors.white : _kTextDark,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Service tile
+// ─────────────────────────────────────────────────────────────────────────────
+class _ServiceTile extends StatelessWidget {
+  const _ServiceTile({
+    required this.service,
+    required this.addedCount,
+    required this.onTap,
+    this.showDivider = true,
+  });
+
+  final BookingServiceOption service;
+  final int addedCount;
+  final VoidCallback onTap;
+  final bool showDivider;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(4),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 2),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // ── Image placeholder ──────────────────────────────────
+                Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    color: addedCount > 0
+                        ? const Color(0xFFEDD8D8)
+                        : _kPlaceImg,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: addedCount > 0
+                      ? Center(
+                          child: addedCount == 1
+                              ? const Icon(Icons.check,
+                                  color: _kPrimary, size: 26)
+                              : Text(
+                                  '×$addedCount',
+                                  style: GoogleFonts.manrope(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700,
+                                      color: _kPrimary),
+                                ),
+                        )
+                      : null,
+                ),
+                const SizedBox(width: 14),
+
+                // ── Text ───────────────────────────────────────────────
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        service.name,
+                        style: GoogleFonts.manrope(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: _kTextDark,
+                        ),
+                      ),
+                      if ((service.description ?? '').isNotEmpty) ...[
+                        const SizedBox(height: 3),
+                        Text(
+                          service.description!,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.manrope(
+                            fontSize: 12,
+                            color: _kTextMid,
+                            height: 1.45,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Text(
+                            '${service.durationMinutes} min',
+                            style: GoogleFonts.manrope(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: _kPrimary,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                              width: 1,
+                              height: 11,
+                              color: const Color(0xFFD8CFC8)),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Starting at ${service.priceLabel}',
+                            style: GoogleFonts.manrope(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: _kPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                // ── Trailing icon ──────────────────────────────────────
+                const SizedBox(width: 8),
+                Icon(
+                  addedCount > 0
+                      ? Icons.check_circle
+                      : Icons.chevron_right,
+                  size: 22,
+                  color: addedCount > 0
+                      ? _kPrimary
+                      : const Color(0xFFB8B0A8),
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (showDivider)
+          Container(height: 1, color: _kDivider),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Selected service items summary
+// ─────────────────────────────────────────────────────────────────────────────
+class _ServiceItemsSummary extends StatelessWidget {
+  const _ServiceItemsSummary({
+    required this.serviceItems,
+    required this.memberNames,
+    required this.onRemove,
+  });
+
+  final List<BookingServiceItem> serviceItems;
+  final Map<String, String> memberNames;
+  final void Function(String itemId) onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF5F0),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFEED8D0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Selected services',
+            style: GoogleFonts.manrope(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: _kPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          ...serviceItems.map(
+            (item) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                children: [
+                  const Icon(Icons.check_circle, size: 14, color: _kPrimary),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      [
+                        '${item.service.name}  ·  ${item.service.durationMinutes} min  ·  ${item.service.priceLabel}',
+                        if (item.assignedMemberId != null)
+                          'For: ${memberNames[item.assignedMemberId] ?? 'Unknown'}',
+                        if (item.notes.isNotEmpty) item.notes,
+                      ].join('\n'),
+                      style: GoogleFonts.manrope(fontSize: 12, color: _kTextMid),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => onRemove(item.id),
+                    child: const Icon(Icons.close, size: 18, color: _kTextMid),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Support / help section
+// ─────────────────────────────────────────────────────────────────────────────
+class _SupportSection extends StatelessWidget {
+  const _SupportSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _kHeroBg,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE2D8D0)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white,
+              border:
+                  Border.all(color: const Color(0xFFD8D0C8)),
+            ),
+            child: const Icon(Icons.chat_bubble_outline,
+                size: 18, color: _kTextMid),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Not sure what to book?',
+                  style: GoogleFonts.manrope(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: _kTextDark,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  "Message us and we'll help you choose the perfect service.",
+                  style: GoogleFonts.manrope(
+                      fontSize: 12, color: _kTextMid, height: 1.4),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          OutlinedButton(
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'Select a service or continue to notes if you want to describe what you need.',
+                  ),
+                ),
+              );
+            },
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 10, vertical: 6),
+              side: const BorderSide(color: _kPrimary),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8)),
+              minimumSize: const Size(0, 36),
+              textStyle: GoogleFonts.manrope(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.2,
+              ),
+            ),
+            child: const Text('MESSAGE US',
+                style: TextStyle(color: _kPrimary)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Empty states
+// ─────────────────────────────────────────────────────────────────────────────
+class _EmptyCatalog extends StatelessWidget {
+  const _EmptyCatalog();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 40),
+      child: Column(
+        children: [
+          const Icon(Icons.content_cut_outlined,
+              size: 40, color: Color(0xFFD0C8C0)),
+          const SizedBox(height: 12),
+          Text(
+            'No services published yet',
+            style: GoogleFonts.manrope(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: _kTextMid),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Run the seed migration or add services in Supabase.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.manrope(fontSize: 13, color: _kTextMid),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyCategory extends StatelessWidget {
+  const _EmptyCategory({required this.category});
+
+  final BookingServiceCategory category;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 32),
+      child: Text(
+        'No ${_displayLabel(category).toLowerCase()} services are currently available.',
+        style: GoogleFonts.manrope(fontSize: 13, color: _kTextMid),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Category helpers
+// ─────────────────────────────────────────────────────────────────────────────
+String _displayLabel(BookingServiceCategory cat) {
+  switch (cat) {
+    case BookingServiceCategory.women:
+      return 'Haircut & Styling';
+    case BookingServiceCategory.hairColor:
+      return 'Hair Color';
+    case BookingServiceCategory.men:
+      return 'Men';
+    case BookingServiceCategory.kids:
+      return 'Kids';
+    case BookingServiceCategory.addOns:
+      return 'Add-Ons';
+    case BookingServiceCategory.specialEventWedding:
+      return 'Special Event / Wedding';
+  }
+}
+
+IconData _categoryIcon(BookingServiceCategory cat) {
+  switch (cat) {
+    case BookingServiceCategory.women:
+      return Icons.content_cut;
+    case BookingServiceCategory.hairColor:
+      return Icons.color_lens_outlined;
+    case BookingServiceCategory.men:
+      return Icons.face_outlined;
+    case BookingServiceCategory.kids:
+      return Icons.child_care_outlined;
+    case BookingServiceCategory.addOns:
+      return Icons.add_circle_outline;
+    case BookingServiceCategory.specialEventWedding:
+      return Icons.local_florist_outlined;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Service categorization logic (preserved from original)
+// ─────────────────────────────────────────────────────────────────────────────
 BookingServiceCategory _categorizeService(BookingServiceOption service) {
   final name = service.name.toLowerCase();
   final exactCategory = bookingServiceCategoryByName[name];
-  if (exactCategory != null) {
-    return exactCategory;
-  }
+  if (exactCategory != null) return exactCategory;
 
   if (name.contains('highlight') ||
       name.contains('balayage') ||
@@ -306,7 +842,6 @@ BookingServiceCategory _categorizeService(BookingServiceOption service) {
       name.contains('color correction')) {
     return BookingServiceCategory.hairColor;
   }
-
   if (name.contains('bridal') ||
       name.contains('wedding') ||
       name.contains('bridesmaid') ||
@@ -316,8 +851,9 @@ BookingServiceCategory _categorizeService(BookingServiceOption service) {
       name.contains('event hair')) {
     return BookingServiceCategory.specialEventWedding;
   }
-
-  if (name.contains('kid') || name.contains('child') || name.contains('youth')) {
+  if (name.contains('kid') ||
+      name.contains('child') ||
+      name.contains('youth')) {
     return BookingServiceCategory.kids;
   }
   if (name.contains('men') ||
@@ -338,7 +874,6 @@ BookingServiceCategory _categorizeService(BookingServiceOption service) {
       name.contains('treatment')) {
     return BookingServiceCategory.addOns;
   }
-
   return BookingServiceCategory.women;
 }
 
@@ -351,493 +886,8 @@ int _compareServicesWithinCategory(
   final leftIndex = order.indexOf(left.name);
   final rightIndex = order.indexOf(right.name);
 
-  if (leftIndex != -1 && rightIndex != -1) {
-    return leftIndex.compareTo(rightIndex);
-  }
-  if (leftIndex != -1) {
-    return -1;
-  }
-  if (rightIndex != -1) {
-    return 1;
-  }
-
+  if (leftIndex != -1 && rightIndex != -1) return leftIndex.compareTo(rightIndex);
+  if (leftIndex != -1) return -1;
+  if (rightIndex != -1) return 1;
   return left.name.compareTo(right.name);
-}
-
-class _ServiceHeroCopy extends StatelessWidget {
-  const _ServiceHeroCopy({required this.category});
-
-  final BookingServiceCategory category;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Haircut & Styling',
-          style: GoogleFonts.cormorantGaramond(
-            fontSize: 48,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          _heroSubtitleForCategory(category),
-          style: GoogleFonts.manrope(
-            fontSize: 15,
-            height: 1.7,
-            color: AppColors.textSecondary,
-          ),
-        ),
-        const SizedBox(height: 18),
-        const Icon(Icons.favorite_border, color: AppColors.accent),
-      ],
-    );
-  }
-}
-
-String _heroSubtitleForCategory(BookingServiceCategory category) {
-  switch (category) {
-    case BookingServiceCategory.women:
-      return 'Women\'s haircut and styling services tailored for shape, movement, and polished in-home finishes.';
-    case BookingServiceCategory.hairColor:
-      return 'Dimension, brightness, root coverage, and corrective color services requested through the booking flow.';
-    case BookingServiceCategory.men:
-      return 'Men\'s grooming, fades, beard cleanup, and scalp care delivered at home.';
-    case BookingServiceCategory.kids:
-      return 'Kid-friendly haircut options, first-haircut moments, and simple finishing styles.';
-    case BookingServiceCategory.addOns:
-      return 'Treatments and finishing upgrades that pair with your core haircut, color, or event service.';
-    case BookingServiceCategory.specialEventWedding:
-      return 'Wedding-day styling, bridal previews, glam waves, and formal event hair for groups or individual appointments.';
-  }
-}
-
-class _ServiceHeroVisual extends StatelessWidget {
-  const _ServiceHeroVisual({required this.category});
-
-  final BookingServiceCategory category;
-
-  @override
-  Widget build(BuildContext context) {
-    final tones = _heroTones(category);
-
-    return Container(
-      height: 220,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [tones.$1, tones.$2],
-        ),
-      ),
-      child: Stack(
-        children: [
-          const Positioned(top: 18, right: 24, child: _MiniLeafSprig()),
-          Positioned(
-            left: 16,
-            bottom: 18,
-            child: Row(
-              children: const [
-                _HeroTool(width: 66),
-                SizedBox(width: 8),
-                _HeroTool(width: 48),
-                SizedBox(width: 8),
-                _HeroTool(width: 74),
-              ],
-            ),
-          ),
-          Positioned(
-            right: 16,
-            top: 22,
-            child: Container(
-              width: 76,
-              height: 140,
-              decoration: BoxDecoration(
-                color: const Color(0xFFE8DACB),
-                borderRadius: BorderRadius.circular(40),
-              ),
-            ),
-          ),
-          Positioned(
-            left: 26,
-            bottom: 26,
-            child: Container(
-              width: 82,
-              height: 122,
-              decoration: BoxDecoration(
-                color: const Color(0xFF1D1C20),
-                borderRadius: BorderRadius.circular(20),
-              ),
-            ),
-          ),
-          Positioned(
-            right: 30,
-            bottom: 20,
-            child: Container(
-              width: 160,
-              height: 180,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF7F0E7),
-                borderRadius: BorderRadius.circular(24),
-              ),
-              alignment: Alignment.bottomCenter,
-              child: Container(
-                width: 124,
-                height: 162,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [tones.$3, const Color(0xFFF7F1EA)],
-                  ),
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(62),
-                    bottom: Radius.circular(24),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-(Color, Color, Color) _heroTones(BookingServiceCategory category) {
-  switch (category) {
-    case BookingServiceCategory.women:
-      return (const Color(0xFFF8EEE6), const Color(0xFFE9D6CA), const Color(0xFF9C745C));
-    case BookingServiceCategory.hairColor:
-      return (const Color(0xFFF7EFE8), const Color(0xFFE9D7C7), const Color(0xFF8B5E3C));
-    case BookingServiceCategory.men:
-      return (const Color(0xFFF2ECE6), const Color(0xFFE1D1C6), const Color(0xFF4A372D));
-    case BookingServiceCategory.kids:
-      return (const Color(0xFFF7EEE7), const Color(0xFFECDCD0), const Color(0xFFC69463));
-    case BookingServiceCategory.addOns:
-      return (const Color(0xFFF5EDE6), const Color(0xFFE8D7CA), const Color(0xFF7B6254));
-    case BookingServiceCategory.specialEventWedding:
-      return (const Color(0xFFF8F1EA), const Color(0xFFEADBCF), const Color(0xFFAE7F67));
-  }
-}
-
-class _MiniLeafSprig extends StatelessWidget {
-  const _MiniLeafSprig();
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 120,
-      height: 60,
-      child: Stack(
-        children: List.generate(5, (index) {
-          return Positioned(
-            left: index * 18,
-            top: index.isEven ? 10 : 0,
-            child: Transform.rotate(
-              angle: 0.55,
-              child: Container(
-                width: 16,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF859370),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-              ),
-            ),
-          );
-        }),
-      ),
-    );
-  }
-}
-
-class _HeroTool extends StatelessWidget {
-  const _HeroTool({required this.width});
-
-  final double width;
-
-  @override
-  Widget build(BuildContext context) {
-    return Transform.rotate(
-      angle: -0.18,
-      child: Container(
-        width: width,
-        height: 10,
-        decoration: BoxDecoration(
-          color: const Color(0xFF43352F),
-          borderRadius: BorderRadius.circular(999),
-        ),
-      ),
-    );
-  }
-}
-
-class _CategoryChip extends StatelessWidget {
-  const _CategoryChip({
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return FilledButton(
-      onPressed: onTap,
-      style: FilledButton.styleFrom(
-        backgroundColor: isSelected ? AppColors.primary : const Color(0xFFFFFBF8),
-        foregroundColor: isSelected ? Colors.white : AppColors.textPrimary,
-        elevation: 0,
-      ),
-      child: Text(label),
-    );
-  }
-}
-
-class _ServiceListCard extends StatelessWidget {
-  const _ServiceListCard({
-    required this.service,
-    required this.isSelected,
-    required this.onTap,
-    required this.category,
-  });
-
-  final BookingServiceOption service;
-  final bool isSelected;
-  final VoidCallback onTap;
-  final BookingServiceCategory category;
-
-  @override
-  Widget build(BuildContext context) {
-    final tones = _heroTones(category);
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(24),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFFFFF6EF) : const Color(0xFFFFFCF9),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: isSelected ? AppColors.accent : const Color(0xFFE7D8CB),
-              width: isSelected ? 1.5 : 1,
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 110,
-                height: 110,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(18),
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [tones.$3, const Color(0xFFF4E9DE)],
-                  ),
-                ),
-                child: Center(
-                  child: Container(
-                    width: 72,
-                    height: 86,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF8F2EC),
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(36),
-                        bottom: Radius.circular(16),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            service.name,
-                            style: GoogleFonts.cormorantGaramond(
-                              fontSize: 28,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                        ),
-                        Icon(
-                          isSelected ? Icons.check_circle : Icons.chevron_right,
-                          color: isSelected ? AppColors.accent : AppColors.textMuted,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      service.description ??
-                          'Professional in-home hair service tailored to your household.',
-                      style: GoogleFonts.manrope(
-                        fontSize: 14,
-                        height: 1.55,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: 8,
-                      runSpacing: 6,
-                      children: [
-                        const Icon(
-                          Icons.schedule_outlined,
-                          size: 16,
-                          color: AppColors.textSecondary,
-                        ),
-                        Text(
-                          '${service.durationMinutes} min',
-                          style: GoogleFonts.manrope(
-                            fontSize: 13,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        Text(
-                          '|',
-                          style: GoogleFonts.manrope(
-                            color: const Color(0xFFD4C1AF),
-                          ),
-                        ),
-                        Text(
-                          'Starting at ${service.priceLabel}',
-                          style: GoogleFonts.manrope(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.accent,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SupportPrompt extends StatelessWidget {
-  const _SupportPrompt({required this.onPressed});
-
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final stack = constraints.maxWidth < 700;
-
-        if (stack) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFFE4D4C7)),
-                    ),
-                    child: const Icon(
-                      Icons.chat_bubble_outline,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(child: _SupportPromptCopy()),
-                ],
-              ),
-              const SizedBox(height: 14),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: OutlinedButton.icon(
-                  onPressed: onPressed,
-                  icon: const Icon(Icons.chat_bubble_outline),
-                  label: const Text('Message Us'),
-                ),
-              ),
-            ],
-          );
-        }
-
-        return Row(
-          children: [
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFFE4D4C7)),
-              ),
-              child: const Icon(Icons.chat_bubble_outline, color: AppColors.textSecondary),
-            ),
-            const SizedBox(width: 14),
-            const Expanded(child: _SupportPromptCopy()),
-            const SizedBox(width: 14),
-            Flexible(
-              child: OutlinedButton.icon(
-                onPressed: onPressed,
-                icon: const Icon(Icons.chat_bubble_outline),
-                label: const Text('Message Us'),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _SupportPromptCopy extends StatelessWidget {
-  const _SupportPromptCopy();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Not sure what to book?',
-          style: GoogleFonts.manrope(
-            fontSize: 15,
-            fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'Our stylists are here to help you choose the best fit.',
-          style: GoogleFonts.manrope(
-            fontSize: 13,
-            color: AppColors.textSecondary,
-          ),
-        ),
-      ],
-    );
-  }
 }

@@ -359,6 +359,7 @@ class AdminAppointmentDetail {
     required this.internalNotes,
     required this.safetyEvents,
     required this.availableStylists,
+    this.requestedStylistName,
   });
 
   final String id;
@@ -373,6 +374,7 @@ class AdminAppointmentDetail {
   final String? preferredTimeWindow;
   final int? estimatedTotalCents;
   final String? assignedStylistName;
+  final String? requestedStylistName;
   final List<AdminCheckInEvent> checkInEvents;
   final List<AdminInternalNote> internalNotes;
   final List<AdminSafetyEventSummary> safetyEvents;

@@ -25,12 +25,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final bookingList = find.byType(ListView).first;
-
     expect(find.text('Bob / Lob Haircut'), findsOneWidget);
     expect(find.text("Men's Haircut"), findsNothing);
 
-    await tester.drag(bookingList, const Offset(0, -900));
+    // Scroll the horizontal category pills bar to reveal the Men pill
+    await tester.ensureVisible(find.text('Men'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Men'));
     await tester.pumpAndSettle();
@@ -41,12 +40,16 @@ void main() {
     await tester.tap(find.text("Men's Haircut"));
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.text('Continue to notes'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Continue to notes'));
+    // Modal opens — tap "Add service" to confirm
+    await tester.tap(find.text('Add service'));
     await tester.pumpAndSettle();
 
-    expect(find.text('notes screen'), findsOneWidget);
+    await tester.ensureVisible(find.text('CONTINUE'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('CONTINUE'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('time screen'), findsOneWidget);
   });
 
   testWidgets('message us button shows guidance snackbar', (
@@ -65,9 +68,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.text('Message Us'));
+    await tester.ensureVisible(find.text('MESSAGE US'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Message Us'));
+    await tester.tap(find.text('MESSAGE US'));
     await tester.pump();
 
     expect(
@@ -86,10 +89,21 @@ void main() {
 
     final seedState = _buildSeedState().copyWith(
       selectedMemberIds: <String>{'member-1'},
-      selectedServiceIds: <String>{'service-1'},
+      serviceItems: [
+        BookingServiceItem(
+          id: 'item-1',
+          service: const BookingServiceOption(
+            id: 'service-1',
+            name: 'Bob / Lob Haircut',
+            description: 'Precision cut with a polished finish.',
+            durationMinutes: 60,
+            basePriceCents: 9500,
+            allowsMultipleParticipants: false,
+          ),
+        ),
+      ],
       preferredDate: DateTime(2026, 5, 20),
       preferredTimeWindow: 'morning',
-      paymentStatus: 'not_started',
       acceptedPolicy: false,
     );
 
@@ -127,6 +141,10 @@ Widget _buildTestApp({
         builder: (context, state) => const ServiceSelectionScreen(),
       ),
       GoRoute(
+        path: '/customer/book/time',
+        builder: (context, state) => const Scaffold(body: Text('time screen')),
+      ),
+      GoRoute(
         path: '/customer/book/household-members',
         builder: (context, state) => const Scaffold(body: Text('household screen')),
       ),
@@ -137,6 +155,10 @@ Widget _buildTestApp({
       GoRoute(
         path: '/customer/book/review',
         builder: (context, state) => const BookingReviewScreen(),
+      ),
+      GoRoute(
+        path: '/customer/book/details',
+        builder: (context, state) => const Scaffold(body: Text('details screen')),
       ),
       GoRoute(
         path: '/customer/book/payment',
@@ -240,9 +262,8 @@ BookingFlowState _buildSeedState() {
     ],
     selectedAddressId: 'address-1',
     selectedMemberIds: const <String>{},
-    selectedServiceIds: const <String>{},
+    serviceItems: const <BookingServiceItem>[],
     customerNotes: '',
-    photoDrafts: const <BookingPhotoDraft>[],
     preferredDate: null,
     preferredTimeWindow: null,
     paymentStatus: 'not_started',

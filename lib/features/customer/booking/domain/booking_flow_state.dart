@@ -108,6 +108,48 @@ class BookingPhotoDraft {
   final Uint8List bytes;
 }
 
+/// A single service item in the booking request, with optional member
+/// assignment, per-service notes, and inspiration photos.
+class BookingServiceItem {
+  const BookingServiceItem({
+    required this.id,
+    required this.service,
+    this.assignedMemberId,
+    this.notes = '',
+    this.photos = const [],
+  });
+
+  /// Locally-unique identifier (not persisted until booking is submitted).
+  final String id;
+  final BookingServiceOption service;
+
+  /// Which household member this service is for, or null for "unspecified".
+  final String? assignedMemberId;
+
+  /// Service-specific notes (e.g. "just a trim", "please style after cut").
+  final String notes;
+
+  /// Inspiration / reference photos for this specific service.
+  final List<BookingPhotoDraft> photos;
+
+  BookingServiceItem copyWith({
+    String? assignedMemberId,
+    bool clearAssignedMember = false,
+    String? notes,
+    List<BookingPhotoDraft>? photos,
+  }) {
+    return BookingServiceItem(
+      id: id,
+      service: service,
+      assignedMemberId: clearAssignedMember
+          ? null
+          : (assignedMemberId ?? this.assignedMemberId),
+      notes: notes ?? this.notes,
+      photos: photos ?? this.photos,
+    );
+  }
+}
+
 /// Human-friendly time window shown to customers and persisted as text.
 class BookingTimeWindowOption {
   const BookingTimeWindowOption({
@@ -180,14 +222,17 @@ class BookingFlowState {
     required this.services,
     required this.selectedAddressId,
     required this.selectedMemberIds,
-    required this.selectedServiceIds,
+    required this.serviceItems,
     required this.customerNotes,
-    required this.photoDrafts,
     required this.preferredDate,
     required this.preferredTimeWindow,
     required this.paymentStatus,
     required this.acceptedPolicy,
     required this.submittedAppointmentId,
+    this.customerPhone,
+    this.requestedStylistId,
+    this.requestedStylistName,
+    this.selectedSlotStartAt,
   });
 
   final String householdId;
@@ -197,14 +242,32 @@ class BookingFlowState {
   final List<BookingServiceOption> services;
   final String? selectedAddressId;
   final Set<String> selectedMemberIds;
-  final Set<String> selectedServiceIds;
+
+  /// Services added to this booking request, each with optional member
+  /// assignment, notes, and per-service photos.
+  final List<BookingServiceItem> serviceItems;
+
   final String customerNotes;
-  final List<BookingPhotoDraft> photoDrafts;
+
+  /// Customer contact phone number for in-home appointment logistics.
+  final String? customerPhone;
+
   final DateTime? preferredDate;
   final String? preferredTimeWindow;
   final String paymentStatus;
   final bool acceptedPolicy;
   final String? submittedAppointmentId;
+
+  /// Stylist the customer explicitly requested during booking.
+  /// Null means "no preference" — any available qualified stylist may be assigned.
+  final String? requestedStylistId;
+
+  /// Display name of the requested stylist, stored for review screen display.
+  final String? requestedStylistName;
+
+  /// The specific slot start time the customer selected in the slot picker.
+  /// When set, this overrides the generic preferredDate + preferredTimeWindow.
+  final DateTime? selectedSlotStartAt;
 
   factory BookingFlowState.seeded({
     required String householdId,
@@ -226,14 +289,17 @@ class BookingFlowState {
       services: services,
       selectedAddressId: serviceableAddress?.id,
       selectedMemberIds: <String>{},
-      selectedServiceIds: <String>{},
+      serviceItems: const <BookingServiceItem>[],
       customerNotes: '',
-      photoDrafts: const <BookingPhotoDraft>[],
+      customerPhone: null,
       preferredDate: null,
       preferredTimeWindow: null,
       paymentStatus: 'not_started',
       acceptedPolicy: false,
       submittedAppointmentId: null,
+      requestedStylistId: null,
+      requestedStylistName: null,
+      selectedSlotStartAt: null,
     );
   }
 
@@ -251,29 +317,38 @@ class BookingFlowState {
     return null;
   }
 
+  /// Convenience getter for the market ID of the selected address.
+  String? get marketId => selectedAddress?.marketId;
+
   List<BookingHouseholdMemberOption> get selectedMembers {
     return householdMembers
         .where((member) => selectedMemberIds.contains(member.id))
         .toList(growable: false);
   }
 
-  List<BookingServiceOption> get selectedServices {
-    return services
-        .where((service) => selectedServiceIds.contains(service.id))
-        .toList(growable: false);
-  }
+  /// Unique service IDs from all service items, derived from [serviceItems].
+  Set<String> get selectedServiceIds =>
+      serviceItems.map((item) => item.service.id).toSet();
+
+  /// Ordered list of services from [serviceItems].
+  List<BookingServiceOption> get selectedServices =>
+      serviceItems.map((item) => item.service).toList(growable: false);
+
+  /// All reference photos across all service items.
+  List<BookingPhotoDraft> get photoDrafts =>
+      serviceItems.expand((item) => item.photos).toList(growable: false);
 
   int get estimatedTotalCents {
-    return selectedServices.fold<int>(
+    return serviceItems.fold<int>(
       0,
-      (total, service) => total + service.basePriceCents,
+      (total, item) => total + item.service.basePriceCents,
     );
   }
 
   int get estimatedDurationMinutes {
-    return selectedServices.fold<int>(
+    return serviceItems.fold<int>(
       0,
-      (total, service) => total + service.durationMinutes,
+      (total, item) => total + item.service.durationMinutes,
     );
   }
 
@@ -285,9 +360,10 @@ class BookingFlowState {
     List<BookingServiceOption>? services,
     String? selectedAddressId,
     Set<String>? selectedMemberIds,
-    Set<String>? selectedServiceIds,
+    List<BookingServiceItem>? serviceItems,
     String? customerNotes,
-    List<BookingPhotoDraft>? photoDrafts,
+    String? customerPhone,
+    bool clearCustomerPhone = false,
     DateTime? preferredDate,
     bool clearPreferredDate = false,
     String? preferredTimeWindow,
@@ -296,6 +372,11 @@ class BookingFlowState {
     bool? acceptedPolicy,
     String? submittedAppointmentId,
     bool clearSubmittedAppointmentId = false,
+    String? requestedStylistId,
+    bool clearRequestedStylist = false,
+    String? requestedStylistName,
+    DateTime? selectedSlotStartAt,
+    bool clearSelectedSlot = false,
   }) {
     return BookingFlowState(
       householdId: householdId ?? this.householdId,
@@ -305,19 +386,30 @@ class BookingFlowState {
       services: services ?? this.services,
       selectedAddressId: selectedAddressId ?? this.selectedAddressId,
       selectedMemberIds: selectedMemberIds ?? this.selectedMemberIds,
-      selectedServiceIds: selectedServiceIds ?? this.selectedServiceIds,
+      serviceItems: serviceItems ?? this.serviceItems,
       customerNotes: customerNotes ?? this.customerNotes,
-      photoDrafts: photoDrafts ?? this.photoDrafts,
+      customerPhone: clearCustomerPhone
+          ? null
+          : (customerPhone ?? this.customerPhone),
       preferredDate:
           clearPreferredDate ? null : (preferredDate ?? this.preferredDate),
       preferredTimeWindow: clearPreferredTimeWindow
           ? null
           : (preferredTimeWindow ?? this.preferredTimeWindow),
-        paymentStatus: paymentStatus ?? this.paymentStatus,
+      paymentStatus: paymentStatus ?? this.paymentStatus,
       acceptedPolicy: acceptedPolicy ?? this.acceptedPolicy,
       submittedAppointmentId: clearSubmittedAppointmentId
           ? null
           : (submittedAppointmentId ?? this.submittedAppointmentId),
+      requestedStylistId: clearRequestedStylist
+          ? null
+          : (requestedStylistId ?? this.requestedStylistId),
+      requestedStylistName: clearRequestedStylist
+          ? null
+          : (requestedStylistName ?? this.requestedStylistName),
+      selectedSlotStartAt: clearSelectedSlot
+          ? null
+          : (selectedSlotStartAt ?? this.selectedSlotStartAt),
     );
   }
 }

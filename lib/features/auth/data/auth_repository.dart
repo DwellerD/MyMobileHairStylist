@@ -2,6 +2,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../domain/app_user.dart';
 
+enum SignUpOutcome {
+  signedIn,
+  confirmationRequired,
+}
+
 /// Repository responsible for all Supabase auth and profile queries.
 ///
 /// Widgets should never talk to Supabase directly. They ask providers, and the
@@ -51,14 +56,16 @@ class AuthRepository {
   ///
   /// The companion SQL migration creates `user_profiles`, `user_roles`, and
   /// `customer_profiles` rows automatically when a new auth user is created.
-  Future<void> signUpCustomer({
+  Future<SignUpOutcome> signUpCustomer({
     required String email,
     required String password,
     required String firstName,
     required String lastName,
+    Map<String, dynamic>? additionalData,
   }) async {
     final client = _requireClient();
     final defaultMarketId = await _fetchDefaultMarketId();
+    final emailRedirectTo = _emailRedirectTo();
 
     try {
       final response = await client.auth.signUp(
@@ -68,7 +75,9 @@ class AuthRepository {
           'first_name': firstName.trim(),
           'last_name': lastName.trim(),
           'default_market_id': defaultMarketId,
+          ...?additionalData,
         },
+        emailRedirectTo: emailRedirectTo,
       );
 
       if (response.user == null) {
@@ -77,16 +86,20 @@ class AuthRepository {
         );
       }
 
-      // If a session exists immediately, confirm the profile rows are readable.
-      if (response.session != null) {
-        final appUser = await getCurrentAppUser();
-
-        if (appUser == null) {
-          throw const AuthRepositoryException(
-            'Your account was created, but we could not finish setting up your profile. Please contact support.',
-          );
-        }
+      if (response.session == null) {
+        return SignUpOutcome.confirmationRequired;
       }
+
+      // If a session exists immediately, confirm the profile rows are readable.
+      final appUser = await getCurrentAppUser();
+
+      if (appUser == null) {
+        throw const AuthRepositoryException(
+          'Your account was created, but we could not finish setting up your profile. Please contact support.',
+        );
+      }
+
+      return SignUpOutcome.signedIn;
     } on AuthRepositoryException {
       rethrow;
     } on AuthException catch (error) {
@@ -149,7 +162,7 @@ class AuthRepository {
         profile: profile,
         roleValue: roleValue,
       );
-    } on PostgrestException catch (_) {
+    } on PostgrestException {
       throw const AuthRepositoryException(
         'We could not load your profile. Please try again.',
       );
@@ -194,7 +207,20 @@ class AuthRepository {
       return 'An account with that email already exists.';
     }
 
+    if (originalMessage.toLowerCase().contains('email rate limit exceeded')) {
+      return 'Too many signup emails were sent. Please wait a bit before trying again, or log in with an existing account to finish the application.';
+    }
+
     return originalMessage;
+  }
+
+  String? _emailRedirectTo() {
+    final base = Uri.base;
+    if (base.scheme != 'http' && base.scheme != 'https') {
+      return null;
+    }
+
+    return base.replace(path: '/', query: null, fragment: '/stylist/apply').toString();
   }
 }
 

@@ -59,31 +59,46 @@ class AuthActionController extends AsyncNotifier<void> {
     final repository = ref.read(authRepositoryProvider);
 
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
+    final nextState = await AsyncValue.guard(() async {
       await repository.signIn(email: email, password: password);
       ref.invalidate(currentAppUserProvider);
     });
+    state = nextState;
+
+    if (nextState.hasError) {
+      throw nextState.error!;
+    }
   }
 
   /// Creates a default customer account.
-  Future<void> signUpCustomer({
+  Future<SignUpOutcome> signUpCustomer({
     required String email,
     required String password,
     required String firstName,
     required String lastName,
+    Map<String, dynamic>? additionalData,
   }) async {
     final repository = ref.read(authRepositoryProvider);
 
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
-      await repository.signUpCustomer(
+    SignUpOutcome? outcome;
+    final nextState = await AsyncValue.guard(() async {
+      outcome = await repository.signUpCustomer(
         email: email,
         password: password,
         firstName: firstName,
         lastName: lastName,
+        additionalData: additionalData,
       );
       ref.invalidate(currentAppUserProvider);
     });
+    state = nextState;
+
+    if (nextState.hasError) {
+      throw nextState.error!;
+    }
+
+    return outcome!;
   }
 
   /// Ends the current session.
@@ -91,9 +106,14 @@ class AuthActionController extends AsyncNotifier<void> {
     final repository = ref.read(authRepositoryProvider);
 
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
+    final nextState = await AsyncValue.guard(() async {
       await repository.signOut();
       ref.invalidate(currentAppUserProvider);
     });
+    state = nextState;
+
+    if (nextState.hasError) {
+      throw nextState.error!;
+    }
   }
 }

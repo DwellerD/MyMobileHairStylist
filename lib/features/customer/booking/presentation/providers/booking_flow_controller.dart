@@ -34,12 +34,89 @@ class BookingFlowController extends AutoDisposeAsyncNotifier<BookingFlowState> {
 
   void toggleService(String serviceId) {
     final current = _requireState();
-    final selected = Set<String>.from(current.selectedServiceIds);
-    if (!selected.add(serviceId)) {
-      selected.remove(serviceId);
+    final existingIndex =
+        current.serviceItems.indexWhere((item) => item.service.id == serviceId);
+    if (existingIndex >= 0) {
+      final updated = List<BookingServiceItem>.from(current.serviceItems)
+        ..removeAt(existingIndex);
+      state = AsyncData(current.copyWith(serviceItems: updated));
+    } else {
+      final service =
+          current.services.firstWhere((s) => s.id == serviceId);
+      final autoMemberId = current.selectedMemberIds.length == 1
+          ? current.selectedMemberIds.first
+          : null;
+      final newItem = BookingServiceItem(
+        id: '${serviceId}_${DateTime.now().microsecondsSinceEpoch}',
+        service: service,
+        assignedMemberId: autoMemberId,
+      );
+      state = AsyncData(
+        current.copyWith(
+          serviceItems: [...current.serviceItems, newItem],
+        ),
+      );
     }
+  }
 
-    state = AsyncData(current.copyWith(selectedServiceIds: selected));
+  /// Add a service item with optional member assignment, notes, and photos.
+  void addServiceItem({
+    required BookingServiceOption service,
+    String? assignedMemberId,
+    String notes = '',
+    List<BookingPhotoDraft> photos = const [],
+  }) {
+    final current = _requireState();
+    final newItem = BookingServiceItem(
+      id: '${service.id}_${DateTime.now().microsecondsSinceEpoch}',
+      service: service,
+      assignedMemberId: assignedMemberId,
+      notes: notes,
+      photos: photos,
+    );
+    state = AsyncData(
+      current.copyWith(serviceItems: [...current.serviceItems, newItem]),
+    );
+  }
+
+  /// Remove a service item by its [itemId].
+  void removeServiceItem(String itemId) {
+    final current = _requireState();
+    state = AsyncData(
+      current.copyWith(
+        serviceItems: current.serviceItems
+            .where((item) => item.id != itemId)
+            .toList(growable: false),
+      ),
+    );
+  }
+
+  /// Update an existing service item's member assignment, notes, or photos.
+  void updateServiceItem(
+    String itemId, {
+    String? assignedMemberId,
+    bool clearAssignedMember = false,
+    String? notes,
+    List<BookingPhotoDraft>? photos,
+  }) {
+    final current = _requireState();
+    final updated = current.serviceItems.map((item) {
+      if (item.id != itemId) return item;
+      return item.copyWith(
+        assignedMemberId: assignedMemberId,
+        clearAssignedMember: clearAssignedMember,
+        notes: notes,
+        photos: photos,
+      );
+    }).toList(growable: false);
+    state = AsyncData(current.copyWith(serviceItems: updated));
+  }
+
+  /// Set the customer's contact phone number.
+  void setPhone(String phone) {
+    state = AsyncData(
+      _requireState().copyWith(customerPhone: phone.trim()),
+    );
   }
 
   void setNotes(String notes) {
@@ -56,6 +133,42 @@ class BookingFlowController extends AutoDisposeAsyncNotifier<BookingFlowState> {
     );
   }
 
+  /// Set a specific stylist the customer wants to book with.
+  /// Pass null for both arguments to clear the preference (no preference).
+  void setRequestedStylist({required String? stylistId, required String? stylistName}) {
+    final current = _requireState();
+    if (stylistId == null) {
+      state = AsyncData(current.copyWith(clearRequestedStylist: true, clearSelectedSlot: true));
+    } else {
+      state = AsyncData(
+        current.copyWith(
+          requestedStylistId: stylistId,
+          requestedStylistName: stylistName,
+          clearSelectedSlot: true,
+        ),
+      );
+    }
+  }
+
+  /// Set the specific time slot the customer chose in the slot picker.
+  ///
+  /// Also synchronises [BookingFlowState.preferredDate] and
+  /// [BookingFlowState.preferredTimeWindow] so the review screen and database
+  /// row continue to work without changes.
+  void setSelectedSlot(DateTime slotStartAt, int durationMinutes) {
+    final slotEndAt = slotStartAt.add(Duration(minutes: durationMinutes));
+    final timeLabel =
+        '${_formatSlotTime(slotStartAt)} – ${_formatSlotTime(slotEndAt)}';
+
+    state = AsyncData(
+      _requireState().copyWith(
+        selectedSlotStartAt: slotStartAt,
+        preferredDate: slotStartAt,
+        preferredTimeWindow: timeLabel,
+      ),
+    );
+  }
+
   void setPaymentStatus(String paymentStatus) {
     state = AsyncData(_requireState().copyWith(paymentStatus: paymentStatus));
   }
@@ -64,28 +177,10 @@ class BookingFlowController extends AutoDisposeAsyncNotifier<BookingFlowState> {
     state = AsyncData(_requireState().copyWith(acceptedPolicy: value));
   }
 
-  void addPhotoDrafts(List<BookingPhotoDraft> newDrafts) {
-    final current = _requireState();
-    state = AsyncData(
-      current.copyWith(
-        photoDrafts: <BookingPhotoDraft>[
-          ...current.photoDrafts,
-          ...newDrafts,
-        ],
-      ),
-    );
-  }
-
-  void removePhotoDraft(String fileName) {
-    final current = _requireState();
-    state = AsyncData(
-      current.copyWith(
-        photoDrafts: current.photoDrafts
-            .where((draft) => draft.fileName != fileName)
-            .toList(growable: false),
-      ),
-    );
-  }
+  /// Photos are now stored per service item. These methods are kept for
+  /// backward compatibility with legacy screens but have no effect.
+  void addPhotoDrafts(List<BookingPhotoDraft> newDrafts) {}
+  void removePhotoDraft(String fileName) {}
 
   Future<void> createAddress({
     required String label,
@@ -169,14 +264,16 @@ class BookingFlowController extends AutoDisposeAsyncNotifier<BookingFlowState> {
     state = AsyncData(
       current.copyWith(
         selectedMemberIds: <String>{},
-        selectedServiceIds: <String>{},
+        serviceItems: const <BookingServiceItem>[],
         customerNotes: '',
-        photoDrafts: const <BookingPhotoDraft>[],
+        clearCustomerPhone: true,
         clearPreferredDate: true,
         clearPreferredTimeWindow: true,
         paymentStatus: 'not_started',
         acceptedPolicy: false,
         clearSubmittedAppointmentId: true,
+        clearRequestedStylist: true,
+        clearSelectedSlot: true,
       ),
     );
   }
@@ -203,4 +300,16 @@ class BookingFlowController extends AutoDisposeAsyncNotifier<BookingFlowState> {
 
     return appUser;
   }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ──────────────────────────────────────────────────────────────────────────────
+
+String _formatSlotTime(DateTime dt) {
+  final hour =
+      dt.hour == 0 ? 12 : (dt.hour > 12 ? dt.hour - 12 : dt.hour);
+  final minute = dt.minute.toString().padLeft(2, '0');
+  final suffix = dt.hour >= 12 ? 'PM' : 'AM';
+  return '$hour:$minute $suffix';
 }

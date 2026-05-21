@@ -109,6 +109,8 @@ safety_events(id, appointment_id, event_type, status, details, created_at)
     final customerUserProfile = customerProfile?['user_profile'] as Map<String, dynamic>?;
     final assignedStylist = response['assigned_stylist'] as Map<String, dynamic>?;
     final assignedStylistUser = assignedStylist?['user_profile'] as Map<String, dynamic>?;
+    final requestedStylist = response['requested_stylist'] as Map<String, dynamic>?;
+    final requestedStylistUser = requestedStylist?['user_profile'] as Map<String, dynamic>?;
 
     return AdminAppointmentDetail(
       id: response['id'] as String,
@@ -151,6 +153,10 @@ safety_events(id, appointment_id, event_type, status, details, created_at)
       assignedStylistName: _joinName(
         assignedStylistUser?['first_name'] as String?,
         assignedStylistUser?['last_name'] as String?,
+      ),
+      requestedStylistName: _joinName(
+        requestedStylistUser?['first_name'] as String?,
+        requestedStylistUser?['last_name'] as String?,
       ),
       checkInEvents: ((response['check_ins'] as List<dynamic>?) ?? const <dynamic>[])
           .map(_mapCheckInEvent)

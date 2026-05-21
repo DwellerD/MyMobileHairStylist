@@ -25,7 +25,7 @@ class BookingPhotoUploadScreen extends ConsumerWidget {
 
     return BookingStepScaffold(
       stepNumber: 5,
-      totalSteps: 8,
+      totalSteps: 9,
       title: 'Add reference photos',
       subtitle:
           'Photos are optional, but they help admin and stylists prepare for color work, hair goals, or sensory-aware planning.',
@@ -35,7 +35,7 @@ class BookingPhotoUploadScreen extends ConsumerWidget {
       onSecondaryPressed: () => context.go('/customer/book/notes'),
       primaryLabel: 'Continue to preferred time',
       primaryIcon: Icons.arrow_forward,
-      onPrimaryPressed: () => context.go('/customer/book/time'),
+      onPrimaryPressed: () => context.go('/customer/book/stylist'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

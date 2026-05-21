@@ -1,8 +1,8 @@
 enum BookingServiceCategory {
   women('Women'),
-  hairColor('Hair Color'),
   men('Men'),
   kids('Kids'),
+  hairColor('Hair Color'),
   addOns('Add-Ons'),
   specialEventWedding('Special Event / Wedding');
 

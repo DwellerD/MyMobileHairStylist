@@ -87,13 +87,16 @@ class RoleShell extends ConsumerWidget {
             BottomNavigationBarItem(icon: Icon(item.icon), label: item.label),
         ],
       ),
-      floatingActionButton: role == AppUserRole.customer
-          ? FloatingActionButton.extended(
-              onPressed: () => context.go('/customer/book'),
-              label: const Text('Book now'),
-              icon: const Icon(Icons.calendar_month_outlined),
-            )
-          : null,
+      floatingActionButton: () {
+        if (role != AppUserRole.customer) return null;
+        final currentPath = GoRouterState.of(context).uri.path;
+        if (currentPath.startsWith('/customer/book')) return null;
+        return FloatingActionButton.extended(
+          onPressed: () => context.go('/customer/book'),
+          label: const Text('Book now'),
+          icon: const Icon(Icons.calendar_month_outlined),
+        );
+      }(),
     );
   }
 }

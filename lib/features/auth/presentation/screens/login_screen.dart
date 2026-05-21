@@ -151,12 +151,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       return;
     }
 
-    await ref.read(authActionControllerProvider.notifier).signIn(
-          email: _emailController.text,
-          password: _passwordController.text,
-        );
+    try {
+      await ref.read(authActionControllerProvider.notifier).signIn(
+            email: _emailController.text,
+            password: _passwordController.text,
+          );
+    } catch (_) {
+      return;
+    }
 
-    final appUser = await ref.refresh(currentAppUserProvider.future);
+    ref.invalidate(currentAppUserProvider);
+    final appUser = await ref.read(authRepositoryProvider).getCurrentAppUser();
     if (!mounted) {
       return;
     }

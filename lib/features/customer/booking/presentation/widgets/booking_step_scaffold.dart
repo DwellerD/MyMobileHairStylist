@@ -1,22 +1,40 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // used by bookingErrorMessage helper
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/app_spacing.dart';
-import '../../../../../shared/widgets/app_primary_button.dart';
-import '../../../../../shared/widgets/app_secondary_button.dart';
+// ── Brand colour for the booking flow ──────────────────────────────────────
+const Color _kPrimary   = Color(0xFF8B3838);
+const Color _kHeroBg    = Color(0xFFF5EDE4);
+const Color _kDivider   = Color(0xFFEEE8E2);
+const Color _kTextDark  = Color(0xFF1A1212);
+const Color _kTextMid   = Color(0xFF6B6260);
+const Color _kPlaceholder = Color(0xFFDDD6CE);
 
-/// Shared layout wrapper used across each booking step screen.
+// ── Public error-message helper used by booking screens ────────────────────
+String? bookingErrorMessage(AsyncValue<dynamic> asyncValue) {
+  if (!asyncValue.hasError) return null;
+  return asyncValue.asError!.error.toString().replaceFirst('Exception: ', '');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+/// Shared scaffold used by every booking-flow step.
+///
+/// [displayStep] drives the 5-segment visual stepper:
+///   1 = Who   2 = Services   3 = Date & Time   4 = Details   5 = Review
+// ─────────────────────────────────────────────────────────────────────────────
 class BookingStepScaffold extends StatelessWidget {
   const BookingStepScaffold({
-    required this.stepNumber,
-    required this.totalSteps,
     required this.title,
     required this.subtitle,
     required this.child,
     required this.primaryLabel,
     required this.onPrimaryPressed,
+    this.heroWidget,
+    this.displayStep = 1,
+    // legacy params kept for compatibility with existing step screens
+    this.stepNumber = 1,
+    this.totalSteps = 9,
     this.secondaryLabel,
     this.onSecondaryPressed,
     this.primaryIcon,
@@ -26,13 +44,15 @@ class BookingStepScaffold extends StatelessWidget {
     super.key,
   });
 
-  final int stepNumber;
-  final int totalSteps;
   final String title;
   final String subtitle;
+  final Widget? heroWidget;
   final Widget child;
   final String primaryLabel;
   final VoidCallback? onPrimaryPressed;
+  final int displayStep;
+  final int stepNumber;
+  final int totalSteps;
   final String? secondaryLabel;
   final VoidCallback? onSecondaryPressed;
   final IconData? primaryIcon;
@@ -42,644 +62,333 @@ class BookingStepScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width;
-    final isWide = width >= 980;
-
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.pagePadding),
+      backgroundColor: Colors.white,
+      appBar: _buildAppBar(context),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(32),
-              gradient: const LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFFFFFCF8),
-                  Color(0xFFF7EEE6),
-                ],
-              ),
-              border: Border.all(color: const Color(0xFFE7D8CB)),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x12000000),
-                  blurRadius: 28,
-                  offset: Offset(0, 14),
+          if (showProgress) _BookingStepper(displayStep: displayStep),
+          Expanded(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                _BookingHeroStrip(
+                  title: title,
+                  subtitle: subtitle,
+                  displayStep: displayStep,
+                  heroWidget: heroWidget,
+                ),
+                if (errorMessage != null) _ErrorBanner(message: errorMessage!),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 120),
+                  child: child,
                 ),
               ],
             ),
-            child: Padding(
-              padding: EdgeInsets.all(isWide ? 28 : 18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _BookingHero(
-                    title: title,
-                    subtitle: subtitle,
-                    stepNumber: stepNumber,
-                    totalSteps: totalSteps,
-                    showProgress: showProgress,
-                  ),
-                  const SizedBox(height: AppSpacing.sectionGap),
-                  if (errorMessage != null) ...[
-                    Container(
-                      padding: const EdgeInsets.all(AppSpacing.cardPadding),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFF6EC),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: const Color(0xFFE8D5C3)),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(Icons.error_outline, color: AppColors.warning),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: Text(
-                              errorMessage!,
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sectionGap),
-                  ],
-                  child,
-                  const SizedBox(height: AppSpacing.sectionGap),
-                  Container(
-                    padding: const EdgeInsets.all(AppSpacing.cardPadding),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFFBF8),
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: const Color(0xFFE7D8CB)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (secondaryLabel != null) ...[
-                          AppSecondaryButton(
-                            label: secondaryLabel!,
-                            onPressed: isBusy ? null : onSecondaryPressed,
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                        ],
-                        AppPrimaryButton(
-                          label: isBusy ? 'Working...' : primaryLabel,
-                          icon: primaryIcon,
-                          onPressed: isBusy ? null : onPrimaryPressed,
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            final stackNotice = constraints.maxWidth < 360;
-
-                            if (stackNotice) {
-                              return Column(
-                                children: [
-                                  const Icon(
-                                    Icons.lock_outline,
-                                    size: 16,
-                                    color: AppColors.textMuted,
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    'Your booking information is safe and secure.',
-                                    textAlign: TextAlign.center,
-                                    style: GoogleFonts.manrope(
-                                      fontSize: 12,
-                                      color: AppColors.textMuted,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              );
-                            }
-
-                            return Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(
-                                  Icons.lock_outline,
-                                  size: 16,
-                                  color: AppColors.textMuted,
-                                ),
-                                const SizedBox(width: 8),
-                                Flexible(
-                                  child: Text(
-                                    'Your booking information is safe and secure.',
-                                    textAlign: TextAlign.center,
-                                    style: GoogleFonts.manrope(
-                                      fontSize: 12,
-                                      color: AppColors.textMuted,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ),
         ],
+      ),
+      bottomNavigationBar: _ContinueBar(
+        label: primaryLabel,
+        onPressed: isBusy ? null : onPrimaryPressed,
+        isBusy: isBusy,
+        secondaryLabel: secondaryLabel,
+        onSecondaryPressed: onSecondaryPressed,
+      ),
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
+    return AppBar(
+      backgroundColor: Colors.white,
+      elevation: 0,
+      surfaceTintColor: Colors.transparent,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back_ios_new,
+            size: 20, color: _kTextDark),
+        onPressed: () =>
+            context.canPop() ? context.pop() : context.go('/customer/home'),
+      ),
+      centerTitle: true,
+      title: Text(
+        'Book Appointment',
+        style: GoogleFonts.manrope(
+          fontSize: 17,
+          fontWeight: FontWeight.w700,
+          color: _kTextDark,
+        ),
+      ),
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Container(height: 1, color: _kDivider),
       ),
     );
   }
 }
 
-class _BookingHero extends StatelessWidget {
-  const _BookingHero({
-    required this.title,
-    required this.subtitle,
-    required this.stepNumber,
-    required this.totalSteps,
-    required this.showProgress,
-  });
+// ─────────────────────────────────────────────────────────────────────────────
+// 4-step progress stepper
+// ─────────────────────────────────────────────────────────────────────────────
+class _BookingStepper extends StatelessWidget {
+  const _BookingStepper({required this.displayStep});
 
-  final String title;
-  final String subtitle;
-  final int stepNumber;
-  final int totalSteps;
-  final bool showProgress;
+  final int displayStep;
+
+  static const _steps = [
+    (Icons.people_outline,             'Who'),
+    (Icons.content_cut,                'Services'),
+    (Icons.calendar_today_outlined,    'Date & Time'),
+    (Icons.home_outlined,              'Details'),
+    (Icons.check_circle_outline,       'Review'),
+  ];
 
   @override
   Widget build(BuildContext context) {
-    final isWide = MediaQuery.sizeOf(context).width >= 980;
-
     return Container(
-      padding: EdgeInsets.all(isWide ? 28 : 20),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFFFFBF8), Color(0xFFF1E4D9)],
-        ),
-      ),
-      child: Column(
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (isWide)
-            const _BookingTopNav()
-          else
-            const _BookingBrandCompact(),
-          const SizedBox(height: 20),
-          if (isWide)
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: _BookingHeroCopy(
-                    title: title,
-                    subtitle: subtitle,
-                    stepNumber: stepNumber,
-                    totalSteps: totalSteps,
-                    showProgress: showProgress,
+          for (int i = 0; i < _steps.length; i++) ...[
+            _StepItem(
+              icon: _steps[i].$1,
+              label: _steps[i].$2,
+              stepIndex: i + 1,
+              isActive: i == displayStep - 1,
+              isCompleted: i < displayStep - 1,
+            ),
+            if (i < _steps.length - 1)
+              Expanded(
+                child: Padding(
+                  // 17 = half of 34px circle, aligns line to circle centre
+                  padding: const EdgeInsets.only(top: 17),
+                  child: Container(
+                    height: 2,
+                    color: i < displayStep - 1
+                        ? _kPrimary
+                        : const Color(0xFFE2DAD4),
                   ),
                 ),
-                const SizedBox(width: 24),
-                const Expanded(child: _BookingHeroVisual()),
-              ],
-            )
-          else ...[
-            _BookingHeroCopy(
-              title: title,
-              subtitle: subtitle,
-              stepNumber: stepNumber,
-              totalSteps: totalSteps,
-              showProgress: showProgress,
-            ),
-            const SizedBox(height: 18),
-            const _BookingHeroVisual(),
+              ),
           ],
-          const SizedBox(height: 24),
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: const Color(0xCCFFFDF9),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: const Color(0xFFE7D8CB)),
-            ),
-            child: Column(
-              children: [
-                Text(
-                  'Book in',
-                  style: GoogleFonts.cormorantGaramond(
-                    fontSize: 34,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                Transform.translate(
-                  offset: const Offset(42, -10),
-                  child: Text(
-                    'easy steps',
-                    style: GoogleFonts.parisienne(
-                      fontSize: 36,
-                      color: AppColors.accent,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                _BookingProgressRow(
-                  stepNumber: stepNumber,
-                  totalSteps: totalSteps,
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );
   }
 }
 
-class _BookingTopNav extends StatelessWidget {
-  const _BookingTopNav();
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const Expanded(child: _BookingBrandCompact()),
-        ...const [
-          _BookingNavItem(label: 'HOME'),
-          _BookingNavItem(label: 'SERVICES'),
-          _BookingNavItem(label: 'ABOUT'),
-          _BookingNavItem(label: 'GALLERY'),
-          _BookingNavItem(label: 'BOOKING', isActive: true),
-          _BookingNavItem(label: 'CONTACT'),
-        ],
-        const SizedBox(width: 16),
-        FilledButton(
-          onPressed: null,
-          style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF232125),
-            disabledBackgroundColor: const Color(0xFF232125),
-            disabledForegroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
-          ),
-          child: const Text('BOOK NOW'),
-        ),
-      ],
-    );
-  }
-}
-
-class _BookingBrandCompact extends StatelessWidget {
-  const _BookingBrandCompact();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          'My',
-          style: GoogleFonts.parisienne(
-            fontSize: 28,
-            color: AppColors.accent,
-          ),
-        ),
-        Text(
-          'MOBILE',
-          style: GoogleFonts.cormorantGaramond(
-            fontSize: 34,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        Text(
-          'HAIR STYLIST',
-          style: GoogleFonts.manrope(
-            fontSize: 10,
-            color: AppColors.accent,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 3,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _BookingNavItem extends StatelessWidget {
-  const _BookingNavItem({required this.label, this.isActive = false});
-
-  final String label;
-  final bool isActive;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            style: GoogleFonts.manrope(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.1,
-              color: isActive ? AppColors.accent : AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 4),
-          SizedBox(
-            width: 42,
-            child: Divider(
-              color: isActive ? const Color(0xFFE7CDBB) : Colors.transparent,
-              thickness: 2,
-              height: 2,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BookingHeroCopy extends StatelessWidget {
-  const _BookingHeroCopy({
-    required this.title,
-    required this.subtitle,
-    required this.stepNumber,
-    required this.totalSteps,
-    required this.showProgress,
+class _StepItem extends StatelessWidget {
+  const _StepItem({
+    required this.icon,
+    required this.label,
+    required this.stepIndex,
+    required this.isActive,
+    required this.isCompleted,
   });
-
-  final String title;
-  final String subtitle;
-  final int stepNumber;
-  final int totalSteps;
-  final bool showProgress;
-
-  @override
-  Widget build(BuildContext context) {
-    final isWide = MediaQuery.sizeOf(context).width >= 980;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'BOOK YOUR',
-          style: GoogleFonts.manrope(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 4,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        Text(
-          'Appointment',
-          style: GoogleFonts.cormorantGaramond(
-            fontSize: isWide ? 62 : 48,
-            height: 0.95,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Container(
-          width: 180,
-          height: 1,
-          color: const Color(0xFFD9C7B8),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          subtitle,
-          style: GoogleFonts.manrope(
-            fontSize: 15,
-            height: 1.7,
-            color: AppColors.textSecondary,
-          ),
-        ),
-        if (showProgress) ...[
-          const SizedBox(height: 18),
-          Text(
-            'Current step: $stepNumber of $totalSteps',
-            style: GoogleFonts.manrope(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textMuted,
-            ),
-          ),
-        ],
-        const SizedBox(height: 24),
-        const Wrap(
-          spacing: 24,
-          runSpacing: 16,
-          children: [
-            _HeroFeature(icon: Icons.home_outlined, label: 'I come to you'),
-            _HeroFeature(icon: Icons.schedule_outlined, label: 'Save time'),
-            _HeroFeature(icon: Icons.spa_outlined, label: 'Premium service'),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _HeroFeature extends StatelessWidget {
-  const _HeroFeature({required this.icon, required this.label});
 
   final IconData icon;
   final String label;
+  final int stepIndex;
+  final bool isActive;
+  final bool isCompleted;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color circleColor =
+        (isActive || isCompleted) ? _kPrimary : Colors.white;
+    final Color borderColor =
+        (isActive || isCompleted) ? _kPrimary : const Color(0xFFD0C8C0);
+    final Color iconColor =
+        (isActive || isCompleted) ? Colors.white : const Color(0xFFB0A8A0);
+    final Color labelColor =
+        isActive ? _kPrimary : const Color(0xFFB0A8A0);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: circleColor,
+                border: Border.all(color: borderColor, width: 2),
+              ),
+              child: Center(
+                child: isCompleted
+                    ? const Icon(Icons.check, color: Colors.white, size: 16)
+                    : Icon(icon, color: iconColor, size: 16),
+              ),
+            ),
+            if (isActive)
+              Positioned(
+                top: -4,
+                right: -4,
+                child: Container(
+                  width: 14,
+                  height: 14,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _kPrimary,
+                  ),
+                  child: Center(
+                    child: Text(
+                      '$stepIndex',
+                      style: GoogleFonts.manrope(
+                          fontSize: 8,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 5),
+        SizedBox(
+          width: 60,
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.manrope(
+              fontSize: 9,
+              fontWeight:
+                  isActive ? FontWeight.w700 : FontWeight.w500,
+              color: labelColor,
+              height: 1.3,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Hero strip
+// ─────────────────────────────────────────────────────────────────────────────
+class _BookingHeroStrip extends StatelessWidget {
+  const _BookingHeroStrip({
+    required this.title,
+    required this.subtitle,
+    required this.displayStep,
+    this.heroWidget,
+  });
+
+  final String title;
+  final String subtitle;
+  final int displayStep;
+  final Widget? heroWidget;
+
+  @override
+  Widget build(BuildContext context) {
+    if (heroWidget != null) {
+      return heroWidget!;
+    }
+    return Container(
+      color: _kHeroBg,
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            flex: 3,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'STEP $displayStep OF 5',
+                  style: GoogleFonts.manrope(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.6,
+                    color: _kPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  title,
+                  style: GoogleFonts.manrope(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: _kTextDark,
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  subtitle,
+                  style: GoogleFonts.manrope(
+                    fontSize: 13,
+                    color: _kTextMid,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 14),
+          const _HeroImagePlaceholders(),
+        ],
+      ),
+    );
+  }
+}
+
+/// Right-side placeholder area: large image rect + overlapping logo frame.
+class _HeroImagePlaceholders extends StatelessWidget {
+  const _HeroImagePlaceholders();
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 88,
-      child: Column(
-        children: [
-          Icon(icon, color: AppColors.textSecondary),
-          const SizedBox(height: 10),
-          Text(
-            label.toUpperCase(),
-            textAlign: TextAlign.center,
-            style: GoogleFonts.manrope(
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.7,
-              color: AppColors.textPrimary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BookingHeroVisual extends StatelessWidget {
-  const _BookingHeroVisual();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 300,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFF9F0E8), Color(0xFFEAD9CB)],
-        ),
-      ),
+      width: 130,
+      height: 110,
       child: Stack(
         children: [
+          // Large placeholder (where a real hair-photo would go)
           Positioned(
-            top: 18,
-            right: 14,
-            child: SizedBox(
-              width: 170,
-              height: 90,
-              child: Stack(
-                children: List.generate(6, (index) {
-                  return Positioned(
-                    left: index * 24,
-                    top: index.isEven ? 10 : 0,
-                    child: Transform.rotate(
-                      angle: 0.45,
-                      child: Container(
-                        width: 20,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF889474),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                      ),
-                    ),
-                  );
-                }),
+            left: 0,
+            top: 0,
+            right: 26,
+            bottom: 0,
+            child: Container(
+              decoration: BoxDecoration(
+                color: _kPlaceholder,
+                borderRadius: BorderRadius.circular(10),
               ),
             ),
           ),
+          // Framed logo card, overlapping the bottom-right corner
           Positioned(
-            right: 16,
-            top: 54,
+            right: 0,
+            bottom: 0,
             child: Container(
-              width: 76,
-              height: 150,
+              width: 72,
+              height: 56,
               decoration: BoxDecoration(
-                color: const Color(0xFFE7DACB),
-                borderRadius: BorderRadius.circular(36),
-              ),
-            ),
-          ),
-          Positioned(
-            left: 26,
-            bottom: 44,
-            child: Container(
-              width: 46,
-              height: 108,
-              decoration: BoxDecoration(
-                color: const Color(0xFF1E1E22),
-                borderRadius: BorderRadius.circular(20),
-              ),
-            ),
-          ),
-          Positioned(
-            left: 102,
-            bottom: 30,
-            child: Container(
-              width: 214,
-              height: 158,
-              decoration: BoxDecoration(
-                color: const Color(0xFF1F1E22),
-                borderRadius: BorderRadius.circular(24),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                    color: const Color(0xFFD0C8C0), width: 2),
                 boxShadow: const [
                   BoxShadow(
-                    color: Color(0x22000000),
-                    blurRadius: 24,
-                    offset: Offset(0, 14),
+                    color: Color(0x18000000),
+                    blurRadius: 8,
+                    offset: Offset(0, 4),
                   ),
                 ],
               ),
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'My',
-                      style: GoogleFonts.parisienne(
-                        fontSize: 28,
-                        color: const Color(0xFFD8B4A4),
-                      ),
-                    ),
-                    Text(
-                      'MOBILE',
-                      style: GoogleFonts.cormorantGaramond(
-                        fontSize: 32,
-                        color: const Color(0xFFE4CCBD),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      'HAIR STYLIST',
-                      style: GoogleFonts.manrope(
-                        fontSize: 9,
-                        color: const Color(0xFFD8B4A4),
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 3,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            left: 88,
-            bottom: 14,
-            child: Transform.rotate(
-              angle: -0.2,
-              child: Container(
-                width: 90,
-                height: 10,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF2E2827),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            left: 186,
-            bottom: 16,
-            child: Transform.rotate(
-              angle: 0.2,
-              child: Container(
-                width: 72,
-                height: 10,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF6A4B33),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            right: 8,
-            bottom: 14,
-            child: Transform.rotate(
-              angle: 0.35,
-              child: Container(
-                width: 84,
-                height: 18,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF6C4C35),
-                  borderRadius: BorderRadius.circular(999),
-                ),
+              padding: const EdgeInsets.all(5),
+              child: Image.asset(
+                'assets/images/logo.png',
+                fit: BoxFit.contain,
               ),
             ),
           ),
@@ -689,84 +398,139 @@ class _BookingHeroVisual extends StatelessWidget {
   }
 }
 
-class _BookingProgressRow extends StatelessWidget {
-  const _BookingProgressRow({
-    required this.stepNumber,
-    required this.totalSteps,
-  });
-
-  final int stepNumber;
-  final int totalSteps;
+// ─────────────────────────────────────────────────────────────────────────────
+// Error banner
+// ─────────────────────────────────────────────────────────────────────────────
+class _ErrorBanner extends StatelessWidget {
+  const _ErrorBanner({required this.message});
+  final String message;
 
   @override
   Widget build(BuildContext context) {
-    final clampedStep = stepNumber.clamp(1, totalSteps);
-    final checkpoints = [
-      ('Choose service', clampedStep >= 1),
-      ('Pick a time', clampedStep >= 5),
-      ('Your details', clampedStep >= totalSteps),
-    ];
-
-    return Row(
-      children: [
-        for (var index = 0; index < checkpoints.length; index++) ...[
-          Expanded(
-            child: Column(
-              children: [
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: checkpoints[index].$2
-                        ? const Color(0xFF232125)
-                        : const Color(0xFFF3ECE5),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    '${index + 1}',
-                    style: GoogleFonts.manrope(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      color: checkpoints[index].$2
-                          ? Colors.white
-                          : AppColors.textSecondary,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  checkpoints[index].$1.toUpperCase(),
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.manrope(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.7,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (index < checkpoints.length - 1)
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF5F5),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFEECCCC)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.error_outline,
+                color: _kPrimary, size: 20),
+            const SizedBox(width: 10),
             Expanded(
-              child: Container(
-                height: 1,
-                color: const Color(0xFFE1D3C7),
-                margin: const EdgeInsets.only(bottom: 36),
+              child: Text(
+                message,
+                style: GoogleFonts.manrope(
+                    fontSize: 13, color: const Color(0xFF6B2020)),
               ),
             ),
-        ],
-      ],
+          ],
+        ),
+      ),
     );
   }
 }
 
-/// Normalizes AsyncValue errors so screens can show a small inline message.
-String? bookingErrorMessage(AsyncValue<dynamic> asyncValue) {
-  if (!asyncValue.hasError) {
-    return null;
-  }
+// ─────────────────────────────────────────────────────────────────────────────
+// Sticky bottom CONTINUE bar
+// ─────────────────────────────────────────────────────────────────────────────
+class _ContinueBar extends StatelessWidget {
+  const _ContinueBar({
+    required this.label,
+    required this.onPressed,
+    required this.isBusy,
+    this.secondaryLabel,
+    this.onSecondaryPressed,
+  });
 
-  return asyncValue.asError!.error.toString().replaceFirst('Exception: ', '');
+  final String label;
+  final VoidCallback? onPressed;
+  final bool isBusy;
+  final String? secondaryLabel;
+  final VoidCallback? onSecondaryPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onPressed != null;
+
+    final primaryButton = FilledButton(
+      onPressed: onPressed,
+      style: FilledButton.styleFrom(
+        backgroundColor: enabled ? _kPrimary : const Color(0xFFCEC9C5),
+        disabledBackgroundColor: const Color(0xFFCEC9C5),
+        foregroundColor: Colors.white,
+        disabledForegroundColor: Colors.white,
+        minimumSize: const Size.fromHeight(52),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10)),
+        textStyle: GoogleFonts.manrope(
+          fontSize: 14,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 1.4,
+        ),
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Text(isBusy ? 'Working...' : label),
+          if (!isBusy)
+            const Positioned(
+              right: 0,
+              child: Icon(Icons.arrow_forward,
+                  size: 20, color: Colors.white),
+            ),
+          if (isBusy)
+            const Positioned(
+              right: 0,
+              child: SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          border: Border(top: BorderSide(color: _kDivider)),
+        ),
+        child: SizedBox(
+          height: 52,
+          child: secondaryLabel != null
+              ? Row(
+                  children: [
+                    TextButton(
+                      onPressed: onSecondaryPressed,
+                      style: TextButton.styleFrom(
+                        foregroundColor: _kTextMid,
+                        textStyle: GoogleFonts.manrope(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      child: Text(secondaryLabel!),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(child: primaryButton),
+                  ],
+                )
+              : primaryButton,
+        ),
+      ),
+    );
+  }
 }
+
