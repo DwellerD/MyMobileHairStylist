@@ -310,6 +310,30 @@ class AdminCheckInEvent {
   final String? eventNotes;
 }
 
+class AdminDispatchEvent {
+  const AdminDispatchEvent({
+    required this.id,
+    required this.eventType,
+    required this.createdAt,
+    required this.actorName,
+    required this.previousStatus,
+    required this.nextStatus,
+    required this.previousStylistName,
+    required this.nextStylistName,
+    required this.notes,
+  });
+
+  final String id;
+  final String eventType;
+  final DateTime createdAt;
+  final String? actorName;
+  final String? previousStatus;
+  final String? nextStatus;
+  final String? previousStylistName;
+  final String? nextStylistName;
+  final String? notes;
+}
+
 /// Household member details on the admin appointment screen.
 class AdminAppointmentParticipant {
   const AdminAppointmentParticipant({
@@ -359,6 +383,7 @@ class AdminAppointmentDetail {
     required this.internalNotes,
     required this.safetyEvents,
     required this.availableStylists,
+    required this.dispatchEvents,
     this.requestedStylistName,
   });
 
@@ -379,6 +404,7 @@ class AdminAppointmentDetail {
   final List<AdminInternalNote> internalNotes;
   final List<AdminSafetyEventSummary> safetyEvents;
   final List<AdminStylistOption> availableStylists;
+  final List<AdminDispatchEvent> dispatchEvents;
 }
 
 String formatMoneyCents(int? cents) {

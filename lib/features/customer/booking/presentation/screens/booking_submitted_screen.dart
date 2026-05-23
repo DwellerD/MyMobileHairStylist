@@ -17,6 +17,7 @@ class BookingSubmittedScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final bookingState = ref.watch(bookingFlowControllerProvider).valueOrNull;
     final appointmentId = bookingState?.submittedAppointmentId;
+    final paymentStatus = bookingState?.paymentStatus ?? 'not_started';
 
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.pagePadding),
@@ -40,6 +41,20 @@ class BookingSubmittedScreen extends ConsumerWidget {
             ],
           ),
         ),
+        const SizedBox(height: AppSpacing.sm),
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Deposit status',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(_submittedPaymentStatusLabel(paymentStatus)),
+            ],
+          ),
+        ),
         const SizedBox(height: AppSpacing.sectionGap),
         AppSecondaryButton(
           label: 'View appointments',
@@ -60,5 +75,23 @@ class BookingSubmittedScreen extends ConsumerWidget {
         ),
       ],
     );
+  }
+}
+
+String _submittedPaymentStatusLabel(String status) {
+  switch (status) {
+    case 'authorized':
+      return 'Your deposit was authorized successfully.';
+    case 'captured':
+      return 'Your deposit has been captured.';
+    case 'pending':
+      return 'A payment intent was created and is waiting for completion.';
+    case 'failed':
+      return 'The payment step did not complete. Your request was still saved.';
+    case 'refunded':
+      return 'The recorded deposit was refunded.';
+    case 'not_started':
+    default:
+      return 'No live deposit was collected in this session.';
   }
 }

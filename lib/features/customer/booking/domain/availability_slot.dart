@@ -90,20 +90,6 @@ class AvailableTimeSlot {
 // Availability Calculation
 // ──────────────────────────────────────────────────────────────────────────────
 
-/// One stylist's "available" window loaded from the DB.
-class _AvailBlock {
-  const _AvailBlock({required this.start, required this.end});
-  final DateTime start;
-  final DateTime end;
-}
-
-/// One booked appointment that occupies stylist time.
-class _BookedWindow {
-  const _BookedWindow({required this.start, required this.end});
-  final DateTime start;
-  final DateTime end;
-}
-
 /// Calculates open time slots for a stylist on a given day.
 ///
 /// [availableBlocks] - the stylist's "available" availability_block rows.

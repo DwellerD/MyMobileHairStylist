@@ -284,7 +284,7 @@ class _AdminAccessManagerState extends ConsumerState<_AdminAccessManager> {
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   DropdownButtonFormField<String>(
-                    value: _selectedUserProfileId,
+                    initialValue: _selectedUserProfileId,
                     items: users
                         .map(
                           (user) => DropdownMenuItem<String>(
@@ -302,7 +302,7 @@ class _AdminAccessManagerState extends ConsumerState<_AdminAccessManager> {
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   DropdownButtonFormField<String>(
-                    value: _selectedRole,
+                    initialValue: _selectedRole,
                     items: const [
                       DropdownMenuItem<String>(
                         value: 'admin',
@@ -331,7 +331,7 @@ class _AdminAccessManagerState extends ConsumerState<_AdminAccessManager> {
                     const SizedBox(height: AppSpacing.sm),
                     marketsAsync.when(
                       data: (markets) => DropdownButtonFormField<String>(
-                        value: _selectedMarketId,
+                        initialValue: _selectedMarketId,
                         items: markets
                             .map(
                               (market) => DropdownMenuItem<String>(
@@ -354,7 +354,7 @@ class _AdminAccessManagerState extends ConsumerState<_AdminAccessManager> {
                     const SizedBox(height: AppSpacing.sm),
                     territoriesAsync.when(
                       data: (territories) => DropdownButtonFormField<String>(
-                        value: _selectedTerritoryId,
+                        initialValue: _selectedTerritoryId,
                         items: [
                           const DropdownMenuItem<String>(
                             value: null,

@@ -48,6 +48,31 @@ class StylistAppointmentSummary {
   final int estimatedDurationMinutes;
 }
 
+/// Local unassigned booking request available for a stylist to claim.
+class ClaimableAppointmentSummary {
+  const ClaimableAppointmentSummary({
+    required this.id,
+    required this.customerFirstName,
+    required this.cityOrArea,
+    required this.serviceSummary,
+    required this.status,
+    required this.startsAt,
+    required this.addressSummary,
+    required this.estimatedDurationMinutes,
+    required this.requestedStylist,
+  });
+
+  final String id;
+  final String customerFirstName;
+  final String cityOrArea;
+  final String serviceSummary;
+  final String status;
+  final DateTime startsAt;
+  final String addressSummary;
+  final int estimatedDurationMinutes;
+  final bool requestedStylist;
+}
+
 /// Participant details shown on the stylist detail screen.
 class StylistAppointmentParticipant {
   const StylistAppointmentParticipant({

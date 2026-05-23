@@ -271,6 +271,42 @@ class _AdminAppointmentDetailScreenState
                             .toList(growable: false),
                       ),
               ),
+              const SizedBox(height: AppSpacing.sm),
+              _DetailCard(
+                title: 'Dispatch history',
+                child: detail.dispatchEvents.isEmpty
+                    ? const Text('No dispatch events recorded yet.')
+                    : Column(
+                        children: detail.dispatchEvents
+                            .map(
+                              (event) => Padding(
+                                padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${titleCase(event.eventType)} · ${formatDateTime(event.createdAt)}',
+                                      style: Theme.of(context).textTheme.titleMedium,
+                                    ),
+                                    const SizedBox(height: AppSpacing.xxs),
+                                    Text('Actor: ${event.actorName ?? 'System'}'),
+                                    if (event.previousStatus != null || event.nextStatus != null)
+                                      Text(
+                                        'Status: ${event.previousStatus ?? 'None'} -> ${event.nextStatus ?? 'None'}',
+                                      ),
+                                    if (event.previousStylistName != null || event.nextStylistName != null)
+                                      Text(
+                                        'Stylist: ${event.previousStylistName ?? 'Unassigned'} -> ${event.nextStylistName ?? 'Unassigned'}',
+                                      ),
+                                    if (event.notes?.trim().isNotEmpty == true)
+                                      Text(event.notes!),
+                                  ],
+                                ),
+                              ),
+                            )
+                            .toList(growable: false),
+                      ),
+              ),
             ],
           );
         },

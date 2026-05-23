@@ -27,5 +27,15 @@ jobs:
       - name: Analyze project
         run: flutter analyze
 
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Lint and type-check edge functions
+        run: |
+          deno lint supabase/functions/
+          deno check supabase/functions/create-booking-payment-intent/index.ts
+
       - name: Run tests
         run: flutter test

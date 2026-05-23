@@ -67,6 +67,60 @@ class StylistRepository {
     return _loadAssignedAppointments(stylistProfileId: stylistProfile.id);
   }
 
+  Future<List<ClaimableAppointmentSummary>> getClaimableAppointments({
+    required StylistProfileSummary stylistProfile,
+  }) async {
+    if (stylistProfile.marketId == null) {
+      return const <ClaimableAppointmentSummary>[];
+    }
+
+    final response = await _requireClient().from('appointments').select('''
+id,
+status,
+requested_start_at,
+scheduled_start_at,
+estimated_duration_minutes,
+territory_id,
+requested_stylist_profile_id,
+address:addresses!appointments_address_id_fkey(line1, city, state, postal_code),
+customer_profile:customer_profiles!appointments_customer_profile_id_fkey(
+  user_profile:user_profiles!customer_profiles_user_profile_id_fkey(first_name)
+),
+appointment_services(quantity, service:services(name, duration_minutes))
+''').eq('market_id', stylistProfile.marketId!).isFilter(
+          'assigned_stylist_profile_id',
+          null,
+        ).inFilter('status', <String>['requested', 'approved']);
+
+    return (response as List<dynamic>)
+        .map((dynamic row) => row as Map<String, dynamic>)
+        .where((row) {
+          final territoryId = row['territory_id'] as String?;
+          final requestedStylistProfileId =
+              row['requested_stylist_profile_id'] as String?;
+          final matchesTerritory = territoryId == null ||
+              stylistProfile.territoryId == null ||
+              territoryId == stylistProfile.territoryId;
+          final matchesRequest = requestedStylistProfileId == null ||
+              requestedStylistProfileId == stylistProfile.id;
+          return matchesTerritory && matchesRequest;
+        })
+        .map(_mapClaimableAppointmentSummary)
+        .toList(growable: false)
+      ..sort((left, right) => left.startsAt.compareTo(right.startsAt));
+  }
+
+  Future<void> claimAppointmentRequest({
+    required String appointmentId,
+  }) async {
+    await _requireClient().rpc(
+      'claim_appointment_request',
+      params: <String, dynamic>{
+        'p_appointment_id': appointmentId,
+      },
+    );
+  }
+
   Future<StylistAppointmentDetail> getAppointmentDetail({
     required String appointmentId,
   }) async {
@@ -352,6 +406,42 @@ check_ins(event_type, created_at)
       ),
       estimatedDurationMinutes: (row['estimated_duration_minutes'] as int?) ??
           _estimatedDurationFromRows(serviceRows),
+    );
+  }
+
+  ClaimableAppointmentSummary _mapClaimableAppointmentSummary(
+    Map<String, dynamic> row,
+  ) {
+    final address = row['address'] as Map<String, dynamic>?;
+    final customerProfile = row['customer_profile'] as Map<String, dynamic>?;
+    final userProfile = customerProfile?['user_profile'] as Map<String, dynamic>?;
+    final serviceRows =
+        (row['appointment_services'] as List<dynamic>? ?? const <dynamic>[]);
+    final startsAt = _parseDateTime(
+      row['scheduled_start_at'] as String? ?? row['requested_start_at'] as String,
+    );
+
+    return ClaimableAppointmentSummary(
+      id: row['id'] as String,
+      customerFirstName: (userProfile?['first_name'] as String?)?.trim().isNotEmpty ==
+              true
+          ? userProfile!['first_name'] as String
+          : 'Customer',
+      cityOrArea: (address?['city'] as String?)?.trim().isNotEmpty == true
+          ? address!['city'] as String
+          : 'Area not set',
+      serviceSummary: _serviceSummaryFromRows(serviceRows),
+      status: row['status'] as String,
+      startsAt: startsAt,
+      addressSummary: _formatAddress(
+        line1: address?['line1'] as String?,
+        city: address?['city'] as String?,
+        state: address?['state'] as String?,
+        postalCode: address?['postal_code'] as String?,
+      ),
+      estimatedDurationMinutes: (row['estimated_duration_minutes'] as int?) ??
+          _estimatedDurationFromRows(serviceRows),
+      requestedStylist: row['requested_stylist_profile_id'] != null,
     );
   }
 

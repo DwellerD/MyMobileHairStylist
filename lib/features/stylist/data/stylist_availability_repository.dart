@@ -68,7 +68,7 @@ class StylistAvailabilityRepository {
         .select('id, stylist_profile_id, block_type, start_at, end_at, notes, market_id, territory_id')
         .single();
 
-    return _mapBlock(response as Map<String, dynamic>);
+      return _mapBlock(response);
   }
 
   /// Update an existing availability block's time range, type, or notes.
@@ -95,7 +95,7 @@ class StylistAvailabilityRepository {
         .select('id, stylist_profile_id, block_type, start_at, end_at, notes, market_id, territory_id')
         .single();
 
-    return _mapBlock(response as Map<String, dynamic>);
+      return _mapBlock(response);
   }
 
   /// Permanently delete an availability block.

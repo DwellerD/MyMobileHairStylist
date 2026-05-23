@@ -3,291 +3,312 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_spacing.dart';
 
-/// Customer dashboard placeholder.
+/// Customer-facing marketing home screen.
+///
+/// Mobile-first, conversion-focused layout. All CTA buttons navigate
+/// into the existing booking flow via [context.go('/customer/book')].
 class CustomerHomeScreen extends StatelessWidget {
   const CustomerHomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width;
-    final isWide = width >= 980;
-
     return ListView(
-      padding: const EdgeInsets.all(AppSpacing.pagePadding),
+      padding: EdgeInsets.zero,
+      children: const [
+        _HeroSection(),
+        _HowItWorksSection(),
+        _FeaturedServicesSection(),
+        _MobileServiceNoteSection(),
+        _TrustSection(),
+        _FinalCtaSection(),
+        _Footer(),
+      ],
+    );
+  }
+}
+
+// ─── Shared helpers ───────────────────────────────────────────────────────────
+
+class _SectionWrapper extends StatelessWidget {
+  const _SectionWrapper({
+    required this.child,
+    this.color = AppColors.surface,
+    this.padding,
+  });
+
+  final Widget child;
+  final Color color;
+  final EdgeInsetsGeometry? padding;
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final hPad = width >= 980 ? 64.0 : 24.0;
+
+    return Container(
+      color: color,
+      width: double.infinity,
+      padding: padding ??
+          EdgeInsets.symmetric(horizontal: hPad, vertical: 56),
+      child: child,
+    );
+  }
+}
+
+class _MaxWidth extends StatelessWidget {
+  const _MaxWidth({required this.child, this.max = 1060});
+
+  final Widget child;
+  final double max;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: max),
+        child: child,
+      ),
+    );
+  }
+}
+
+class _EyebrowLabel extends StatelessWidget {
+  const _EyebrowLabel(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text.toUpperCase(),
+      style: GoogleFonts.manrope(
+        fontSize: 11,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 2.4,
+        color: AppColors.accent,
+      ),
+    );
+  }
+}
+
+class _HeadingText extends StatelessWidget {
+  const _HeadingText(this.text, {this.center = false});
+
+  final String text;
+  final bool center;
+
+  @override
+  Widget build(BuildContext context) {
+    final wide = MediaQuery.sizeOf(context).width >= 980;
+    return Text(
+      text,
+      textAlign: center ? TextAlign.center : TextAlign.start,
+      style: GoogleFonts.cormorantGaramond(
+        fontSize: wide ? 48 : 36,
+        height: 1.08,
+        fontWeight: FontWeight.w600,
+        color: AppColors.textPrimary,
+      ),
+    );
+  }
+}
+
+class _BodyText extends StatelessWidget {
+  const _BodyText(this.text, {this.center = false});
+
+  final String text;
+  final bool center;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      textAlign: center ? TextAlign.center : TextAlign.start,
+      style: GoogleFonts.manrope(
+        fontSize: 15,
+        height: 1.75,
+        color: AppColors.textSecondary,
+      ),
+    );
+  }
+}
+
+class _BookNowButton extends StatelessWidget {
+  const _BookNowButton({required this.label, this.large = false});
+
+  final String label;
+  final bool large;
+
+  @override
+  Widget build(BuildContext context) {
+    return FilledButton(
+      onPressed: () => context.go('/customer/book'),
+      style: FilledButton.styleFrom(
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.onPrimary,
+        minimumSize: Size.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        padding: EdgeInsets.symmetric(
+          horizontal: large ? 36 : 24,
+          vertical: large ? 18 : 14,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(50),
+        ),
+        textStyle: GoogleFonts.manrope(
+          fontSize: large ? 16 : 14,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.3,
+        ),
+      ),
+      child: Text(label),
+    );
+  }
+}
+
+class _OutlinedLinkButton extends StatelessWidget {
+  const _OutlinedLinkButton({required this.label, required this.route});
+
+  final String label;
+  final String route;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton(
+      onPressed: () => context.go(route),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: AppColors.primary,
+        minimumSize: Size.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        side: const BorderSide(color: AppColors.border, width: 1.5),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(50),
+        ),
+        textStyle: GoogleFonts.manrope(
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      child: Text(label),
+    );
+  }
+}
+
+// ─── 1. Hero section ──────────────────────────────────────────────────────────
+
+class _HeroSection extends StatelessWidget {
+  const _HeroSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final wide = MediaQuery.sizeOf(context).width >= 780;
+
+    return _SectionWrapper(
+      color: const Color(0xFFFFFBF7),
+      padding: EdgeInsets.symmetric(
+        horizontal: MediaQuery.sizeOf(context).width >= 980 ? 64 : 24,
+        vertical: 72,
+      ),
+      child: _MaxWidth(
+        child: wide
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const Expanded(flex: 5, child: _HeroCopy()),
+                  const SizedBox(width: 48),
+                  Expanded(flex: 4, child: _HeroVisual()),
+                ],
+              )
+            : const Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _HeroCopy(),
+                  SizedBox(height: 40),
+                  _HeroVisual(),
+                ],
+              ),
+      ),
+    );
+  }
+}
+
+class _HeroCopy extends StatelessWidget {
+  const _HeroCopy();
+
+  @override
+  Widget build(BuildContext context) {
+    final wide = MediaQuery.sizeOf(context).width >= 780;
+
+    return Column(
+      crossAxisAlignment:
+          wide ? CrossAxisAlignment.start : CrossAxisAlignment.center,
       children: [
         Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(32),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFFFFFBF7), Color(0xFFF1E4D9)],
-            ),
-            border: Border.all(color: const Color(0xFFE7D8CB)),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x11000000),
-                blurRadius: 28,
-                offset: Offset(0, 14),
-              ),
-            ],
+            color: const Color(0xFFF7EDE4),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: AppColors.border),
           ),
-          child: Padding(
-            padding: EdgeInsets.all(isWide ? 28 : 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    _WarmPill(
-                      icon: Icons.favorite_border,
-                      label: 'Premium in-home hair care',
-                    ),
-                    _WarmPill(
-                      icon: Icons.lock_outline,
-                      label: 'Private prep flow',
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 18),
-                if (isWide)
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 24),
-                          child: _HeroCopy(),
-                        ),
-                      ),
-                      const Expanded(child: _HeroScene()),
-                    ],
-                  )
-                else
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _HeroCopy(),
-                      SizedBox(height: 20),
-                      _HeroScene(),
-                    ],
-                  ),
-                const SizedBox(height: 24),
-                Align(
-                  alignment: Alignment.center,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: isWide ? 960 : 520),
-                    child: Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: const Color(0xCCFFFDF9),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: const Color(0xFFE7D8CB)),
-                      ),
-                      child: Wrap(
-                        spacing: 16,
-                        runSpacing: 16,
-                        alignment: WrapAlignment.center,
-                        runAlignment: WrapAlignment.center,
-                        children: const [
-                          _ProcessTile(
-                            step: '01',
-                            icon: Icons.photo_camera_outlined,
-                            title: 'Upload your hair',
-                            description: 'Share clear front, back, and side photos.',
-                          ),
-                          _ProcessTile(
-                            step: '02',
-                            icon: Icons.favorite_border,
-                            title: 'Add inspiration',
-                            description: 'Show styles, cuts, or colour references.',
-                          ),
-                          _ProcessTile(
-                            step: '03',
-                            icon: Icons.chat_bubble_outline,
-                            title: 'Tell me more',
-                            description: 'Include your goals, likes, and dislikes.',
-                          ),
-                          _ProcessTile(
-                            step: '04',
-                            icon: Icons.event_available_outlined,
-                            title: 'I come prepared',
-                            description: 'Everything gets reviewed before arrival.',
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+          child: Text(
+            'In-home hair appointments',
+            style: GoogleFonts.manrope(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textSecondary,
+              letterSpacing: 0.3,
             ),
           ),
         ),
-        const SizedBox(height: AppSpacing.sectionGap),
-        _SectionFrame(
-          eyebrow: 'Booking preview',
-          title: 'A prep board built around your photos, inspiration, and notes.',
-          child: _BookingPreview(isWide: isWide),
-        ),
-        const SizedBox(height: AppSpacing.sectionGap),
-        _SectionFrame(
-          eyebrow: 'Featured services',
-          title: 'Popular services still match the seeded booking flow.',
-          child: Wrap(
-            spacing: 16,
-            runSpacing: 16,
-            children: const [
-              _ServiceSpotlight(
-                title: 'Luxury women\'s haircut',
-                duration: '75 min',
-                price: 'From \$120',
-                description: 'A polished in-home cut with consultation and finishing style included.',
-                tone: Color(0xFFBE9678),
-              ),
-              _ServiceSpotlight(
-                title: 'Signature blowout',
-                duration: '60 min',
-                price: 'From \$95',
-                description: 'Smooth styling and finishing for events or everyday luxury.',
-                tone: Color(0xFF8C6A58),
-              ),
-              _ServiceSpotlight(
-                title: 'Kids haircut',
-                duration: '45 min',
-                price: 'From \$55',
-                description: 'A gentler appointment block for calm, child-centered visits.',
-                tone: Color(0xFFD2B094),
-              ),
-            ],
+        const SizedBox(height: 20),
+        Text(
+          'Hair appointments\nat your home.',
+          textAlign: wide ? TextAlign.start : TextAlign.center,
+          style: GoogleFonts.cormorantGaramond(
+            fontSize: wide ? 58 : 44,
+            height: 1.05,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
           ),
         ),
-        const SizedBox(height: AppSpacing.sectionGap),
-        _SectionFrame(
-          eyebrow: 'Upcoming appointment',
-          title: 'Track your next visit without leaving the home screen.',
-          child: Container(
-            padding: const EdgeInsets.all(22),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFFCF8),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: const Color(0xFFE7D8CB)),
+        const SizedBox(height: 18),
+        _BodyText(
+          'Professional hair services brought directly to your home, hotel, workplace, or event location.',
+          center: !wide,
+        ),
+        const SizedBox(height: 32),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          alignment: wide ? WrapAlignment.start : WrapAlignment.center,
+          children: [
+            _BookNowButton(label: 'Book an Appointment', large: true),
+            _OutlinedLinkButton(
+              label: 'View Services',
+              route: '/customer/appointments',
             ),
-            child: isWide
-                ? Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Expanded(child: _UpcomingAppointmentSummary()),
-                      SizedBox(width: 18),
-                      Expanded(child: _UpcomingAppointmentSidebar()),
-                    ],
-                  )
-                : const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _UpcomingAppointmentSummary(),
-                      SizedBox(height: 18),
-                      _UpcomingAppointmentSidebar(),
-                    ],
-                  ),
-          ),
+          ],
         ),
       ],
     );
   }
 }
 
-class _WarmPill extends StatelessWidget {
-  const _WarmPill({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
+class _HeroVisual extends StatelessWidget {
+  const _HeroVisual();
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF7EDE4),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: const Color(0xFFE5D5C8)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: AppColors.accent),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: GoogleFonts.manrope(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MetricChip extends StatelessWidget {
-  const _MetricChip({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFBF8),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE7D8CB)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            value,
-            style: GoogleFonts.manrope(
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: GoogleFonts.manrope(
-              fontSize: 12,
-              color: AppColors.textMuted,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HeroScene extends StatelessWidget {
-  const _HeroScene();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 320,
+      height: 340,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFF8EFE7), Color(0xFFE9D8CA)],
+          colors: [Color(0xFFF8EFE7), Color(0xFFECD9CB)],
         ),
       ),
       child: Center(
@@ -303,760 +324,635 @@ class _HeroScene extends StatelessWidget {
   }
 }
 
-class _HeroCopy extends StatelessWidget {
-  const _HeroCopy();
+// ─── 3. How it works ──────────────────────────────────────────────────────────
+
+class _HowItWorksSection extends StatelessWidget {
+  const _HowItWorksSection();
+
+  static const _steps = [
+    (
+      icon: Icons.spa_outlined,
+      number: '01',
+      title: 'Choose your service',
+      body:
+          'Pick the appointment type that fits your needs from our menu of professional hair services.',
+    ),
+    (
+      icon: Icons.home_outlined,
+      number: '02',
+      title: 'Select your location',
+      body:
+          "Tell us where you'd like your stylist to come \u2014 home, hotel, workplace, or event venue.",
+    ),
+    (
+      icon: Icons.favorite_border,
+      number: '03',
+      title: 'Relax at home',
+      body:
+          'Your stylist arrives with everything needed for a full salon-quality experience.',
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {
-    final isWide = MediaQuery.sizeOf(context).width >= 980;
+    final wide = MediaQuery.sizeOf(context).width >= 700;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'HELP YOUR',
-          style: GoogleFonts.cormorantGaramond(
-            fontSize: isWide ? 58 : 42,
-            height: 0.95,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        Transform.translate(
-          offset: const Offset(0, -6),
-          child: Text(
-            'Stylist Prepare',
-            style: GoogleFonts.parisienne(
-              fontSize: isWide ? 64 : 46,
-              color: AppColors.accent,
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'The more detail you share, the better I can understand your goals before your appointment. This home screen now follows that same calm, polished prep-board look.',
-          style: GoogleFonts.manrope(
-            fontSize: 15,
-            height: 1.7,
-            color: AppColors.textSecondary,
-          ),
-        ),
-        const SizedBox(height: 22),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
+    return _SectionWrapper(
+      color: AppColors.surface,
+      child: _MaxWidth(
+        child: Column(
           children: [
-            FilledButton.icon(
-              onPressed: () => context.go('/customer/book'),
-              icon: const Icon(Icons.photo_camera_outlined),
-              label: const Text('Start A New Booking'),
-            ),
-            OutlinedButton.icon(
-              onPressed: () => context.go('/customer/appointments'),
-              icon: const Icon(Icons.event_note_outlined),
-              label: const Text('View Appointments'),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: const [
-            _MetricChip(label: 'Photo upload', value: '4 angles'),
-            _MetricChip(label: 'Consult notes', value: 'Personalized'),
-            _MetricChip(label: 'Household booking', value: 'Family ready'),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _MiniPlant extends StatelessWidget {
-  const _MiniPlant();
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 150,
-      height: 180,
-      child: Stack(
-        alignment: Alignment.bottomCenter,
-        children: [
-          Container(
-            width: 62,
-            height: 92,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF9F5EE),
-              borderRadius: BorderRadius.circular(40),
-            ),
-          ),
-          ...List.generate(7, (index) {
-            return Positioned(
-              left: index.isEven ? 24 + index * 10 : 50 + index * 6,
-              top: 16 + index * 8,
-              child: Transform.rotate(
-                angle: index.isEven ? -0.5 : 0.5,
-                child: Container(
-                  width: 10,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF708A5F),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
+            const _EyebrowLabel('How it works'),
+            const SizedBox(height: 12),
+            _HeadingText('Three easy steps.', center: true),
+            const SizedBox(height: 40),
+            if (wide)
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: _steps
+                    .map((s) => Expanded(
+                          child: Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 12),
+                            child: _StepCard(
+                              icon: s.icon,
+                              number: s.number,
+                              title: s.title,
+                              body: s.body,
+                            ),
+                          ),
+                        ))
+                    .toList(),
+              )
+            else
+              Column(
+                children: _steps
+                    .map((s) => Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: _StepCard(
+                            icon: s.icon,
+                            number: s.number,
+                            title: s.title,
+                            body: s.body,
+                          ),
+                        ))
+                    .toList(),
               ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-}
-
-class _ToolStrip extends StatelessWidget {
-  const _ToolStrip({required this.width});
-
-  final double width;
-
-  @override
-  Widget build(BuildContext context) {
-    return Transform.rotate(
-      angle: -0.22,
-      child: Container(
-        width: width,
-        height: 12,
-        decoration: BoxDecoration(
-          color: const Color(0xFF453730),
-          borderRadius: BorderRadius.circular(999),
+          ],
         ),
       ),
     );
   }
 }
 
-class _ProcessTile extends StatelessWidget {
-  const _ProcessTile({
-    required this.step,
+class _StepCard extends StatelessWidget {
+  const _StepCard({
     required this.icon,
+    required this.number,
     required this.title,
-    required this.description,
+    required this.body,
   });
 
-  final String step;
   final IconData icon;
+  final String number;
   final String title;
-  final String description;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 220,
-      child: Column(
-        children: [
-          Text(
-            step,
-            style: GoogleFonts.parisienne(
-              fontSize: 36,
-              color: const Color(0xFFD4B19E),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            width: 58,
-            height: 58,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: const Color(0xFFF8EFE7),
-              border: Border.all(color: const Color(0xFFE4D4C7)),
-            ),
-            child: Icon(icon, color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            title.toUpperCase(),
-            textAlign: TextAlign.center,
-            style: GoogleFonts.manrope(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.6,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            description,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.manrope(
-              fontSize: 13,
-              height: 1.6,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SectionFrame extends StatelessWidget {
-  const _SectionFrame({
-    required this.eyebrow,
-    required this.title,
-    required this.child,
-  });
-
-  final String eyebrow;
-  final String title;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          eyebrow.toUpperCase(),
-          style: GoogleFonts.manrope(
-            fontSize: 11,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 2.3,
-            color: AppColors.accent,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          title,
-          style: GoogleFonts.cormorantGaramond(
-            fontSize: 30,
-            fontWeight: FontWeight.w600,
-            height: 1.05,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 16),
-        child,
-      ],
-    );
-  }
-}
-
-class _BookingPreview extends StatelessWidget {
-  const _BookingPreview({required this.isWide});
-
-  final bool isWide;
+  final String body;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFCF8),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFE7D8CB)),
+        color: const Color(0xFFFFFBF7),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (isWide)
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: _UploadCard(
-                    title: 'Upload photos of your hair',
-                    subtitle: 'Add clear photos in natural light.',
-                    footer: const [
-                      _MiniShot(label: 'Front'),
-                      _MiniShot(label: 'Back'),
-                      _MiniShot(label: 'Left'),
-                      _MiniShot(label: 'Right'),
-                    ],
-                  ),
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF7EDE4),
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _UploadCard(
-                    title: 'Add inspiration photos',
-                    subtitle: 'Upload any styles, cuts, or colours you love.',
-                    footer: const [
-                      _RefTile(tone: Color(0xFF886851)),
-                      _RefTile(tone: Color(0xFFB28768)),
-                      _RefTile(tone: Color(0xFF6B5142)),
-                      _RefTile(tone: Color(0xFFCAA27E)),
-                    ],
-                  ),
+                child: Icon(icon, color: AppColors.primary, size: 20),
+              ),
+              const Spacer(),
+              Text(
+                number,
+                style: GoogleFonts.cormorantGaramond(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.border,
                 ),
-              ],
-            )
-          else
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _UploadCard(
-                  title: 'Upload photos of your hair',
-                  subtitle: 'Add clear photos in natural light.',
-                  footer: const [
-                    _MiniShot(label: 'Front'),
-                    _MiniShot(label: 'Back'),
-                    _MiniShot(label: 'Left'),
-                    _MiniShot(label: 'Right'),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                _UploadCard(
-                  title: 'Add inspiration photos',
-                  subtitle: 'Upload any styles, cuts, or colours you love.',
-                  footer: const [
-                    _RefTile(tone: Color(0xFF886851)),
-                    _RefTile(tone: Color(0xFFB28768)),
-                    _RefTile(tone: Color(0xFF6B5142)),
-                    _RefTile(tone: Color(0xFFCAA27E)),
-                  ],
-                ),
-              ],
-            ),
-          const SizedBox(height: 18),
-          Wrap(
-            spacing: 14,
-            runSpacing: 14,
-            children: const [
-              _MockInput(label: 'What are you looking to do?', hint: 'Select an option'),
-              _MockInput(label: 'What do you love about your hair?', hint: 'e.g. length, colour, texture...'),
-              _MockInput(label: 'What would you like to change?', hint: 'e.g. lighter, softer, more layers...'),
-              _MockInput(label: 'Any dislikes or things to avoid?', hint: 'e.g. brassy tones, too short, bulk...'),
-              _MockInput(label: 'Any other notes for me?', hint: 'Share anything else I should know...'),
+              ),
             ],
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _UploadCard extends StatelessWidget {
-  const _UploadCard({
-    required this.title,
-    required this.subtitle,
-    required this.footer,
-  });
-
-  final String title;
-  final String subtitle;
-  final List<Widget> footer;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE7D8CB)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+          const SizedBox(height: 16),
           Text(
-            title.toUpperCase(),
-            style: GoogleFonts.manrope(
-              fontSize: 12,
-              letterSpacing: 0.6,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: GoogleFonts.manrope(
-              fontSize: 13,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 14),
-          Container(
-            height: 140,
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFFBF7),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFE3D3C6)),
-            ),
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.cloud_upload_outlined, size: 30, color: AppColors.accent),
-                  const SizedBox(height: 10),
-                  Text(
-                    'DRAG & DROP YOUR PHOTOS HERE',
-                    style: GoogleFonts.manrope(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  FilledButton(
-                    onPressed: () => context.go('/customer/book'),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.accent,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      minimumSize: Size.zero,
-                    ),
-                    child: const Text('CHOOSE FILES'),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Wrap(spacing: 10, runSpacing: 10, children: footer),
-        ],
-      ),
-    );
-  }
-}
-
-class _MiniShot extends StatelessWidget {
-  const _MiniShot({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 78,
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFBF8),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE7D8CB)),
-      ),
-      child: Column(
-        children: [
-          const Icon(Icons.face_retouching_natural_outlined, color: AppColors.textMuted),
-          const SizedBox(height: 6),
-          Text(
-            label.toUpperCase(),
-            style: GoogleFonts.manrope(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RefTile extends StatelessWidget {
-  const _RefTile({required this.tone});
-
-  final Color tone;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 76,
-      height: 98,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [tone, const Color(0xFFF2E6DA)],
-        ),
-      ),
-      child: Align(
-        alignment: Alignment.bottomCenter,
-        child: Container(
-          width: 54,
-          height: 66,
-          margin: const EdgeInsets.only(bottom: 8),
-          decoration: const BoxDecoration(
-            color: Color(0xFFF8F2EC),
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(24),
-              bottom: Radius.circular(12),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _MockInput extends StatelessWidget {
-  const _MockInput({required this.label, required this.hint});
-
-  final String label;
-  final String hint;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 320,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: GoogleFonts.manrope(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            height: 46,
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFFBF8),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFFE7D8CB)),
-            ),
-            alignment: Alignment.centerLeft,
-            child: Text(
-              hint,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.manrope(
-                fontSize: 13,
-                color: AppColors.textMuted,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ServiceSpotlight extends StatelessWidget {
-  const _ServiceSpotlight({
-    required this.title,
-    required this.duration,
-    required this.price,
-    required this.description,
-    required this.tone,
-  });
-
-  final String title;
-  final String duration;
-  final String price;
-  final String description;
-  final Color tone;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 280,
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFFFCF8),
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: const Color(0xFFE7D8CB)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              height: 160,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(18),
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [tone, const Color(0xFFF2E8DD)],
-                ),
-              ),
-              child: Center(
-                child: Container(
-                  width: 92,
-                  height: 118,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFF9F4EE),
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(50),
-                      bottom: Radius.circular(20),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              title,
-              style: GoogleFonts.cormorantGaramond(
-                fontSize: 26,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              description,
-              style: GoogleFonts.manrope(
-                fontSize: 13,
-                height: 1.6,
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Text(
-                  duration,
-                  style: GoogleFonts.manrope(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  price,
-                  style: GoogleFonts.manrope(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _InfoLine extends StatelessWidget {
-  const _InfoLine({required this.icon, required this.text});
-
-  final IconData icon;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 18, color: AppColors.textSecondary),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            text,
-            style: GoogleFonts.manrope(
-              fontSize: 13,
-              height: 1.5,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _UpcomingAppointmentSummary extends StatelessWidget {
-  const _UpcomingAppointmentSummary();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF7E8D7),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                'REQUESTED',
-                style: GoogleFonts.manrope(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1,
-                  color: AppColors.warning,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 14),
-        Text(
-          'Family appointment block',
-          style: GoogleFonts.cormorantGaramond(
-            fontSize: 32,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Lena and Noah',
-          style: GoogleFonts.manrope(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textSecondary,
-          ),
-        ),
-        const SizedBox(height: 16),
-        const _InfoLine(icon: Icons.schedule_outlined, text: 'Saturday, May 24 at 10:00 AM'),
-        const SizedBox(height: 10),
-        const _InfoLine(icon: Icons.home_outlined, text: 'Mock address on file for your household'),
-        const SizedBox(height: 10),
-        const _InfoLine(icon: Icons.design_services_outlined, text: 'Consultation, haircut, and finishing style'),
-      ],
-    );
-  }
-}
-
-class _UpcomingAppointmentSidebar extends StatelessWidget {
-  const _UpcomingAppointmentSidebar();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF7EFE6),
-        borderRadius: BorderRadius.circular(22),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Ready before arrival',
+            title,
             style: GoogleFonts.manrope(
               fontSize: 15,
               fontWeight: FontWeight.w800,
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Text(
-            'Your uploaded photos, inspiration, and notes stay together so the stylist can review the full plan before the visit starts.',
+            body,
             style: GoogleFonts.manrope(
-              fontSize: 14,
+              fontSize: 13,
               height: 1.65,
               color: AppColors.textSecondary,
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── 4. Featured services ─────────────────────────────────────────────────────
+
+class _FeaturedServicesSection extends StatelessWidget {
+  const _FeaturedServicesSection();
+
+  static const _services = [
+    (
+      title: 'Haircut & Style',
+      price: r'From $85',
+      description:
+          'A precision cut tailored to your face shape, hair type, and lifestyle goals.',
+      icon: Icons.content_cut_outlined,
+    ),
+    (
+      title: 'Blowout',
+      price: r'From $75',
+      description:
+          'Smooth, polished blowout for events, special occasions, or everyday luxury.',
+      icon: Icons.air_outlined,
+    ),
+    (
+      title: 'Formal Styling',
+      price: r'From $95',
+      description:
+          'Elegant updo and finishing styles for galas, dinners, or any formal event.',
+      icon: Icons.auto_awesome_outlined,
+    ),
+    (
+      title: 'Bridal / Event Hair',
+      price: r'From $150',
+      description:
+          'Full bridal or event preparation \u2014 trials available, on-location services included.',
+      icon: Icons.favorite_outline_rounded,
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+
+    return _SectionWrapper(
+      color: const Color(0xFFF9F3ED),
+      child: _MaxWidth(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const _EyebrowLabel('What we offer'),
+            const SizedBox(height: 12),
+            const _HeadingText('Featured services.'),
+            const SizedBox(height: 8),
+            _BodyText(
+              'A few of our most popular in-home appointments. Start booking to see the full menu.',
+            ),
+            const SizedBox(height: 36),
+            if (width >= 640)
+              _TwoColGrid(
+                children: _services
+                    .map((s) => _ServiceCard(
+                          title: s.title,
+                          price: s.price,
+                          description: s.description,
+                          icon: s.icon,
+                        ))
+                    .toList(),
+              )
+            else
+              Column(
+                children: _services
+                    .map((s) => Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: _ServiceCard(
+                            title: s.title,
+                            price: s.price,
+                            description: s.description,
+                            icon: s.icon,
+                          ),
+                        ))
+                    .toList(),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TwoColGrid extends StatelessWidget {
+  const _TwoColGrid({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = <Widget>[];
+    for (var i = 0; i < children.length; i += 2) {
+      rows.add(
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: children[i]),
+            const SizedBox(width: 16),
+            Expanded(
+              child: i + 1 < children.length
+                  ? children[i + 1]
+                  : const SizedBox.shrink(),
+            ),
+          ],
+        ),
+      );
+      if (i + 2 < children.length) rows.add(const SizedBox(height: 16));
+    }
+    return Column(children: rows);
+  }
+}
+
+class _ServiceCard extends StatelessWidget {
+  const _ServiceCard({
+    required this.title,
+    required this.price,
+    required this.description,
+    required this.icon,
+  });
+
+  final String title;
+  final String price;
+  final String description;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0E6DE),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(icon, color: AppColors.primary, size: 20),
+              ),
+              const Spacer(),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF7EDE4),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  price,
+                  style: GoogleFonts.manrope(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text(
+            title,
+            style: GoogleFonts.cormorantGaramond(
+              fontSize: 22,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            description,
+            style: GoogleFonts.manrope(
+              fontSize: 13,
+              height: 1.6,
+              color: AppColors.textSecondary,
+            ),
+          ),
           const SizedBox(height: 18),
-          FilledButton.icon(
-            onPressed: () => context.go('/customer/appointments'),
-            icon: const Icon(Icons.arrow_forward),
-            label: const Text('Open Appointments'),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () => context.go('/customer/book'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                side: const BorderSide(color: AppColors.border),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                textStyle: GoogleFonts.manrope(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              child: const Text('Book This'),
+            ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─── 5. Mobile service note ───────────────────────────────────────────────────
+
+class _MobileServiceNoteSection extends StatelessWidget {
+  const _MobileServiceNoteSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return _SectionWrapper(
+      color: AppColors.surface,
+      child: _MaxWidth(
+        max: 720,
+        child: Column(
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF7EDE4),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: const Icon(
+                Icons.directions_car_outlined,
+                color: AppColors.primary,
+                size: 26,
+              ),
+            ),
+            const SizedBox(height: 20),
+            _HeadingText('We come to you.', center: true),
+            const SizedBox(height: 14),
+            _BodyText(
+              'My Mobile Hair Stylist comes to you, making it easier to get salon-quality hair services without leaving your home.',
+              center: true,
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFFBF7),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.info_outline,
+                      size: 16, color: AppColors.textMuted),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Travel fees and final availability may vary by location and will be confirmed before your appointment.',
+                      style: GoogleFonts.manrope(
+                        fontSize: 13,
+                        height: 1.55,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── 6. Trust section ────────────────────────────────────────────────────────
+
+class _TrustSection extends StatelessWidget {
+  const _TrustSection();
+
+  static const _points = [
+    (
+      icon: Icons.verified_outlined,
+      title: 'Professional hair services',
+      body:
+          'Experienced stylists delivering skilled, personalized results every visit.',
+    ),
+    (
+      icon: Icons.home_outlined,
+      title: 'Convenient in-home appointments',
+      body:
+          'Skip the commute. Your appointment comes to wherever you are most comfortable.',
+    ),
+    (
+      icon: Icons.clean_hands_outlined,
+      title: 'Clean tools and quality products',
+      body:
+          'Every appointment uses sanitized tools and professional-grade products.',
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final wide = MediaQuery.sizeOf(context).width >= 700;
+
+    return _SectionWrapper(
+      color: const Color(0xFFF9F3ED),
+      child: _MaxWidth(
+        child: Column(
+          children: [
+            const _EyebrowLabel('Why choose us'),
+            const SizedBox(height: 12),
+            _HeadingText('Built around your comfort.', center: true),
+            const SizedBox(height: 40),
+            if (wide)
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: _points
+                    .map(
+                      (p) => Expanded(
+                        child: Padding(
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 10),
+                          child: _TrustPoint(
+                            icon: p.icon,
+                            title: p.title,
+                            body: p.body,
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
+              )
+            else
+              Column(
+                children: _points
+                    .map(
+                      (p) => Padding(
+                        padding: const EdgeInsets.only(bottom: 20),
+                        child: _TrustPoint(
+                          icon: p.icon,
+                          title: p.title,
+                          body: p.body,
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TrustPoint extends StatelessWidget {
+  const _TrustPoint({
+    required this.icon,
+    required this.title,
+    required this.body,
+  });
+
+  final IconData icon;
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Container(
+          width: 52,
+          height: 52,
+          decoration: BoxDecoration(
+            color: const Color(0xFFF0E6DE),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Icon(icon, color: AppColors.primary, size: 22),
+        ),
+        const SizedBox(height: 14),
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.manrope(
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          body,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.manrope(
+            fontSize: 13,
+            height: 1.65,
+            color: AppColors.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── 7. Final CTA ─────────────────────────────────────────────────────────────
+
+class _FinalCtaSection extends StatelessWidget {
+  const _FinalCtaSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return _SectionWrapper(
+      color: AppColors.surface,
+      child: _MaxWidth(
+        max: 680,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFFFFFBF7), Color(0xFFF3E6DB)],
+            ),
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Column(
+            children: [
+              _HeadingText(
+                'Ready to book your appointment?',
+                center: true,
+              ),
+              const SizedBox(height: 16),
+              _BodyText(
+                "Request your preferred service, date, time, and location. We'll confirm availability and details before your appointment.",
+                center: true,
+              ),
+              const SizedBox(height: 32),
+              _BookNowButton(label: 'Start Booking', large: true),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Footer ───────────────────────────────────────────────────────────────────
+
+class _Footer extends StatelessWidget {
+  const _Footer();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: AppColors.textPrimary,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+      child: Center(
+        child: Text(
+          '\u00A9 ${DateTime.now().year} My Mobile Hair Stylist. All rights reserved.',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.manrope(
+            fontSize: 12,
+            color: Colors.white.withValues(alpha: 0.5),
+          ),
+        ),
       ),
     );
   }

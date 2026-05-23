@@ -259,6 +259,21 @@ class BookingFlowController extends AutoDisposeAsyncNotifier<BookingFlowState> {
     });
   }
 
+  Future<String> ensureSubmittedAppointmentId() async {
+    final current = _requireState();
+    if (current.submittedAppointmentId != null) {
+      return current.submittedAppointmentId!;
+    }
+
+    await submitBookingRequest();
+    final appointmentId = state.valueOrNull?.submittedAppointmentId;
+    if (appointmentId == null) {
+      throw Exception('Booking request was not created.');
+    }
+
+    return appointmentId;
+  }
+
   Future<void> resetFlow() async {
     final current = _requireState();
     state = AsyncData(

@@ -32,6 +32,11 @@ migrate_working_dir/
 .pub/
 /build/
 /coverage/
+/temp_supabase/
+/supabase/.temp/
+/.supabase/
+**/ios/Flutter/ephemeral/
+**/android/.gradle/
 
 # Symbolication related
 app.*.symbols

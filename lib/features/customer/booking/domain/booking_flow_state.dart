@@ -320,6 +320,9 @@ class BookingFlowState {
   /// Convenience getter for the market ID of the selected address.
   String? get marketId => selectedAddress?.marketId;
 
+  /// Convenience getter for the territory ID of the selected address.
+  String? get territoryId => selectedAddress?.territoryId;
+
   List<BookingHouseholdMemberOption> get selectedMembers {
     return householdMembers
         .where((member) => selectedMemberIds.contains(member.id))

@@ -1,8 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
+import 'core/payments/stripe_config.dart';
 import 'core/supabase/supabase_client_provider.dart';
 
 /// Starts the Flutter application inside a [ProviderScope] so Riverpod
@@ -13,6 +16,11 @@ import 'core/supabase/supabase_client_provider.dart';
 /// configuration message in the auth flow.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  if (!kIsWeb && StripeConfig.isConfigured) {
+    Stripe.publishableKey = StripeConfig.publishableKey;
+    await Stripe.instance.applySettings();
+  }
 
   if (SupabaseConfig.isConfigured) {
     await Supabase.initialize(

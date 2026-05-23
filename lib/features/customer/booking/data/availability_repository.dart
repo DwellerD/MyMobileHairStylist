@@ -38,9 +38,10 @@ class AvailabilityRepository {
   /// with a specific stylist" flow without duplicating query logic.
   Future<List<BookableStylist>> loadBookableStylists({
     required String marketId,
+    String? territoryId,
     String? requestedStylistId,
   }) async {
-    final selectBuilder = _requireClient()
+    var selectBuilder = _requireClient()
         .from('stylist_profiles')
         .select('''
 id,
@@ -53,6 +54,12 @@ user_profile:user_profiles!stylist_profiles_user_profile_id_fkey(first_name, las
         .eq('market_id', marketId)
         .eq('status', 'active')
         .eq('is_accepting_bookings', true);
+
+    if (territoryId != null) {
+      selectBuilder = selectBuilder.or(
+        'territory_id.is.null,territory_id.eq.$territoryId',
+      );
+    }
 
     final response = requestedStylistId != null
         ? await selectBuilder.eq('id', requestedStylistId)
@@ -77,10 +84,12 @@ user_profile:user_profiles!stylist_profiles_user_profile_id_fkey(first_name, las
     required DateTime date,
     required int durationMinutes,
     required String marketId,
+    String? territoryId,
     String? requestedStylistId,
   }) async {
     final stylists = await loadBookableStylists(
       marketId: marketId,
+      territoryId: territoryId,
       requestedStylistId: requestedStylistId,
     );
 

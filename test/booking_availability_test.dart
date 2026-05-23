@@ -28,6 +28,7 @@ class FakeAvailabilityRepository extends AvailabilityRepository {
   @override
   Future<List<BookableStylist>> loadBookableStylists({
     required String marketId,
+    String? territoryId,
     String? requestedStylistId,
   }) async =>
       _stylists;
@@ -37,6 +38,7 @@ class FakeAvailabilityRepository extends AvailabilityRepository {
     required DateTime date,
     required int durationMinutes,
     required String marketId,
+    String? territoryId,
     String? requestedStylistId,
   }) async =>
       _slots;
@@ -103,15 +105,15 @@ Widget _buildStylistSelectionApp({
     routes: [
       GoRoute(
         path: '/customer/book/stylist',
-        builder: (_, __) => const StylistSelectionScreen(),
+        builder: (_, _) => const StylistSelectionScreen(),
       ),
       GoRoute(
         path: '/customer/book/photos',
-        builder: (_, __) => const Scaffold(body: Text('photos screen')),
+        builder: (_, _) => const Scaffold(body: Text('photos screen')),
       ),
       GoRoute(
         path: '/customer/book/time',
-        builder: (_, __) => const Scaffold(body: Text('time screen')),
+        builder: (_, _) => const Scaffold(body: Text('time screen')),
       ),
     ],
   );
@@ -137,15 +139,15 @@ Widget _buildSlotsApp({
     routes: [
       GoRoute(
         path: '/customer/book/time',
-        builder: (_, __) => const AvailableSlotsScreen(),
+        builder: (_, _) => const AvailableSlotsScreen(),
       ),
       GoRoute(
         path: '/customer/book/services',
-        builder: (_, __) => const Scaffold(body: Text('services screen')),
+        builder: (_, _) => const Scaffold(body: Text('services screen')),
       ),
       GoRoute(
         path: '/customer/book/details',
-        builder: (_, __) => const Scaffold(body: Text('details screen')),
+        builder: (_, _) => const Scaffold(body: Text('details screen')),
       ),
     ],
   );

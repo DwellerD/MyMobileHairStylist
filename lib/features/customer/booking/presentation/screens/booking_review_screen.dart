@@ -9,7 +9,7 @@ import '../providers/booking_flow_controller.dart';
 import '../widgets/booking_step_scaffold.dart';
 import '../../domain/booking_flow_state.dart';
 
-/// Final review screen before the booking request is submitted to Supabase.
+/// Final review screen before the booking request is created and paid for.
 class BookingReviewScreen extends ConsumerWidget {
   const BookingReviewScreen({super.key});
 
@@ -28,28 +28,15 @@ class BookingReviewScreen extends ConsumerWidget {
       totalSteps: 5,
       title: 'Review your request',
       subtitle:
-          'This request will be saved in Supabase, then reviewed by admin before a stylist is confirmed.',
+          'Confirm the request details, then continue to the secure deposit step.',
       errorMessage: bookingErrorMessage(bookingAsync),
       isBusy: bookingAsync.isLoading,
       secondaryLabel: 'Back to details',
       onSecondaryPressed: () => context.go('/customer/book/details'),
-      primaryLabel: 'Submit booking request',
-      primaryIcon: Icons.send_outlined,
+      primaryLabel: 'Continue to payment',
+      primaryIcon: Icons.lock_outline,
       onPrimaryPressed: bookingState.acceptedPolicy
-          ? () async {
-              await ref
-                  .read(bookingFlowControllerProvider.notifier)
-                  .submitBookingRequest();
-
-              if (!context.mounted) {
-                return;
-              }
-
-              final latestState = ref.read(bookingFlowControllerProvider).valueOrNull;
-              if (latestState?.submittedAppointmentId != null) {
-                context.go('/customer/book/submitted');
-              }
-            }
+          ? () => context.go('/customer/book/payment')
           : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -97,16 +84,26 @@ class BookingReviewScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 ...bookingState.serviceItems.map(
-                  (item) => Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.xxs),
-                    child: Text(
-                      '${item.service.name} • ${item.service.durationMinutes} min • ${item.service.priceLabel}'  +
-                      (item.assignedMemberId != null
-                          ? '\nFor: ${bookingState.householdMembers.firstWhere((m) => m.id == item.assignedMemberId, orElse: () => bookingState.householdMembers.first).displayName}'
-                          : '') +
-                      (item.notes.isNotEmpty ? '\n${item.notes}' : ''),
-                    ),
-                  ),
+                  (item) {
+                    final memberLabel = item.assignedMemberId != null
+                        ? bookingState.householdMembers
+                            .firstWhere(
+                              (member) => member.id == item.assignedMemberId,
+                              orElse: () => bookingState.householdMembers.first,
+                            )
+                            .displayName
+                        : null;
+                    final itemSummary = [
+                      '${item.service.name} • ${item.service.durationMinutes} min • ${item.service.priceLabel}',
+                      if (memberLabel != null) 'For: $memberLabel',
+                      if (item.notes.isNotEmpty) item.notes,
+                    ].join('\n');
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.xxs),
+                      child: Text(itemSummary),
+                    );
+                  },
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(

@@ -81,7 +81,7 @@ void main() {
     );
   });
 
-  testWidgets('review screen submits after policy acceptance', (
+  testWidgets('review screen continues to payment after policy acceptance', (
     WidgetTester tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(430, 2600));
@@ -120,12 +120,12 @@ void main() {
     await tester.tap(find.byType(CheckboxListTile));
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.text('Submit booking request'));
+    await tester.ensureVisible(find.text('Continue to payment'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Submit booking request'));
+    await tester.tap(find.text('Continue to payment'));
     await tester.pumpAndSettle();
 
-    expect(find.text('submitted screen'), findsOneWidget);
+    expect(find.text('payment screen'), findsOneWidget);
   });
 }
 

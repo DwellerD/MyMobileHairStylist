@@ -61,6 +61,7 @@ class _AvailableSlotsScreenState extends ConsumerState<AvailableSlotsScreen> {
           date: _selectedDate,
           durationMinutes: bookingState.estimatedDurationMinutes,
           marketId: marketId,
+          territoryId: bookingState.territoryId,
           requestedStylistId: bookingState.requestedStylistId,
         );
 
@@ -238,7 +239,7 @@ class _SlotList extends StatelessWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: slots.length,
-      separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.xs),
+      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.xs),
       itemBuilder: (context, index) {
         final slot = slots[index];
         final isSelected = selectedSlot?.startAt == slot.startAt &&
@@ -315,12 +316,14 @@ class _SlotsQuery {
     required this.date,
     required this.durationMinutes,
     required this.marketId,
+    required this.territoryId,
     this.requestedStylistId,
   });
 
   final DateTime date;
   final int durationMinutes;
   final String marketId;
+  final String? territoryId;
   final String? requestedStylistId;
 
   @override
@@ -329,10 +332,17 @@ class _SlotsQuery {
       other.date == date &&
       other.durationMinutes == durationMinutes &&
       other.marketId == marketId &&
+      other.territoryId == territoryId &&
       other.requestedStylistId == requestedStylistId;
 
   @override
-  int get hashCode => Object.hash(date, durationMinutes, marketId, requestedStylistId);
+  int get hashCode => Object.hash(
+        date,
+        durationMinutes,
+        marketId,
+        territoryId,
+        requestedStylistId,
+      );
 }
 
 final _availableSlotsProvider = FutureProvider.autoDispose
@@ -341,6 +351,7 @@ final _availableSlotsProvider = FutureProvider.autoDispose
         date: query.date,
         durationMinutes: query.durationMinutes,
         marketId: query.marketId,
+      territoryId: query.territoryId,
         requestedStylistId: query.requestedStylistId,
       );
 });

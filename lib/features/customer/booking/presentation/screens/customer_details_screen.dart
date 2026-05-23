@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_spacing.dart';
 import '../../../../../shared/widgets/app_card.dart';
-import '../../domain/booking_flow_state.dart';
 import '../providers/booking_flow_controller.dart';
 import '../widgets/booking_step_scaffold.dart';
 
@@ -116,22 +115,24 @@ class _CustomerDetailsScreenState
                     )
                   else
                     Column(
-                      children: bookingState.addresses.map((address) {
+                      children: bookingState.addresses.map<Widget>((address) {
                         final isSelected =
                             bookingState.selectedAddressId == address.id;
-                        return RadioListTile<String>(
+                        return ListTile(
                           contentPadding: EdgeInsets.zero,
-                          value: address.id,
-                          groupValue: bookingState.selectedAddressId,
-                          onChanged: (id) {
-                            if (id != null) {
-                              ref
-                                  .read(
-                                    bookingFlowControllerProvider.notifier,
-                                  )
-                                  .selectAddress(id);
-                            }
+                          onTap: () {
+                            ref
+                                .read(
+                                  bookingFlowControllerProvider.notifier,
+                                )
+                                .selectAddress(address.id);
                           },
+                          leading: Icon(
+                            isSelected
+                                ? Icons.radio_button_checked
+                                : Icons.radio_button_unchecked,
+                            color: isSelected ? AppColors.primary : null,
+                          ),
                           title: Text(
                             address.label,
                             style: TextStyle(
@@ -141,9 +142,8 @@ class _CustomerDetailsScreenState
                             ),
                           ),
                           subtitle: Text(address.shortAddress),
-                          activeColor: AppColors.primary,
                         );
-                      }).toList(),
+                      }).toList(growable: false),
                     ),
                   const SizedBox(height: AppSpacing.sm),
                   // Toggle inline add-address form
@@ -252,7 +252,9 @@ class _CustomerDetailsScreenState
                                 ? null
                                 : () async {
                                     if (!_addressFormKey.currentState!
-                                        .validate()) return;
+                                        .validate()) {
+                                      return;
+                                    }
                                     await ref
                                         .read(
                                           bookingFlowControllerProvider

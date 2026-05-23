@@ -73,6 +73,9 @@ preferred_time_window,
 estimated_total_cents,
 customer_notes,
 assigned_stylist_profile_id,
+requested_stylist:stylist_profiles!appointments_requested_stylist_profile_id_fkey(
+  user_profile:user_profiles!stylist_profiles_user_profile_id_fkey(first_name, last_name)
+),
 address:addresses!appointments_address_id_fkey(line1, city, state, postal_code, access_notes),
 customer_profile:customer_profiles!appointments_customer_profile_id_fkey(
   user_profile:user_profiles!customer_profiles_user_profile_id_fkey(first_name, last_name)
@@ -103,7 +106,27 @@ internal_notes(
 safety_events(id, appointment_id, event_type, status, details, created_at)
 ''').eq('id', appointmentId).single();
 
-    final availableStylists = await loadStylistOptions();
+    final dispatchEventsResponse = await _requireClient()
+        .from('appointment_dispatch_events')
+        .select('''
+id,
+event_type,
+previous_status,
+next_status,
+notes,
+created_at,
+actor:user_profiles!appointment_dispatch_events_actor_user_profile_id_fkey(first_name, last_name),
+previous_stylist:stylist_profiles!appointment_dispatch_events_previous_stylist_profile_id_fkey(
+  user_profile:user_profiles!stylist_profiles_user_profile_id_fkey(first_name, last_name)
+),
+next_stylist:stylist_profiles!appointment_dispatch_events_next_stylist_profile_id_fkey(
+  user_profile:user_profiles!stylist_profiles_user_profile_id_fkey(first_name, last_name)
+)
+''')
+        .eq('appointment_id', appointmentId)
+        .order('created_at', ascending: false);
+
+    final availableStylists = await loadStylistOptionsForAppointment(appointmentId);
     final address = response['address'] as Map<String, dynamic>?;
     final customerProfile = response['customer_profile'] as Map<String, dynamic>?;
     final customerUserProfile = customerProfile?['user_profile'] as Map<String, dynamic>?;
@@ -179,6 +202,9 @@ safety_events(id, appointment_id, event_type, status, details, created_at)
           .toList(growable: false)
         ..sort((left, right) => right.createdAt.compareTo(left.createdAt)),
       availableStylists: availableStylists,
+      dispatchEvents: (dispatchEventsResponse as List<dynamic>)
+          .map((dynamic raw) => _mapDispatchEvent(raw as Map<String, dynamic>))
+          .toList(growable: false),
     );
   }
 
@@ -460,11 +486,24 @@ user_roles(id, role, status, is_primary, market_id, territory_id)
         .toList(growable: false);
   }
 
-  Future<List<AdminStylistOption>> loadStylistOptions() async {
-    final response = await _requireClient().from('stylist_profiles').select('''
+  Future<List<AdminStylistOption>> loadStylistOptions({
+    String? marketId,
+    String? territoryId,
+  }) async {
+    var query = _requireClient().from('stylist_profiles').select('''
 id,
+market_id,
+territory_id,
 user_profile:user_profiles!stylist_profiles_user_profile_id_fkey(first_name, last_name)
-''');
+''').eq('status', 'active').eq('is_accepting_bookings', true);
+
+    if (marketId != null) {
+      query = query.eq('market_id', marketId);
+    }
+
+    final response = territoryId == null
+        ? await query
+        : await query.or('territory_id.is.null,territory_id.eq.$territoryId');
 
     return (response as List<dynamic>)
         .map((dynamic raw) {
@@ -481,6 +520,21 @@ user_profile:user_profiles!stylist_profiles_user_profile_id_fkey(first_name, las
         .toList(growable: false);
   }
 
+  Future<List<AdminStylistOption>> loadStylistOptionsForAppointment(
+    String appointmentId,
+  ) async {
+    final appointment = await _requireClient()
+        .from('appointments')
+        .select('market_id, territory_id')
+        .eq('id', appointmentId)
+        .single();
+
+    return loadStylistOptions(
+      marketId: appointment['market_id'] as String?,
+      territoryId: appointment['territory_id'] as String?,
+    );
+  }
+
   Future<void> approveAppointment(String appointmentId) async {
     await updateAppointmentStatus(appointmentId: appointmentId, status: 'approved');
   }
@@ -493,22 +547,26 @@ user_profile:user_profiles!stylist_profiles_user_profile_id_fkey(first_name, las
     required String appointmentId,
     required String status,
   }) async {
-    await _requireClient().from('appointments').update({
-      'status': status,
-    }).eq('id', appointmentId);
-
-    // TODO: Narrow appointment status mutation policies so only admins can edit
-    // approval and assignment lifecycle fields in production.
+    await _requireClient().rpc(
+      'update_appointment_status_admin',
+      params: <String, dynamic>{
+        'p_appointment_id': appointmentId,
+        'p_status': status,
+      },
+    );
   }
 
   Future<void> assignStylist({
     required String appointmentId,
     required String stylistProfileId,
   }) async {
-    await _requireClient().from('appointments').update({
-      'assigned_stylist_profile_id': stylistProfileId,
-      'status': 'assigned',
-    }).eq('id', appointmentId);
+    await _requireClient().rpc(
+      'assign_appointment_stylist',
+      params: <String, dynamic>{
+        'p_appointment_id': appointmentId,
+        'p_stylist_profile_id': stylistProfileId,
+      },
+    );
   }
 
   Future<void> upsertService({
@@ -757,6 +815,35 @@ appointment:appointments!safety_events_appointment_id_fkey(
       status: row['status'] as String,
       recordedAt: _parseDateTime(recordedAt),
       eventNotes: row['event_notes'] as String?,
+    );
+  }
+
+  AdminDispatchEvent _mapDispatchEvent(Map<String, dynamic> row) {
+    final actor = row['actor'] as Map<String, dynamic>?;
+    final previousStylist = row['previous_stylist'] as Map<String, dynamic>?;
+    final previousStylistUser = previousStylist?['user_profile'] as Map<String, dynamic>?;
+    final nextStylist = row['next_stylist'] as Map<String, dynamic>?;
+    final nextStylistUser = nextStylist?['user_profile'] as Map<String, dynamic>?;
+
+    return AdminDispatchEvent(
+      id: row['id'] as String,
+      eventType: row['event_type'] as String,
+      createdAt: _parseDateTime(row['created_at'] as String),
+      actorName: _joinName(
+        actor?['first_name'] as String?,
+        actor?['last_name'] as String?,
+      ),
+      previousStatus: row['previous_status'] as String?,
+      nextStatus: row['next_status'] as String?,
+      previousStylistName: _joinName(
+        previousStylistUser?['first_name'] as String?,
+        previousStylistUser?['last_name'] as String?,
+      ),
+      nextStylistName: _joinName(
+        nextStylistUser?['first_name'] as String?,
+        nextStylistUser?['last_name'] as String?,
+      ),
+      notes: row['notes'] as String?,
     );
   }
 

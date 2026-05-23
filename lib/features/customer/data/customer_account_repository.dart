@@ -160,11 +160,11 @@ class CustomerAccountRepository {
   }) async {
     await _requireClient().from('household_members').update({
       'first_name': firstName,
-      if (lastName != null) 'last_name': lastName,
-      if (dateOfBirth != null) 'date_of_birth': dateOfBirth.toIso8601String(),
-      if (generalNotes != null) 'general_notes': generalNotes,
-      if (sensoryNotes != null) 'sensory_notes': sensoryNotes,
-      if (hairNotes != null) 'hair_notes': hairNotes,
+      ...?lastName == null ? null : {'last_name': lastName},
+      ...?dateOfBirth == null ? null : {'date_of_birth': dateOfBirth.toIso8601String()},
+      ...?generalNotes == null ? null : {'general_notes': generalNotes},
+      ...?sensoryNotes == null ? null : {'sensory_notes': sensoryNotes},
+      ...?hairNotes == null ? null : {'hair_notes': hairNotes},
     }).eq('id', memberId);
   }
 
@@ -180,11 +180,11 @@ class CustomerAccountRepository {
     await _requireClient().from('household_members').insert({
       'household_id': householdId,
       'first_name': firstName,
-      if (lastName != null) 'last_name': lastName,
-      if (dateOfBirth != null) 'date_of_birth': dateOfBirth.toIso8601String(),
-      if (generalNotes != null) 'general_notes': generalNotes,
-      if (sensoryNotes != null) 'sensory_notes': sensoryNotes,
-      if (hairNotes != null) 'hair_notes': hairNotes,
+      ...?lastName == null ? null : {'last_name': lastName},
+      ...?dateOfBirth == null ? null : {'date_of_birth': dateOfBirth.toIso8601String()},
+      ...?generalNotes == null ? null : {'general_notes': generalNotes},
+      ...?sensoryNotes == null ? null : {'sensory_notes': sensoryNotes},
+      ...?hairNotes == null ? null : {'hair_notes': hairNotes},
     });
   }
 

@@ -40,6 +40,10 @@ class _StylistAvailabilityScreenState
         ref.watch(stylistAvailabilityControllerProvider.notifier);
     final mutationState =
         ref.watch(stylistAvailabilityControllerProvider);
+    final mutationError =
+      mutationState is AsyncError<void>
+        ? mutationState.error
+        : null;
 
     return Scaffold(
       body: SafeArea(
@@ -60,11 +64,11 @@ class _StylistAvailabilityScreenState
               }),
             ),
             const SizedBox(height: AppSpacing.sm),
-            if (mutationState is AsyncError)
+            if (mutationError != null)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                 child: Text(
-                  'Error: ${(mutationState as AsyncError).error}',
+                  'Error: $mutationError',
                   style: const TextStyle(color: AppColors.danger),
                 ),
               ),
@@ -93,7 +97,7 @@ class _StylistAvailabilityScreenState
                       vertical: AppSpacing.sm,
                     ),
                     itemCount: blocks.length,
-                    separatorBuilder: (_, __) =>
+                    separatorBuilder: (_, _) =>
                         const SizedBox(height: AppSpacing.sm),
                     itemBuilder: (context, index) {
                       final block = blocks[index];
@@ -408,7 +412,7 @@ class _BlockFormSheetState extends ConsumerState<_BlockFormSheet> {
           Text('Type', style: Theme.of(context).textTheme.labelLarge),
           const SizedBox(height: AppSpacing.xs),
           DropdownButtonFormField<String>(
-            value: _blockType,
+            initialValue: _blockType,
             decoration: const InputDecoration(border: OutlineInputBorder()),
             items: const [
               DropdownMenuItem(

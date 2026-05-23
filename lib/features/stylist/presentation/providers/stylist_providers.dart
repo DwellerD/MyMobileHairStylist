@@ -28,6 +28,14 @@ final stylistScheduleAppointmentsProvider = FutureProvider<List<StylistAppointme
   return repository.getScheduleAppointments(stylistProfile: stylistProfile);
 });
 
+/// Local unassigned booking requests this stylist may claim.
+final stylistClaimableAppointmentsProvider =
+    FutureProvider<List<ClaimableAppointmentSummary>>((ref) async {
+  final repository = ref.watch(stylistRepositoryProvider);
+  final stylistProfile = await ref.watch(currentStylistProfileProvider.future);
+  return repository.getClaimableAppointments(stylistProfile: stylistProfile);
+});
+
 /// Detail provider for one appointment selected by the stylist.
 final stylistAppointmentDetailProvider = FutureProvider.family<StylistAppointmentDetail, String>((ref, appointmentId) async {
   final repository = ref.watch(stylistRepositoryProvider);
@@ -118,6 +126,17 @@ class StylistActionController extends AsyncNotifier<void> {
     });
   }
 
+  Future<void> claimAppointmentRequest({required String appointmentId}) async {
+    await _runAction(() async {
+      await ref.read(stylistRepositoryProvider).claimAppointmentRequest(
+            appointmentId: appointmentId,
+          );
+      ref.invalidate(stylistClaimableAppointmentsProvider);
+      ref.invalidate(stylistTodayAppointmentsProvider);
+      ref.invalidate(stylistScheduleAppointmentsProvider);
+    });
+  }
+
   Future<void> _runAction(Future<void> Function() action) async {
     state = const AsyncLoading();
     final nextState = await AsyncValue.guard(action);
@@ -141,6 +160,7 @@ Future<AppUser> _requireAppUser(Ref ref) async {
 void _refreshAppointmentSlices(Ref ref, String appointmentId) {
   ref.invalidate(stylistTodayAppointmentsProvider);
   ref.invalidate(stylistScheduleAppointmentsProvider);
+  ref.invalidate(stylistClaimableAppointmentsProvider);
   ref.invalidate(stylistAppointmentDetailProvider(appointmentId));
   ref.invalidate(stylistSafetyEventsProvider);
 }

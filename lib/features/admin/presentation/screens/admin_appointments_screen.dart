@@ -108,7 +108,9 @@ class _AdminAppointmentsScreenState extends ConsumerState<AdminAppointmentsScree
   }
 
   Future<void> _showAssignStylistSheet(String appointmentId) async {
-    final options = await ref.read(adminRepositoryProvider).loadStylistOptions();
+    final options = await ref
+        .read(adminRepositoryProvider)
+        .loadStylistOptionsForAppointment(appointmentId);
     if (!mounted) {
       return;
     }

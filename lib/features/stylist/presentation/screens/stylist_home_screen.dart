@@ -17,9 +17,12 @@ class StylistHomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final todayAsync = ref.watch(stylistTodayAppointmentsProvider);
+    final claimableAsync = ref.watch(stylistClaimableAppointmentsProvider);
 
     return todayAsync.when(
       data: (appointments) {
+        return claimableAsync.when(
+          data: (claimableAppointments) {
         return ListView(
           padding: const EdgeInsets.all(AppSpacing.pagePadding),
           children: [
@@ -53,14 +56,57 @@ class StylistHomeScreen extends ConsumerWidget {
                 ],
               ),
             ),
+            const SizedBox(height: AppSpacing.sm),
+            AppCard(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${claimableAppointments.length} local request${claimableAppointments.length == 1 ? '' : 's'} available',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: AppSpacing.xxs),
+                        Text(
+                          claimableAppointments.isEmpty
+                              ? 'No unassigned local requests match your territory right now.'
+                              : 'Claim a local request below to move it into your working schedule.',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.notifications_active_outlined),
+                ],
+              ),
+            ),
             const SizedBox(height: AppSpacing.sectionGap),
+            if (claimableAppointments.isNotEmpty) ...[
+              Text(
+                'Local requests',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              ...claimableAppointments.map(
+                (appointment) => Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  child: _ClaimableAppointmentCard(appointment: appointment),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sectionGap),
+            ],
             if (appointments.isEmpty)
               EmptyState(
                 title: 'Nothing assigned for today',
                 description: 'Assigned visits will appear here once admin confirms the appointment and stylist assignment.',
                 icon: Icons.event_available_outlined,
                 actionLabel: 'Refresh',
-                onActionPressed: () => ref.invalidate(stylistTodayAppointmentsProvider),
+                onActionPressed: () {
+                  ref.invalidate(stylistTodayAppointmentsProvider);
+                  ref.invalidate(stylistClaimableAppointmentsProvider);
+                },
               )
             else
               ...appointments.map(
@@ -70,6 +116,18 @@ class StylistHomeScreen extends ConsumerWidget {
                 ),
               ),
           ],
+        );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, _) => Center(
+            child: EmptyState(
+              title: 'Could not load local requests',
+              description: error.toString().replaceFirst('Exception: ', ''),
+              icon: Icons.notifications_off_outlined,
+              actionLabel: 'Retry',
+              onActionPressed: () => ref.invalidate(stylistClaimableAppointmentsProvider),
+            ),
+          ),
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -81,6 +139,86 @@ class StylistHomeScreen extends ConsumerWidget {
           actionLabel: 'Retry',
           onActionPressed: () => ref.invalidate(stylistTodayAppointmentsProvider),
         ),
+      ),
+    );
+  }
+}
+
+class _ClaimableAppointmentCard extends ConsumerWidget {
+  const _ClaimableAppointmentCard({required this.appointment});
+
+  final ClaimableAppointmentSummary appointment;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final actionState = ref.watch(stylistActionControllerProvider);
+
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  appointment.customerFirstName,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ),
+              if (appointment.requestedStylist)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: AppSpacing.xxs,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.warning.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    'Requested you',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.warning,
+                        ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text('${_formatTime(appointment.startsAt)} · ${appointment.cityOrArea}'),
+          const SizedBox(height: AppSpacing.xxs),
+          Text(appointment.serviceSummary),
+          const SizedBox(height: AppSpacing.xxs),
+          Text('${appointment.estimatedDurationMinutes} min · ${appointment.addressSummary}'),
+          const SizedBox(height: AppSpacing.md),
+          FilledButton(
+            onPressed: actionState.isLoading
+                ? null
+                : () async {
+                    try {
+                      await ref
+                          .read(stylistActionControllerProvider.notifier)
+                          .claimAppointmentRequest(appointmentId: appointment.id);
+                      if (!context.mounted) {
+                        return;
+                      }
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Appointment claimed.')),
+                      );
+                    } catch (_) {
+                      if (!context.mounted) {
+                        return;
+                      }
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('This request could not be claimed.'),
+                        ),
+                      );
+                    }
+                  },
+            child: const Text('Claim request'),
+          ),
+        ],
       ),
     );
   }

@@ -40,6 +40,7 @@ class StylistSelectionScreen extends ConsumerWidget {
 
         return _StylistSelectionBody(
           marketId: marketId,
+          territoryId: bookingState.territoryId,
           requestedStylistId: bookingState.requestedStylistId,
         );
       },
@@ -50,16 +51,18 @@ class StylistSelectionScreen extends ConsumerWidget {
 class _StylistSelectionBody extends ConsumerWidget {
   const _StylistSelectionBody({
     required this.marketId,
+    required this.territoryId,
     this.requestedStylistId,
   });
 
   final String marketId;
+  final String? territoryId;
   final String? requestedStylistId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final stylistsAsync = ref.watch(
-      _bookableStylistsProvider(marketId),
+      _bookableStylistsProvider((marketId: marketId, territoryId: territoryId)),
     );
 
     return BookingStepScaffold(
@@ -101,7 +104,7 @@ class _StylistSelectionBody extends ConsumerWidget {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: stylists.length,
-            separatorBuilder: (_, __) =>
+            separatorBuilder: (_, _) =>
                 const SizedBox(height: AppSpacing.sm),
             itemBuilder: (context, index) {
               final stylist = stylists[index];
@@ -197,8 +200,9 @@ class _StylistSelectionBody extends ConsumerWidget {
 // ─── Scoped provider ─────────────────────────────────────────────────────────
 
 final _bookableStylistsProvider = FutureProvider.autoDispose
-    .family<List<BookableStylist>, String>((ref, marketId) async {
+    .family<List<BookableStylist>, ({String marketId, String? territoryId})>((ref, query) async {
   return ref.watch(availabilityRepositoryProvider).loadBookableStylists(
-        marketId: marketId,
+        marketId: query.marketId,
+        territoryId: query.territoryId,
       );
 });
