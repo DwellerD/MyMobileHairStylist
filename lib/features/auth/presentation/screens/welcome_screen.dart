@@ -148,93 +148,36 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                       isDesktop ? Axis.horizontal : Axis.vertical,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Expanded(
-                                      flex: isDesktop ? 11 : 0,
-                                      child: Padding(
-                                        padding: EdgeInsets.only(
-                                          right: isDesktop ? 28 : 0,
-                                          bottom: isDesktop ? 0 : 24,
+                                    if (isDesktop)
+                                      Expanded(
+                                        flex: 11,
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(right: 28),
+                                          child: _HeroCopy(
+                                            headlineStyle: headlineStyle,
+                                            scriptStyle: scriptStyle,
+                                            isTablet: isTablet,
+                                            onStartPrep: () => _scrollToSection(_bookingKey),
+                                          ),
                                         ),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            _MutedPill(
-                                              icon: Icons.favorite_border,
-                                              label:
-                                                  'Luxury in-home hair care for modern households',
-                                            ),
-                                            const SizedBox(height: 22),
-                                            Text('HELP YOUR', style: headlineStyle),
-                                            Transform.translate(
-                                              offset: const Offset(0, -8),
-                                              child: Text(
-                                                'Stylist Prepare',
-                                                style: scriptStyle,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              'The more detail you share, the better I can understand your hair goals and create a plan before I arrive. This home page mirrors that calm, elevated prep experience.',
-                                              style: GoogleFonts.manrope(
-                                                fontSize: isTablet ? 18 : 16,
-                                                height: 1.65,
-                                                color: AppColors.textSecondary,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 26),
-                                            Wrap(
-                                              spacing: 12,
-                                              runSpacing: 12,
-                                              children: [
-                                                FilledButton.icon(
-                                                  onPressed: () =>
-                                                      _scrollToSection(_bookingKey),
-                                                  icon: const Icon(Icons.photo_camera_outlined),
-                                                  label: const Text('Start The Prep'),
-                                                ),
-                                                OutlinedButton.icon(
-                                                  onPressed: () => context.go('/login'),
-                                                  icon: const Icon(Icons.login),
-                                                  label: const Text('Log In'),
-                                                ),
-                                                TextButton.icon(
-                                                  onPressed: () =>
-                                                      context.go('/stylist/portal'),
-                                                  icon: const Icon(
-                                                    Icons.content_cut_outlined,
-                                                  ),
-                                                  label: const Text('Stylist Portal'),
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 26),
-                                            Wrap(
-                                              spacing: 12,
-                                              runSpacing: 12,
-                                              children: const [
-                                                _StatPill(
-                                                  label: 'Private photo upload',
-                                                  icon: Icons.lock_outline,
-                                                ),
-                                                _StatPill(
-                                                  label: 'Tailored consultation',
-                                                  icon: Icons.chat_bubble_outline,
-                                                ),
-                                                _StatPill(
-                                                  label: 'Prepared before arrival',
-                                                  icon: Icons.event_available_outlined,
-                                                ),
-                                              ],
-                                            ),
-                                          ],
+                                      )
+                                    else
+                                      Padding(
+                                        padding: const EdgeInsets.only(bottom: 24),
+                                        child: _HeroCopy(
+                                          headlineStyle: headlineStyle,
+                                          scriptStyle: scriptStyle,
+                                          isTablet: isTablet,
+                                          onStartPrep: () => _scrollToSection(_bookingKey),
                                         ),
                                       ),
-                                    ),
-                                    Expanded(
-                                      flex: isDesktop ? 10 : 0,
-                                      child: _HeroVisual(isTablet: isTablet),
-                                    ),
+                                    if (isDesktop)
+                                      Expanded(
+                                        flex: 10,
+                                        child: _HeroVisual(isTablet: isTablet),
+                                      )
+                                    else
+                                      _HeroVisual(isTablet: isTablet),
                                   ],
                                 ),
                                 const SizedBox(height: 24),
@@ -741,31 +684,55 @@ class _PrepBoard extends StatelessWidget {
             direction: isDesktop ? Axis.horizontal : Axis.vertical,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: _UploadPanel(
+              if (isDesktop)
+                const Expanded(
+                  child: _UploadPanel(
+                    title: '1. Upload photos of your hair',
+                    subtitle: 'Add clear photos in natural light.',
+                    footer: [
+                      _MiniTag(label: 'Front'),
+                      _MiniTag(label: 'Back'),
+                      _MiniTag(label: 'Left side'),
+                      _MiniTag(label: 'Right side'),
+                    ],
+                  ),
+                )
+              else
+                const _UploadPanel(
                   title: '1. Upload photos of your hair',
                   subtitle: 'Add clear photos in natural light.',
-                  footer: const [
+                  footer: [
                     _MiniTag(label: 'Front'),
                     _MiniTag(label: 'Back'),
                     _MiniTag(label: 'Left side'),
                     _MiniTag(label: 'Right side'),
                   ],
                 ),
-              ),
               SizedBox(width: isDesktop ? 18 : 0, height: isDesktop ? 0 : 18),
-              Expanded(
-                child: _UploadPanel(
+              if (isDesktop)
+                const Expanded(
+                  child: _UploadPanel(
+                    title: '2. Add inspiration photos',
+                    subtitle: 'Upload styles, cuts, or colours you love.',
+                    footer: [
+                      _ReferenceThumb(tone: Color(0xFF8B664E)),
+                      _ReferenceThumb(tone: Color(0xFFAA7A5B)),
+                      _ReferenceThumb(tone: Color(0xFF6B5344)),
+                      _ReferenceThumb(tone: Color(0xFFB48B6A)),
+                    ],
+                  ),
+                )
+              else
+                const _UploadPanel(
                   title: '2. Add inspiration photos',
                   subtitle: 'Upload styles, cuts, or colours you love.',
-                  footer: const [
+                  footer: [
                     _ReferenceThumb(tone: Color(0xFF8B664E)),
                     _ReferenceThumb(tone: Color(0xFFAA7A5B)),
                     _ReferenceThumb(tone: Color(0xFF6B5344)),
                     _ReferenceThumb(tone: Color(0xFFB48B6A)),
                   ],
                 ),
-              ),
             ],
           ),
           const SizedBox(height: 22),
@@ -807,8 +774,56 @@ class _PrepBoard extends StatelessWidget {
           Flex(
             direction: isDesktop ? Axis.horizontal : Axis.vertical,
             children: [
-              Expanded(
-                child: Container(
+              if (isDesktop)
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFAF1E9),
+                      borderRadius: BorderRadius.circular(22),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 54,
+                          height: 54,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: const Color(0xFFD8BCAB)),
+                          ),
+                          child: const Icon(Icons.favorite_border, color: AppColors.accent),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Your comfort, your style',
+                                style: GoogleFonts.manrope(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'This helps me prepare everything I need so you get the best in-home salon experience.',
+                                style: GoogleFonts.manrope(
+                                  fontSize: 13,
+                                  height: 1.5,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                Container(
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFAF1E9),
@@ -853,10 +868,27 @@ class _PrepBoard extends StatelessWidget {
                     ],
                   ),
                 ),
-              ),
               SizedBox(width: isDesktop ? 18 : 0, height: isDesktop ? 0 : 18),
-              Expanded(
-                child: FilledButton.icon(
+              if (isDesktop)
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: () => context.go('/signup'),
+                    icon: const Icon(Icons.favorite),
+                    label: const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 18),
+                      child: Text('SUBMIT MY PHOTOS & DETAILS'),
+                    ),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF232125),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                    ),
+                  ),
+                )
+              else
+                FilledButton.icon(
                   onPressed: () => context.go('/signup'),
                   icon: const Icon(Icons.favorite),
                   label: const Padding(
@@ -871,7 +903,6 @@ class _PrepBoard extends StatelessWidget {
                     ),
                   ),
                 ),
-              ),
             ],
           ),
         ],
@@ -1104,23 +1135,53 @@ class _GalleryStrip extends StatelessWidget {
         direction: isDesktop ? Axis.horizontal : Axis.vertical,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            flex: isDesktop ? 7 : 0,
-            child: Wrap(
-              spacing: 16,
-              runSpacing: 16,
-              children: const [
-                _GalleryPhotoCard(title: 'Soft layers', tone: Color(0xFFB18767)),
-                _GalleryPhotoCard(title: 'Warm dimension', tone: Color(0xFF7C624C)),
-                _GalleryPhotoCard(title: 'Lived-in blonde', tone: Color(0xFFC4A07B)),
-                _GalleryPhotoCard(title: 'Elegant upstyle', tone: Color(0xFF8A6856)),
-              ],
-            ),
-          ),
+          if (isDesktop)
+            const Expanded(
+              flex: 7,
+              child: _GalleryCards(),
+            )
+          else
+            const _GalleryCards(),
           SizedBox(width: isDesktop ? 22 : 0, height: isDesktop ? 0 : 22),
-          Expanded(
-            flex: isDesktop ? 4 : 0,
-            child: Container(
+          if (isDesktop)
+            Expanded(
+              flex: 4,
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFFBF8),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Visual direction',
+                      style: GoogleFonts.manrope(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Because I could not directly extract the original screenshot assets, this version uses soft illustration-style placeholders and warm tonal blocks that can be swapped for real brand photos later.',
+                      style: GoogleFonts.manrope(
+                        fontSize: 14,
+                        height: 1.7,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    const _BulletPoint(text: 'Warm ivory, sand, blush, cocoa, and soft black remain the anchor colors.'),
+                    const _BulletPoint(text: 'Typography leans editorial with a serif headline and script accent.'),
+                    const _BulletPoint(text: 'Cards and mock fields are intentionally quiet so future photography can take over.'),
+                  ],
+                ),
+              ),
+            )
+          else
+            Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: const Color(0xFFFFFBF8),
@@ -1153,9 +1214,100 @@ class _GalleryStrip extends StatelessWidget {
                 ],
               ),
             ),
-          ),
         ],
       ),
+    );
+  }
+}
+
+class _HeroCopy extends StatelessWidget {
+  const _HeroCopy({
+    required this.headlineStyle,
+    required this.scriptStyle,
+    required this.isTablet,
+    required this.onStartPrep,
+  });
+
+  final TextStyle headlineStyle;
+  final TextStyle scriptStyle;
+  final bool isTablet;
+  final VoidCallback onStartPrep;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _MutedPill(
+          icon: Icons.favorite_border,
+          label: 'Luxury in-home hair care for modern households',
+        ),
+        const SizedBox(height: 22),
+        Text('HELP YOUR', style: headlineStyle),
+        Transform.translate(
+          offset: const Offset(0, -8),
+          child: Text('Stylist Prepare', style: scriptStyle),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'The more detail you share, the better I can understand your hair goals and create a plan before I arrive. This home page mirrors that calm, elevated prep experience.',
+          style: GoogleFonts.manrope(
+            fontSize: isTablet ? 18 : 16,
+            height: 1.65,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        const SizedBox(height: 26),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            FilledButton.icon(
+              onPressed: onStartPrep,
+              icon: const Icon(Icons.photo_camera_outlined),
+              label: const Text('Start The Prep'),
+            ),
+            OutlinedButton.icon(
+              onPressed: () => context.go('/login'),
+              icon: const Icon(Icons.login),
+              label: const Text('Log In'),
+            ),
+            TextButton.icon(
+              onPressed: () => context.go('/stylist/portal'),
+              icon: const Icon(Icons.content_cut_outlined),
+              label: const Text('Stylist Portal'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 26),
+        const Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            _StatPill(label: 'Private photo upload', icon: Icons.lock_outline),
+            _StatPill(label: 'Tailored consultation', icon: Icons.chat_bubble_outline),
+            _StatPill(label: 'Prepared before arrival', icon: Icons.event_available_outlined),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _GalleryCards extends StatelessWidget {
+  const _GalleryCards();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Wrap(
+      spacing: 16,
+      runSpacing: 16,
+      children: [
+        _GalleryPhotoCard(title: 'Soft layers', tone: Color(0xFFB18767)),
+        _GalleryPhotoCard(title: 'Warm dimension', tone: Color(0xFF7C624C)),
+        _GalleryPhotoCard(title: 'Lived-in blonde', tone: Color(0xFFC4A07B)),
+        _GalleryPhotoCard(title: 'Elegant upstyle', tone: Color(0xFF8A6856)),
+      ],
     );
   }
 }
@@ -1267,8 +1419,28 @@ class _AboutBand extends StatelessWidget {
         direction: isDesktop ? Axis.horizontal : Axis.vertical,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
+          if (isDesktop)
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Tips for the best photos',
+                    style: GoogleFonts.manrope(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const _BulletPoint(text: 'Use natural lighting and avoid harsh overhead shadows.'),
+                  const _BulletPoint(text: 'Keep filters off so colour and texture stay accurate.'),
+                  const _BulletPoint(text: 'Show your hair down and include recent salon work when possible.'),
+                ],
+              ),
+            )
+          else
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -1285,10 +1457,63 @@ class _AboutBand extends StatelessWidget {
                 const _BulletPoint(text: 'Show your hair down and include recent salon work when possible.'),
               ],
             ),
-          ),
+          
           SizedBox(width: isDesktop ? 22 : 0, height: isDesktop ? 0 : 22),
-          Expanded(
-            child: Container(
+          if (isDesktop)
+            Expanded(
+              child: Container(
+                height: 180,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  gradient: const LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [Color(0xFFF1E2D6), Color(0xFFF9F4ED)],
+                  ),
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Positioned(
+                      left: 28,
+                      bottom: 22,
+                      child: Container(
+                        width: 110,
+                        height: 126,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFC79C79),
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(54),
+                            bottom: Radius.circular(26),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      right: 28,
+                      bottom: 18,
+                      child: Transform.rotate(
+                        angle: -0.16,
+                        child: Container(
+                          width: 82,
+                          height: 126,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF27252A),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.white, width: 5),
+                          ),
+                          child: const Center(
+                            child: Icon(Icons.photo_camera_front_outlined, color: Colors.white70),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            Container(
               height: 180,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(24),
@@ -1338,10 +1563,51 @@ class _AboutBand extends StatelessWidget {
                 ],
               ),
             ),
-          ),
+          
           SizedBox(width: isDesktop ? 22 : 0, height: isDesktop ? 0 : 22),
-          Expanded(
-            child: Container(
+          if (isDesktop)
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(22),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFBF3EB),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: const [
+                        Icon(Icons.chat_bubble_outline, color: AppColors.textSecondary),
+                        SizedBox(width: 10),
+                        Text('Questions?'),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'I’m here to help. Send a message anytime and I can guide you on what photos or notes will give the best result.',
+                      style: GoogleFonts.manrope(
+                        fontSize: 13,
+                        height: 1.7,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton.icon(
+                      onPressed: () => context.go('/signup'),
+                      icon: const Icon(Icons.send_outlined),
+                      label: const Text('Message us'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.accent,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            Container(
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
                 color: const Color(0xFFFBF3EB),
@@ -1378,7 +1644,7 @@ class _AboutBand extends StatelessWidget {
                 ],
               ),
             ),
-          ),
+          
         ],
       ),
     );

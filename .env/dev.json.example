@@ -1,0 +1,10 @@
+{
+  "SdkRoot": "<output of: xcrun --sdk iphoneos --show-sdk-path>",
+  "SUPABASE_URL": "https://xdykcrwbkupevoanunto.supabase.co",
+  "SUPABASE_ANON_KEY": "",
+  "STRIPE_PUBLISHABLE_KEY": "pk_test_51TZvr81p4S07mBicjV56W7avqil2IounqU8BvhhSasBNubnQccbPcgzglQ8Mg3ONdPzHe2bcA5DPVirWVhdE7t5W00t1StW5i9"
+}
+
+
+
+

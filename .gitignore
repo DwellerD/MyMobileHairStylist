@@ -35,6 +35,7 @@ migrate_working_dir/
 /temp_supabase/
 /supabase/.temp/
 /.supabase/
+/.env/dev.json
 **/ios/Flutter/ephemeral/
 **/android/.gradle/
 

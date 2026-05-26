@@ -38,10 +38,17 @@ test/
 2. Install project dependencies with `flutter pub get`.
 3. Create a Supabase project.
 4. Apply the SQL files in `supabase/migrations/` in order.
-5. Run the app with compile-time environment values:
+5. Copy `.env/dev.json.example` to `.env/dev.json` and fill in your values.
+6. On iOS, set `SdkRoot` in `.env/dev.json` from:
 
-```powershell
-flutter run --dart-define=SUPABASE_URL=YOUR_URL --dart-define=SUPABASE_ANON_KEY=YOUR_ANON_KEY
+```bash
+xcrun --sdk iphoneos --show-sdk-path
+```
+
+7. Run the app with your define file:
+
+```bash
+flutter run --dart-define-from-file=.env/dev.json
 ```
 
 If the dart defines are missing, the app still boots but Supabase-backed flows remain unavailable.
