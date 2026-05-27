@@ -440,10 +440,17 @@ class _ContinueBar extends StatelessWidget {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: MainAxisSize.max,
         children: [
-          Text(isBusy ? 'Working...' : label),
-          const SizedBox(width: 10),
+          Flexible(
+            child: Text(
+              isBusy ? 'Working...' : label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const SizedBox(width: 8),
           if (!isBusy)
             const Icon(Icons.arrow_forward, size: 20, color: Colors.white),
           if (isBusy)

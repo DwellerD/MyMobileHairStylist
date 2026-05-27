@@ -383,12 +383,21 @@ class _CategoryPillsBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const categoryOrder = <BookingServiceCategory>[
+      BookingServiceCategory.women,
+      BookingServiceCategory.men,
+      BookingServiceCategory.kids,
+      BookingServiceCategory.hairColor,
+      BookingServiceCategory.addOns,
+      BookingServiceCategory.specialEventWedding,
+    ];
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       clipBehavior: Clip.none,
       child: Row(
         children: [
-          for (final cat in BookingServiceCategory.values) ...[
+          for (final cat in categoryOrder) ...[
             _CategoryPill(
               icon: _categoryIcon(cat),
               label: _displayLabel(cat),
@@ -796,17 +805,17 @@ class _EmptyCategory extends StatelessWidget {
 String _displayLabel(BookingServiceCategory cat) {
   switch (cat) {
     case BookingServiceCategory.women:
-      return 'Haircut & Styling';
-    case BookingServiceCategory.hairColor:
-      return 'Hair Color';
+      return 'Women';
     case BookingServiceCategory.men:
       return 'Men';
     case BookingServiceCategory.kids:
       return 'Kids';
+    case BookingServiceCategory.hairColor:
+      return 'Hair Color';
     case BookingServiceCategory.addOns:
-      return 'Add-Ons';
+      return 'Add-ons';
     case BookingServiceCategory.specialEventWedding:
-      return 'Special Event / Wedding';
+      return 'Wedding / Special Events';
   }
 }
 

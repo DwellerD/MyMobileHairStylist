@@ -38,14 +38,6 @@ const List<BookingServiceCatalogEntry> bookingServiceCatalog =
   BookingServiceCatalogEntry(category: BookingServiceCategory.women, name: 'Curly Haircut'),
   BookingServiceCatalogEntry(category: BookingServiceCategory.women, name: 'Bang Trim'),
   BookingServiceCatalogEntry(category: BookingServiceCategory.women, name: 'Blowout & Style'),
-  BookingServiceCatalogEntry(
-    category: BookingServiceCategory.women,
-    name: 'Special Event Styling',
-  ),
-  BookingServiceCatalogEntry(
-    category: BookingServiceCategory.women,
-    name: 'Bridal / Wedding Hair',
-  ),
   BookingServiceCatalogEntry(category: BookingServiceCategory.hairColor, name: 'Highlights'),
   BookingServiceCatalogEntry(
     category: BookingServiceCategory.hairColor,
@@ -72,14 +64,6 @@ const List<BookingServiceCatalogEntry> bookingServiceCatalog =
   BookingServiceCatalogEntry(category: BookingServiceCategory.men, name: 'Fade / Taper Cut'),
   BookingServiceCatalogEntry(category: BookingServiceCategory.men, name: 'Beard Trim'),
   BookingServiceCatalogEntry(
-    category: BookingServiceCategory.men,
-    name: 'Eyebrow Cleanup',
-  ),
-  BookingServiceCatalogEntry(
-    category: BookingServiceCategory.men,
-    name: 'Scalp Treatment',
-  ),
-  BookingServiceCatalogEntry(
     category: BookingServiceCategory.kids,
     name: 'Kids Haircut – Boys',
   ),
@@ -103,7 +87,6 @@ const List<BookingServiceCatalogEntry> bookingServiceCatalog =
     category: BookingServiceCategory.addOns,
     name: 'Deep Conditioning Treatment',
   ),
-  BookingServiceCatalogEntry(category: BookingServiceCategory.addOns, name: 'Toner / Gloss'),
   BookingServiceCatalogEntry(
     category: BookingServiceCategory.addOns,
     name: 'Extra Styling Time',
@@ -121,10 +104,17 @@ const List<BookingServiceCatalogEntry> bookingServiceCatalog =
     category: BookingServiceCategory.addOns,
     name: 'Eyebrow Cleanup',
   ),
-  BookingServiceCatalogEntry(category: BookingServiceCategory.addOns, name: 'Beard Trim'),
   BookingServiceCatalogEntry(
     category: BookingServiceCategory.addOns,
     name: 'Extension Blend Style',
+  ),
+  BookingServiceCatalogEntry(
+    category: BookingServiceCategory.specialEventWedding,
+    name: 'Special Event Styling',
+  ),
+  BookingServiceCatalogEntry(
+    category: BookingServiceCategory.specialEventWedding,
+    name: 'Bridal / Wedding Hair',
   ),
   BookingServiceCatalogEntry(
     category: BookingServiceCategory.specialEventWedding,
