@@ -29,6 +29,19 @@ class _ServiceSelectionScreenState
     extends ConsumerState<ServiceSelectionScreen> {
   BookingServiceCategory _selectedCategory = BookingServiceCategory.women;
 
+  static const Map<String, String> _serviceImageByName = {
+    'highlights': 'assets/images/Highlights.PNG',
+    'partial highlights': 'assets/images/PartialHighlights.PNG',
+    'baby lights': 'assets/images/BabyLights.jpeg',
+    'balayage': 'assets/images/Balayge.PNG',
+    'root retouch': 'assets/images/RootTouchUp.PNG',
+    'all over color': 'assets/images/AllOverColor.jpeg',
+  };
+
+  String? _serviceImagePath(BookingServiceOption service) {
+    return _serviceImageByName[service.name.toLowerCase()];
+  }
+
   void _openServiceModal(
       BuildContext context, BookingFlowState bookingState, BookingServiceOption service) {
     final existingItems = bookingState.serviceItems
@@ -123,6 +136,7 @@ class _ServiceSelectionScreenState
                 for (int i = 0; i < activeServices.length; i++)
                   _ServiceTile(
                     service: activeServices[i],
+                    imagePath: _serviceImagePath(activeServices[i]),
                     addedCount: bookingState.serviceItems
                         .where((item) => item.service.id == activeServices[i].id)
                         .length,
@@ -468,12 +482,14 @@ class _CategoryPill extends StatelessWidget {
 class _ServiceTile extends StatelessWidget {
   const _ServiceTile({
     required this.service,
+    required this.imagePath,
     required this.addedCount,
     required this.onTap,
     this.showDivider = true,
   });
 
   final BookingServiceOption service;
+  final String? imagePath;
   final int addedCount;
   final VoidCallback onTap;
   final bool showDivider;
@@ -486,36 +502,50 @@ class _ServiceTile extends StatelessWidget {
         InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(4),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 2),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // ── Image placeholder ──────────────────────────────────
-                Container(
-                  width: 70,
-                  height: 70,
-                  decoration: BoxDecoration(
-                    color: addedCount > 0
-                        ? const Color(0xFFEDD8D8)
-                        : _kPlaceImg,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: addedCount > 0
-                      ? Center(
-                          child: addedCount == 1
-                              ? const Icon(Icons.check,
-                                  color: _kPrimary, size: 26)
-                              : Text(
-                                  '×$addedCount',
-                                  style: GoogleFonts.manrope(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w700,
-                                      color: _kPrimary),
-                                ),
-                        )
-                      : null,
-                ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final thumbSize =
+                  (constraints.maxWidth * 0.16).clamp(64.0, 84.0);
+
+              return Container(
+                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 2),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // ── Image placeholder / photo ─────────────────────
+                    Container(
+                      width: thumbSize,
+                      height: thumbSize,
+                      decoration: BoxDecoration(
+                        color: addedCount > 0
+                            ? const Color(0xFFEDD8D8)
+                            : _kPlaceImg,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: addedCount > 0
+                          ? Center(
+                              child: addedCount == 1
+                                  ? const Icon(Icons.check,
+                                      color: _kPrimary, size: 26)
+                                  : Text(
+                                      '×$addedCount',
+                                      style: GoogleFonts.manrope(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w700,
+                                          color: _kPrimary),
+                                    ),
+                            )
+                          : imagePath != null
+                              ? Image.asset(
+                                  imagePath!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) => Container(
+                                    color: _kPlaceImg,
+                                  ),
+                                )
+                              : null,
+                    ),
                 const SizedBox(width: 14),
 
                 // ── Text ───────────────────────────────────────────────
@@ -586,8 +616,10 @@ class _ServiceTile extends StatelessWidget {
                       ? _kPrimary
                       : const Color(0xFFB8B0A8),
                 ),
-              ],
-            ),
+                  ],
+                ),
+              );
+            },
           ),
         ),
         if (showDivider)
