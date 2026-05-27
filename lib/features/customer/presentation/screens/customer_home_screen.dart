@@ -301,24 +301,13 @@ class _HeroVisual extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       height: 340,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFF8EFE7), Color(0xFFECD9CB)],
-        ),
-      ),
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(40),
-          child: Image.asset(
-            'assets/images/logo.png',
-            fit: BoxFit.contain,
-          ),
-        ),
+      width: double.infinity,
+      child: Image.asset(
+        'assets/images/logo.png',
+        fit: BoxFit.contain,
+        alignment: Alignment.center,
       ),
     );
   }

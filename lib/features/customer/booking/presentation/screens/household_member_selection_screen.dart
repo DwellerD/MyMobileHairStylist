@@ -26,6 +26,7 @@ class _HouseholdMemberSelectionScreenState
   final _notesController = TextEditingController();
   final _sensoryNotesController = TextEditingController();
   final _hairNotesController = TextEditingController();
+  bool _showAddMemberForm = false;
 
   @override
   void dispose() {
@@ -124,100 +125,133 @@ class _HouseholdMemberSelectionScreenState
             ),
           const SizedBox(height: AppSpacing.sectionGap),
           AppCard(
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Add household member',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Full name',
-                    ),
-                    validator: (value) =>
-                        value == null || value.trim().isEmpty ? 'Add a name.' : null,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  TextFormField(
-                    controller: _birthDateController,
-                    decoration: const InputDecoration(
-                      labelText: 'Birthdate (optional)',
-                      hintText: 'YYYY-MM-DD',
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  TextFormField(
-                    controller: _notesController,
-                    maxLines: 2,
-                    decoration: const InputDecoration(
-                      labelText: 'General notes',
-                      hintText: 'Any notes the team should know before the visit.',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                InkWell(
+                  onTap: () {
+                    setState(() {
+                      _showAddMemberForm = !_showAddMemberForm;
+                    });
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Add household member',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                        ),
+                        Icon(
+                          _showAddMemberForm
+                              ? Icons.keyboard_arrow_up_rounded
+                              : Icons.keyboard_arrow_down_rounded,
+                        ),
+                      ],
                     ),
                   ),
+                ),
+                if (_showAddMemberForm) ...[
                   const SizedBox(height: AppSpacing.md),
-                  TextFormField(
-                    controller: _sensoryNotesController,
-                    maxLines: 2,
-                    decoration: const InputDecoration(
-                      labelText: 'Sensory notes',
-                      hintText: 'Noise, pacing, or comfort preferences.',
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  TextFormField(
-                    controller: _hairNotesController,
-                    maxLines: 2,
-                    decoration: const InputDecoration(
-                      labelText: 'Hair notes',
-                      hintText: 'Texture, past cut, styling issues, or goals.',
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  FilledButton.tonalIcon(
-                    onPressed: isBusy
-                        ? null
-                        : () async {
-                            if (!_formKey.currentState!.validate()) {
-                              return;
-                            }
+                  Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextFormField(
+                          controller: _nameController,
+                          decoration: const InputDecoration(
+                            labelText: 'Full name',
+                          ),
+                          validator: (value) => value == null || value.trim().isEmpty
+                              ? 'Add a name.'
+                              : null,
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        TextFormField(
+                          controller: _birthDateController,
+                          decoration: const InputDecoration(
+                            labelText: 'Birthdate (optional)',
+                            hintText: 'YYYY-MM-DD',
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        TextFormField(
+                          controller: _notesController,
+                          maxLines: 2,
+                          decoration: const InputDecoration(
+                            labelText: 'General notes',
+                            hintText: 'Any notes the team should know before the visit.',
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        TextFormField(
+                          controller: _sensoryNotesController,
+                          maxLines: 2,
+                          decoration: const InputDecoration(
+                            labelText: 'Sensory notes',
+                            hintText: 'Noise, pacing, or comfort preferences.',
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        TextFormField(
+                          controller: _hairNotesController,
+                          maxLines: 2,
+                          decoration: const InputDecoration(
+                            labelText: 'Hair notes',
+                            hintText: 'Texture, past cut, styling issues, or goals.',
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        FilledButton.tonalIcon(
+                          onPressed: isBusy
+                              ? null
+                              : () async {
+                                  if (!_formKey.currentState!.validate()) {
+                                    return;
+                                  }
 
-                            final nameParts = _nameController.text.trim().split(RegExp(r'\s+'));
-                            final firstName = nameParts.first;
-                            final lastName = nameParts.length > 1
-                                ? nameParts.sublist(1).join(' ')
-                                : null;
+                                  final nameParts = _nameController.text.trim().split(RegExp(r'\s+'));
+                                  final firstName = nameParts.first;
+                                  final lastName = nameParts.length > 1
+                                      ? nameParts.sublist(1).join(' ')
+                                      : null;
 
-                            await ref
-                                .read(bookingFlowControllerProvider.notifier)
-                                .createHouseholdMember(
-                                  firstName: firstName,
-                                  lastName: lastName,
-                                  dateOfBirth: _parseBirthDate(_birthDateController.text),
-                                  generalNotes: _notesController.text,
-                                  sensoryNotes: _sensoryNotesController.text,
-                                  hairNotes: _hairNotesController.text,
-                                );
+                                  await ref
+                                      .read(bookingFlowControllerProvider.notifier)
+                                      .createHouseholdMember(
+                                        firstName: firstName,
+                                        lastName: lastName,
+                                        dateOfBirth: _parseBirthDate(_birthDateController.text),
+                                        generalNotes: _notesController.text,
+                                        sensoryNotes: _sensoryNotesController.text,
+                                        hairNotes: _hairNotesController.text,
+                                      );
 
-                            if (!mounted) {
-                              return;
-                            }
+                                  if (!mounted) {
+                                    return;
+                                  }
 
-                            _nameController.clear();
-                            _birthDateController.clear();
-                            _notesController.clear();
-                            _sensoryNotesController.clear();
-                            _hairNotesController.clear();
-                          },
-                    icon: const Icon(Icons.person_add_alt_1_outlined),
-                    label: const Text('Save household member'),
+                                  _nameController.clear();
+                                  _birthDateController.clear();
+                                  _notesController.clear();
+                                  _sensoryNotesController.clear();
+                                  _hairNotesController.clear();
+                                  setState(() {
+                                    _showAddMemberForm = false;
+                                  });
+                                },
+                          icon: const Icon(Icons.person_add_alt_1_outlined),
+                          label: const Text('Save household member'),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
-              ),
+              ],
             ),
           ),
         ],

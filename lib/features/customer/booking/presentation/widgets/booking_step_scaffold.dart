@@ -341,58 +341,23 @@ class _BookingHeroStrip extends StatelessWidget {
   }
 }
 
-/// Right-side placeholder area: large image rect + overlapping logo frame.
+/// Right-side placeholder area for booking step artwork.
 class _HeroImagePlaceholders extends StatelessWidget {
   const _HeroImagePlaceholders();
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return Container(
       width: 130,
       height: 110,
-      child: Stack(
-        children: [
-          // Large placeholder (where a real hair-photo would go)
-          Positioned(
-            left: 0,
-            top: 0,
-            right: 26,
-            bottom: 0,
-            child: Container(
-              decoration: BoxDecoration(
-                color: _kPlaceholder,
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          ),
-          // Framed logo card, overlapping the bottom-right corner
-          Positioned(
-            right: 0,
-            bottom: 0,
-            child: Container(
-              width: 72,
-              height: 56,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                    color: const Color(0xFFD0C8C0), width: 2),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x18000000),
-                    blurRadius: 8,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              padding: const EdgeInsets.all(5),
-              child: Image.asset(
-                'assets/images/logo.png',
-                fit: BoxFit.contain,
-              ),
-            ),
-          ),
-        ],
+      decoration: BoxDecoration(
+        color: _kPlaceholder,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Image.asset(
+        'assets/images/logo.png',
+        fit: BoxFit.cover,
       ),
     );
   }
@@ -473,26 +438,21 @@ class _ContinueBar extends StatelessWidget {
           letterSpacing: 1.4,
         ),
       ),
-      child: Stack(
-        alignment: Alignment.center,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(isBusy ? 'Working...' : label),
+          const SizedBox(width: 10),
           if (!isBusy)
-            const Positioned(
-              right: 0,
-              child: Icon(Icons.arrow_forward,
-                  size: 20, color: Colors.white),
-            ),
+            const Icon(Icons.arrow_forward, size: 20, color: Colors.white),
           if (isBusy)
-            const Positioned(
-              right: 0,
-              child: SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
-                ),
+            const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
               ),
             ),
         ],
