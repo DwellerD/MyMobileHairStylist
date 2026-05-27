@@ -51,6 +51,12 @@ xcrun --sdk iphoneos --show-sdk-path
 flutter run --dart-define-from-file=.env/dev.json
 ```
 
+For iOS Simulator, override `SdkRoot` to the simulator SDK:
+
+```bash
+flutter run -d "iPhone 17 Pro" --dart-define-from-file=.env/dev.json --dart-define=SdkRoot=$(xcrun --sdk iphonesimulator --show-sdk-path)
+```
+
 If the dart defines are missing, the app still boots but Supabase-backed flows remain unavailable.
 
 ## Current Supabase Project
