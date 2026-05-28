@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/scheduling/appointment_rules.dart';
 import '../../../core/supabase/supabase_client_provider.dart';
 import '../../auth/domain/app_user.dart';
 import '../domain/availability_models.dart';
@@ -54,6 +55,22 @@ class StylistAvailabilityRepository {
       throw Exception('End time must be after start time.');
     }
 
+    if (overlapsBlockedHours(startAt, endAt)) {
+      throw Exception(blockedAvailabilityMessage);
+    }
+
+    if (_isCrossDateRange(startAt, endAt)) {
+      throw Exception('Availability must start and end on the same date.');
+    }
+
+    if (blockType == 'available') {
+      await _ensureNoDuplicateAvailabilityBlock(
+        stylistProfileId: stylistProfile.id,
+        startAt: startAt,
+        endAt: endAt,
+      );
+    }
+
     final response = await _requireClient()
         .from('availability_blocks')
         .insert({
@@ -81,6 +98,23 @@ class StylistAvailabilityRepository {
   }) async {
     if (!endAt.isAfter(startAt)) {
       throw Exception('End time must be after start time.');
+    }
+
+    if (overlapsBlockedHours(startAt, endAt)) {
+      throw Exception(blockedAvailabilityMessage);
+    }
+
+    if (_isCrossDateRange(startAt, endAt)) {
+      throw Exception('Availability must start and end on the same date.');
+    }
+
+    if (blockType == 'available') {
+      await _ensureNoDuplicateAvailabilityBlock(
+        stylistProfileId: await _loadStylistProfileId(blockId),
+        startAt: startAt,
+        endAt: endAt,
+        excludedBlockId: blockId,
+      );
     }
 
     final response = await _requireClient()
@@ -137,5 +171,49 @@ class StylistAvailabilityRepository {
       return null;
     }
     return value.trim();
+  }
+
+  bool _isCrossDateRange(DateTime startAt, DateTime endAt) {
+    return startAt.year != endAt.year ||
+        startAt.month != endAt.month ||
+        startAt.day != endAt.day;
+  }
+
+  Future<String> _loadStylistProfileId(String blockId) async {
+    final row = await _requireClient()
+        .from('availability_blocks')
+        .select('stylist_profile_id')
+        .eq('id', blockId)
+        .single();
+    return row['stylist_profile_id'] as String;
+  }
+
+  Future<void> _ensureNoDuplicateAvailabilityBlock({
+    required String stylistProfileId,
+    required DateTime startAt,
+    required DateTime endAt,
+    String? excludedBlockId,
+  }) async {
+    final startIso = startAt.toUtc().toIso8601String();
+    final endIso = endAt.toUtc().toIso8601String();
+
+    final duplicates = await _requireClient()
+        .from('availability_blocks')
+        .select('id')
+        .eq('stylist_profile_id', stylistProfileId)
+        .eq('block_type', 'available')
+        .eq('start_at', startIso)
+        .eq('end_at', endIso)
+        .limit(5);
+
+    final hasDuplicate = (duplicates as List<dynamic>).any((dynamic raw) {
+      final row = raw as Map<String, dynamic>;
+      final id = row['id'] as String;
+      return excludedBlockId == null || id != excludedBlockId;
+    });
+
+    if (hasDuplicate) {
+      throw Exception('This availability block already exists.');
+    }
   }
 }

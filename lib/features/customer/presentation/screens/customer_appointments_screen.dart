@@ -117,9 +117,15 @@ Color _statusColor(String status) {
   switch (status) {
     case 'completed':
       return AppColors.success;
+    case 'pending_stylist_confirmation':
+      return AppColors.warning;
+    case 'pending_assignment':
+      return AppColors.warning;
     case 'approved':
     case 'confirmed':
       return AppColors.info;
+    case 'declined_by_stylist':
+      return AppColors.warning;
     case 'declined':
     case 'cancelled':
       return AppColors.danger;

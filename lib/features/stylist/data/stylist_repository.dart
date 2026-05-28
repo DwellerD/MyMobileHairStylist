@@ -121,6 +121,30 @@ appointment_services(quantity, service:services(name, duration_minutes))
     );
   }
 
+  Future<void> acceptAssignedAppointment({
+    required String appointmentId,
+  }) async {
+    await _requireClient().rpc(
+      'stylist_respond_to_assigned_appointment',
+      params: <String, dynamic>{
+        'p_appointment_id': appointmentId,
+        'p_response': 'accept',
+      },
+    );
+  }
+
+  Future<void> declineAssignedAppointment({
+    required String appointmentId,
+  }) async {
+    await _requireClient().rpc(
+      'stylist_respond_to_assigned_appointment',
+      params: <String, dynamic>{
+        'p_appointment_id': appointmentId,
+        'p_response': 'decline',
+      },
+    );
+  }
+
   Future<StylistAppointmentDetail> getAppointmentDetail({
     required String appointmentId,
   }) async {

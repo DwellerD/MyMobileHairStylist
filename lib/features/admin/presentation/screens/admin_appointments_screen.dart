@@ -19,7 +19,7 @@ class AdminAppointmentsScreen extends ConsumerStatefulWidget {
 }
 
 class _AdminAppointmentsScreenState extends ConsumerState<AdminAppointmentsScreen> {
-  String _selectedStatus = 'requested';
+  String _selectedStatus = 'pending_assignment';
 
   @override
   Widget build(BuildContext context) {
@@ -76,17 +76,21 @@ class _AdminAppointmentsScreenState extends ConsumerState<AdminAppointmentsScree
                   child: AdminAppointmentTile(
                     appointment: appointment,
                     onOpen: () => context.go('/admin/appointments/${appointment.id}'),
-                    onApprove: appointment.status == 'requested'
+                    onApprove: (appointment.status == 'requested' ||
+                        appointment.status == 'pending_assignment')
                         ? () => ref
                             .read(adminActionControllerProvider.notifier)
                             .approveAppointment(appointment.id)
                         : null,
-                    onDecline: appointment.status == 'requested'
+                    onDecline: (appointment.status == 'requested' ||
+                        appointment.status == 'pending_assignment')
                         ? () => ref
                             .read(adminActionControllerProvider.notifier)
                             .declineAppointment(appointment.id)
                         : null,
-                    onAssign: () => _showAssignStylistSheet(appointment.id),
+                    onAssign: _canAssignFromStatus(appointment.status)
+                        ? () => _showAssignStylistSheet(appointment.id)
+                        : null,
                     onEditStatus: () => _showStatusSheet(appointment.id, appointment.status),
                   ),
                 ),
@@ -112,6 +116,15 @@ class _AdminAppointmentsScreenState extends ConsumerState<AdminAppointmentsScree
         .read(adminRepositoryProvider)
         .loadStylistOptionsForAppointment(appointmentId);
     if (!mounted) {
+      return;
+    }
+
+    if (options.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No stylists are available for this appointment time.'),
+        ),
+      );
       return;
     }
 
@@ -173,5 +186,12 @@ class _AdminAppointmentsScreenState extends ConsumerState<AdminAppointmentsScree
           appointmentId: appointmentId,
           status: selectedStatus,
         );
+  }
+
+  bool _canAssignFromStatus(String status) {
+    return status == 'pending_assignment' ||
+        status == 'requested' ||
+        status == 'approved' ||
+        status == 'declined_by_stylist';
   }
 }

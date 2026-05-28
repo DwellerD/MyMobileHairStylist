@@ -137,6 +137,24 @@ class StylistActionController extends AsyncNotifier<void> {
     });
   }
 
+  Future<void> acceptAssignedAppointment({required String appointmentId}) async {
+    await _runAction(() async {
+      await ref.read(stylistRepositoryProvider).acceptAssignedAppointment(
+            appointmentId: appointmentId,
+          );
+      _refreshAppointmentSlices(ref, appointmentId);
+    });
+  }
+
+  Future<void> declineAssignedAppointment({required String appointmentId}) async {
+    await _runAction(() async {
+      await ref.read(stylistRepositoryProvider).declineAssignedAppointment(
+            appointmentId: appointmentId,
+          );
+      _refreshAppointmentSlices(ref, appointmentId);
+    });
+  }
+
   Future<void> _runAction(Future<void> Function() action) async {
     state = const AsyncLoading();
     final nextState = await AsyncValue.guard(action);

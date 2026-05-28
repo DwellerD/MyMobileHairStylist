@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/scheduling/appointment_rules.dart';
 import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../../auth/domain/app_user.dart';
 import '../domain/booking_flow_state.dart';
@@ -231,6 +232,10 @@ class BookingRepository {
       );
     }
 
+    if (overlapsBlockedHours(requestedWindow.start, requestedWindow.end)) {
+      throw Exception('Appointments cannot be requested during blocked hours.');
+    }
+
     final appointment = await _requireClient()
         .from('appointments')
         .insert({
@@ -240,7 +245,7 @@ class BookingRepository {
           'household_id': bookingState.householdId,
           'address_id': address.id,
           'requested_by_user_profile_id': appUser.profileId,
-          'status': 'requested',
+          'status': 'pending_assignment',
           'requested_start_at': requestedWindow.start.toIso8601String(),
           'requested_end_at': requestedWindow.end.toIso8601String(),
           'preferred_date': bookingState.preferredDate!.toIso8601String().substring(0, 10),

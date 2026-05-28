@@ -116,8 +116,7 @@ class _AvailableSlotsScreenState extends ConsumerState<AvailableSlotsScreen> {
                     return EmptyState(
                       title: 'No times available',
                       description:
-                          'No available times on ${_selectedDate.month}/${_selectedDate.day}. '
-                          'Try a different date.',
+                          'No appointment times are available for this date. Please choose another date.',
                       icon: Icons.calendar_today_outlined,
                     );
                   }

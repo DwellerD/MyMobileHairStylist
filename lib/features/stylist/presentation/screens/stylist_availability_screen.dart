@@ -82,7 +82,11 @@ class _StylistAvailabilityScreenState
                   icon: Icons.warning_amber_rounded,
                 ),
                 data: (blocks) {
-                  if (blocks.isEmpty) {
+                  final availabilityBlocks = blocks
+                      .where((block) => block.isAvailable)
+                      .toList(growable: false);
+
+                  if (availabilityBlocks.isEmpty) {
                     return const EmptyState(
                       title: 'No blocks this week',
                       description:
@@ -96,11 +100,11 @@ class _StylistAvailabilityScreenState
                       horizontal: AppSpacing.md,
                       vertical: AppSpacing.sm,
                     ),
-                    itemCount: blocks.length,
+                    itemCount: availabilityBlocks.length,
                     separatorBuilder: (_, _) =>
                         const SizedBox(height: AppSpacing.sm),
                     itemBuilder: (context, index) {
-                      final block = blocks[index];
+                      final block = availabilityBlocks[index];
                       return _AvailabilityBlockCard(
                         block: block,
                         onEdit: () => _showBlockSheet(context, controller,
@@ -355,7 +359,6 @@ class _BlockFormSheet extends ConsumerStatefulWidget {
 }
 
 class _BlockFormSheetState extends ConsumerState<_BlockFormSheet> {
-  late String _blockType;
   late DateTime _startAt;
   late DateTime _endAt;
   final TextEditingController _notesController = TextEditingController();
@@ -366,12 +369,10 @@ class _BlockFormSheetState extends ConsumerState<_BlockFormSheet> {
     super.initState();
     final existing = widget.existing;
     if (existing != null) {
-      _blockType = existing.blockType;
       _startAt = existing.startAt;
       _endAt = existing.endAt;
       _notesController.text = existing.notes ?? '';
     } else {
-      _blockType = 'available';
       final d = widget.defaultDate;
       _startAt = DateTime(d.year, d.month, d.day, 9, 0);
       _endAt = DateTime(d.year, d.month, d.day, 17, 0);
@@ -399,36 +400,12 @@ class _BlockFormSheetState extends ConsumerState<_BlockFormSheet> {
         children: [
           Text(
             widget.existing == null
-                ? 'Add availability block'
-                : 'Edit block',
+                ? 'Add availability'
+                : 'Edit availability',
             style: Theme.of(context)
                 .textTheme
                 .titleMedium
                 ?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: AppSpacing.md),
-
-          // Block type
-          Text('Type', style: Theme.of(context).textTheme.labelLarge),
-          const SizedBox(height: AppSpacing.xs),
-          DropdownButtonFormField<String>(
-            initialValue: _blockType,
-            decoration: const InputDecoration(border: OutlineInputBorder()),
-            items: const [
-              DropdownMenuItem(
-                value: 'available',
-                child: Text('Available'),
-              ),
-              DropdownMenuItem(
-                value: 'unavailable',
-                child: Text('Unavailable'),
-              ),
-              DropdownMenuItem(
-                value: 'time_off',
-                child: Text('Time off'),
-              ),
-            ],
-            onChanged: (v) => setState(() => _blockType = v ?? _blockType),
           ),
           const SizedBox(height: AppSpacing.md),
 
@@ -533,14 +510,14 @@ class _BlockFormSheetState extends ConsumerState<_BlockFormSheet> {
       if (widget.existing != null) {
         await widget.controller.updateBlock(
           blockId: widget.existing!.id,
-          blockType: _blockType,
+          blockType: 'available',
           startAt: _startAt,
           endAt: _endAt,
           notes: notes.isEmpty ? null : notes,
         );
       } else {
         await widget.controller.createBlock(
-          blockType: _blockType,
+          blockType: 'available',
           startAt: _startAt,
           endAt: _endAt,
           notes: notes.isEmpty ? null : notes,
@@ -551,8 +528,9 @@ class _BlockFormSheetState extends ConsumerState<_BlockFormSheet> {
       }
     } catch (e) {
       if (mounted) {
+        final message = e.toString().replaceFirst('Exception: ', '');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save: $e')),
+          SnackBar(content: Text(message)),
         );
       }
     } finally {

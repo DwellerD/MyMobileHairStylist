@@ -46,34 +46,43 @@ class RoleShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final config = _configForRole(role);
     final authActionState = ref.watch(authActionControllerProvider);
+    final showTopBar = role == AppUserRole.admin;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(config.title),
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: AppSpacing.md),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: TextButton(
-              onPressed: authActionState.isLoading
-                  ? null
-                  : () async {
-                      await ref.read(authActionControllerProvider.notifier).signOut();
+      appBar: showTopBar
+          ? AppBar(
+              title: Text(config.title),
+              actions: [
+                Container(
+                  margin: const EdgeInsets.only(right: AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: TextButton(
+                    onPressed: authActionState.isLoading
+                        ? null
+                        : () async {
+                            await ref.read(authActionControllerProvider.notifier).signOut();
 
-                      if (context.mounted) {
-                        context.go('/login');
-                      }
-                    },
-              child: const Text('Log out'),
+                            if (context.mounted) {
+                              context.go('/login');
+                            }
+                          },
+                    child: const Text('Log out'),
+                  ),
+                ),
+              ],
+            )
+          : null,
+      body: showTopBar
+          ? navigationShell
+          : SafeArea(
+              top: true,
+              bottom: false,
+              child: navigationShell,
             ),
-          ),
-        ],
-      ),
-      body: navigationShell,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: navigationShell.currentIndex,
         onTap: (index) {

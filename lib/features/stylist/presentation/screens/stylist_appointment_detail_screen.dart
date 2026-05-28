@@ -75,6 +75,36 @@ class _StylistAppointmentDetailScreenState
                 ),
               ),
               const SizedBox(height: AppSpacing.sectionGap),
+              if (detail.status == 'pending_stylist_confirmation') ...[
+                AppPrimaryButton(
+                  label: actionState.isLoading ? 'Working...' : 'Accept Appointment',
+                  icon: Icons.check_circle_outline,
+                  onPressed: actionState.isLoading
+                      ? null
+                      : () => _runAction(
+                            () => ref
+                                .read(stylistActionControllerProvider.notifier)
+                                .acceptAssignedAppointment(
+                                  appointmentId: widget.appointmentId,
+                                ),
+                          ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                AppSecondaryButton(
+                  label: 'Decline Appointment',
+                  icon: Icons.cancel_outlined,
+                  onPressed: actionState.isLoading
+                      ? null
+                      : () => _runAction(
+                            () => ref
+                                .read(stylistActionControllerProvider.notifier)
+                                .declineAssignedAppointment(
+                                  appointmentId: widget.appointmentId,
+                                ),
+                          ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+              ],
               AppSecondaryButton(
                 label: 'Navigation placeholder',
                 icon: Icons.navigation_outlined,

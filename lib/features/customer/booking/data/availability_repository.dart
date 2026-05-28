@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/scheduling/appointment_rules.dart';
 import '../../../../core/supabase/supabase_client_provider.dart';
 import '../domain/availability_slot.dart';
 
@@ -128,7 +129,9 @@ user_profile:user_profiles!stylist_profiles_user_profile_id_fkey(first_name, las
         stylistName: stylist.displayName,
         slotIntervalMinutes: _slotIntervalMinutes,
         travelBufferMinutes: _travelBufferMinutes,
-      );
+      ).where((slot) {
+        return !overlapsBlockedHours(slot.startAt, slot.endAt);
+      }).toList(growable: false);
 
       allSlots.addAll(slots);
     }
@@ -179,7 +182,7 @@ user_profile:user_profiles!stylist_profiles_user_profile_id_fkey(first_name, las
         .from('appointments')
         .select('scheduled_start_at, requested_start_at, estimated_duration_minutes, appointment_services(duration_snapshot_minutes, service:services(duration_minutes))')
         .eq('assigned_stylist_profile_id', stylistProfileId)
-        .not('status', 'in', '(cancelled,declined)')
+        .not('status', 'in', '(cancelled,declined,declined_by_stylist)')
         .gte('requested_start_at', dayStart.toUtc().toIso8601String())
         .lt('requested_start_at', dayEnd.toUtc().toIso8601String());
 

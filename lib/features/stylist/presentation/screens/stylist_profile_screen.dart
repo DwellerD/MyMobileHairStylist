@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/app_card.dart';
@@ -17,6 +18,7 @@ class StylistProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final appUserAsync = ref.watch(currentAppUserProvider);
     final stylistProfileAsync = ref.watch(currentStylistProfileProvider);
+    final authActionState = ref.watch(authActionControllerProvider);
 
     return stylistProfileAsync.when(
       data: (stylistProfile) {
@@ -85,6 +87,19 @@ class StylistProfileScreen extends ConsumerWidget {
                       : 'No emergency contact phone on file.'),
                 ],
               ),
+            ),
+            const SizedBox(height: AppSpacing.sectionGap),
+            FilledButton.tonalIcon(
+              onPressed: authActionState.isLoading
+                  ? null
+                  : () async {
+                      await ref.read(authActionControllerProvider.notifier).signOut();
+                      if (context.mounted) {
+                        context.go('/login');
+                      }
+                    },
+              icon: const Icon(Icons.logout_outlined),
+              label: const Text('Log out'),
             ),
           ],
         );

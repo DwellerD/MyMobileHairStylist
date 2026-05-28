@@ -327,6 +327,15 @@ class _AdminAppointmentDetailScreenState
   }
 
   Future<void> _showAssignStylistSheet(AdminAppointmentDetail detail) async {
+    if (detail.availableStylists.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No stylists are available for this appointment time.'),
+        ),
+      );
+      return;
+    }
+
     final stylistId = await showModalBottomSheet<String>(
       context: context,
       builder: (context) {

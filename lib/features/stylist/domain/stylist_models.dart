@@ -206,7 +206,12 @@ class StylistAppointmentDetail {
     return 'Not started';
   }
 
-  bool get canCheckIn => checkInEvents.every((event) => event.eventType != 'check_in');
+  bool get canCheckIn {
+    if (status != 'confirmed' && status != 'in_progress') {
+      return false;
+    }
+    return checkInEvents.every((event) => event.eventType != 'check_in');
+  }
 
   bool get canCheckOut {
     final hasCheckIn = checkInEvents.any((event) => event.eventType == 'check_in');

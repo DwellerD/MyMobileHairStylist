@@ -1,12 +1,17 @@
 /// Shared appointment statuses used across admin list filtering and editing.
 const List<String> adminAppointmentStatuses = <String>[
+  'pending_assignment',
+  'pending_stylist_confirmation',
+  'confirmed',
+  'declined_by_stylist',
+  'cancelled',
+  'in_progress',
+  'completed',
+
+  // Legacy statuses kept for backward compatibility with existing rows.
   'requested',
   'approved',
   'assigned',
-  'confirmed',
-  'in_progress',
-  'completed',
-  'cancelled',
   'declined',
 ];
 

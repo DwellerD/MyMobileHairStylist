@@ -114,12 +114,14 @@ class AdminHomeScreen extends ConsumerWidget {
                       child: AdminAppointmentTile(
                         appointment: appointment,
                         onOpen: () => context.go('/admin/appointments/${appointment.id}'),
-                        onApprove: appointment.status == 'requested'
+                        onApprove: (appointment.status == 'requested' ||
+                            appointment.status == 'pending_assignment')
                             ? () => ref
                                 .read(adminActionControllerProvider.notifier)
                                 .approveAppointment(appointment.id)
                             : null,
-                        onDecline: appointment.status == 'requested'
+                        onDecline: (appointment.status == 'requested' ||
+                            appointment.status == 'pending_assignment')
                             ? () => ref
                                 .read(adminActionControllerProvider.notifier)
                                 .declineAppointment(appointment.id)

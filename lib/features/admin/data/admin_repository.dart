@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/scheduling/appointment_rules.dart';
 import '../../../core/supabase/supabase_client_provider.dart';
 import '../../auth/domain/app_user.dart';
 import '../domain/admin_models.dart';
@@ -29,7 +30,11 @@ class AdminRepository {
         .toList(growable: false);
 
     final pendingBookingRequests = appointments
-        .where((appointment) => appointment.status == 'requested')
+      .where(
+        (appointment) =>
+          appointment.status == 'pending_assignment' ||
+          appointment.status == 'requested',
+      )
         .length;
 
     final checkInAlerts = todayAppointments
@@ -523,16 +528,90 @@ user_profile:user_profiles!stylist_profiles_user_profile_id_fkey(first_name, las
   Future<List<AdminStylistOption>> loadStylistOptionsForAppointment(
     String appointmentId,
   ) async {
-    final appointment = await _requireClient()
-        .from('appointments')
-        .select('market_id, territory_id')
-        .eq('id', appointmentId)
-        .single();
+    final window = await _loadAssignmentWindow(appointmentId);
+    if (window.isBlocked) {
+      return const <AdminStylistOption>[];
+    }
 
-    return loadStylistOptions(
-      marketId: appointment['market_id'] as String?,
-      territoryId: appointment['territory_id'] as String?,
+    final scopedStylists = await loadStylistOptions(
+      marketId: window.marketId,
+      territoryId: window.territoryId,
     );
+
+    if (scopedStylists.isEmpty) {
+      return const <AdminStylistOption>[];
+    }
+
+    final stylistIds = scopedStylists.map((stylist) => stylist.id).toList(growable: false);
+
+    final blocksResponse = await _requireClient()
+        .from('availability_blocks')
+        .select('stylist_profile_id, start_at, end_at')
+        .inFilter('stylist_profile_id', stylistIds)
+        .eq('block_type', 'available')
+        .lte('start_at', window.startAt.toUtc().toIso8601String())
+        .gte('end_at', window.endAt.toUtc().toIso8601String());
+
+    final availableStylistIds = (blocksResponse as List<dynamic>)
+        .map((dynamic raw) => (raw as Map<String, dynamic>)['stylist_profile_id'] as String)
+        .toSet();
+
+    if (availableStylistIds.isEmpty) {
+      return const <AdminStylistOption>[];
+    }
+
+    final dayStart = DateTime(
+      window.startAt.year,
+      window.startAt.month,
+      window.startAt.day,
+    );
+    final dayEnd = dayStart.add(const Duration(days: 1));
+
+    final conflictsResponse = await _requireClient()
+        .from('appointments')
+        .select('id, assigned_stylist_profile_id, status, requested_start_at, requested_end_at, scheduled_start_at, estimated_duration_minutes')
+        .inFilter('assigned_stylist_profile_id', availableStylistIds.toList(growable: false))
+        .neq('id', appointmentId)
+        .not('status', 'in', '(cancelled,declined,declined_by_stylist,pending_assignment)')
+        .gte('requested_start_at', dayStart.toUtc().toIso8601String())
+        .lt('requested_start_at', dayEnd.toUtc().toIso8601String());
+
+    final conflictingStylistIds = <String>{};
+    for (final dynamic raw in (conflictsResponse as List<dynamic>)) {
+      final row = raw as Map<String, dynamic>;
+      final stylistId = row['assigned_stylist_profile_id'] as String?;
+      if (stylistId == null) {
+        continue;
+      }
+
+      final start = _parseDateTime(
+        row['scheduled_start_at'] as String? ?? row['requested_start_at'] as String,
+      );
+      final end = row['requested_end_at'] != null
+          ? _parseDateTime(row['requested_end_at'] as String)
+          : start.add(
+              Duration(minutes: (row['estimated_duration_minutes'] as int?) ?? 60),
+            );
+
+      final hasConflict = timeRangesOverlap(
+        startA: start,
+        endA: end,
+        startB: window.startAt,
+        endB: window.endAt,
+      );
+
+      if (hasConflict) {
+        conflictingStylistIds.add(stylistId);
+      }
+    }
+
+    return scopedStylists
+        .where(
+          (stylist) =>
+              availableStylistIds.contains(stylist.id) &&
+              !conflictingStylistIds.contains(stylist.id),
+        )
+        .toList(growable: false);
   }
 
   Future<void> approveAppointment(String appointmentId) async {
@@ -560,6 +639,16 @@ user_profile:user_profiles!stylist_profiles_user_profile_id_fkey(first_name, las
     required String appointmentId,
     required String stylistProfileId,
   }) async {
+    final window = await _loadAssignmentWindow(appointmentId);
+    if (window.isBlocked) {
+      throw Exception('Appointments cannot be assigned during blocked hours.');
+    }
+
+    final availableStylists = await loadStylistOptionsForAppointment(appointmentId);
+    if (!availableStylists.any((stylist) => stylist.id == stylistProfileId)) {
+      throw Exception('No stylists are available for this appointment time.');
+    }
+
     await _requireClient().rpc(
       'assign_appointment_stylist',
       params: <String, dynamic>{
@@ -928,4 +1017,46 @@ appointment:appointments!safety_events_appointment_id_fkey(
 
     return 'Not started';
   }
+
+  Future<_AssignmentWindow> _loadAssignmentWindow(String appointmentId) async {
+    final row = await _requireClient()
+        .from('appointments')
+        .select(
+          'market_id, territory_id, requested_start_at, requested_end_at, scheduled_start_at, estimated_duration_minutes',
+        )
+        .eq('id', appointmentId)
+        .single();
+
+    final startAt = _parseDateTime(
+      row['scheduled_start_at'] as String? ?? row['requested_start_at'] as String,
+    );
+    final endAt = row['requested_end_at'] != null
+        ? _parseDateTime(row['requested_end_at'] as String)
+        : startAt.add(
+            Duration(minutes: (row['estimated_duration_minutes'] as int?) ?? 60),
+          );
+
+    return _AssignmentWindow(
+      marketId: row['market_id'] as String?,
+      territoryId: row['territory_id'] as String?,
+      startAt: startAt,
+      endAt: endAt,
+    );
+  }
+}
+
+class _AssignmentWindow {
+  const _AssignmentWindow({
+    required this.marketId,
+    required this.territoryId,
+    required this.startAt,
+    required this.endAt,
+  });
+
+  final String? marketId;
+  final String? territoryId;
+  final DateTime startAt;
+  final DateTime endAt;
+
+  bool get isBlocked => overlapsBlockedHours(startAt, endAt);
 }

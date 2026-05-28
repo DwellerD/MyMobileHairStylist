@@ -83,7 +83,7 @@ appointment_services(
 
     return CustomerAppointmentSummary(
       id: row['id'] as String,
-      status: row['status'] as String? ?? 'requested',
+      status: row['status'] as String? ?? 'pending_assignment',
       startsAt: DateTime.parse(
         (row['scheduled_start_at'] as String?) ?? (row['requested_start_at'] as String),
       ),

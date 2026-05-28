@@ -104,7 +104,7 @@ class _ServiceSelectionScreenState
       title: 'Choose your services',
       subtitle: 'Tap a service to add it. You can add multiple services.',
       heroWidget: Image.asset(
-        'assets/images/topservicesbanner.png',
+        'assets/images/TopServiceBanner.png',
         width: double.infinity,
         fit: BoxFit.fitWidth,
       ),

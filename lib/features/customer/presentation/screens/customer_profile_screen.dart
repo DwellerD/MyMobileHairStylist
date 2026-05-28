@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_spacing.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../../../../shared/widgets/app_screen_header.dart';
 import '../../../../shared/widgets/empty_state.dart';
@@ -15,6 +17,7 @@ class CustomerProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final accountAsync = ref.watch(customerAccountSummaryProvider);
+    final authActionState = ref.watch(authActionControllerProvider);
 
     return accountAsync.when(
       data: (account) {
@@ -72,6 +75,19 @@ class CustomerProfileScreen extends ConsumerWidget {
               title: 'Preferences coming next',
               description: 'Communication settings and richer household preferences can now build on your live profile instead of mock data.',
               icon: Icons.settings_outlined,
+            ),
+            const SizedBox(height: AppSpacing.sectionGap),
+            FilledButton.tonalIcon(
+              onPressed: authActionState.isLoading
+                  ? null
+                  : () async {
+                      await ref.read(authActionControllerProvider.notifier).signOut();
+                      if (context.mounted) {
+                        context.go('/login');
+                      }
+                    },
+              icon: const Icon(Icons.logout_outlined),
+              label: const Text('Log out'),
             ),
           ],
         );
