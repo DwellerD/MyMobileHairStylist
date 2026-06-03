@@ -206,7 +206,7 @@ class _HeroSection extends StatelessWidget {
     final wide = MediaQuery.sizeOf(context).width >= 780;
 
     return _SectionWrapper(
-      color: const Color(0xFFFFFBF7),
+      color: AppColors.showcaseSurfaceBase,
       padding: EdgeInsets.symmetric(
         horizontal: MediaQuery.sizeOf(context).width >= 980 ? 64 : 24,
         vertical: 72,
@@ -248,7 +248,7 @@ class _HeroCopy extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
           decoration: BoxDecoration(
-            color: const Color(0xFFF7EDE4),
+            color: AppColors.showcaseSurfaceSoft,
             borderRadius: BorderRadius.circular(999),
             border: Border.all(color: AppColors.border),
           ),
@@ -412,7 +412,7 @@ class _StepCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFBF7),
+        color: AppColors.showcaseSurfaceBase,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.border),
       ),
@@ -425,7 +425,7 @@ class _StepCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF7EDE4),
+                  color: AppColors.showcaseSurfaceSoft,
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(icon, color: AppColors.primary, size: 20),
@@ -506,7 +506,7 @@ class _FeaturedServicesSection extends StatelessWidget {
     final width = MediaQuery.sizeOf(context).width;
 
     return _SectionWrapper(
-      color: const Color(0xFFF9F3ED),
+      color: AppColors.showcaseSurfaceWarm,
       child: _MaxWidth(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -612,7 +612,7 @@ class _ServiceCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF0E6DE),
+                  color: AppColors.showcaseSurfaceAlt,
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(icon, color: AppColors.primary, size: 20),
@@ -622,7 +622,7 @@ class _ServiceCard extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF7EDE4),
+                  color: AppColors.showcaseSurfaceSoft,
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
@@ -699,7 +699,7 @@ class _MobileServiceNoteSection extends StatelessWidget {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: const Color(0xFFF7EDE4),
+                color: AppColors.showcaseSurfaceSoft,
                 borderRadius: BorderRadius.circular(18),
               ),
               child: const Icon(
@@ -720,7 +720,7 @@ class _MobileServiceNoteSection extends StatelessWidget {
               padding:
                   const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFFBF7),
+                color: AppColors.showcaseSurfaceBase,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: AppColors.border),
               ),
@@ -781,7 +781,7 @@ class _TrustSection extends StatelessWidget {
     final wide = MediaQuery.sizeOf(context).width >= 700;
 
     return _SectionWrapper(
-      color: const Color(0xFFF9F3ED),
+      color: AppColors.showcaseSurfaceWarm,
       child: _MaxWidth(
         child: Column(
           children: [
@@ -850,7 +850,7 @@ class _TrustPoint extends StatelessWidget {
           width: 52,
           height: 52,
           decoration: BoxDecoration(
-            color: const Color(0xFFF0E6DE),
+            color: AppColors.showcaseSurfaceAlt,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Icon(icon, color: AppColors.primary, size: 22),
@@ -897,7 +897,10 @@ class _FinalCtaSection extends StatelessWidget {
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Color(0xFFFFFBF7), Color(0xFFF3E6DB)],
+              colors: [
+                AppColors.showcaseSurfaceBase,
+                AppColors.showcaseGradientGalleryEnd,
+              ],
             ),
             borderRadius: BorderRadius.circular(28),
             border: Border.all(color: AppColors.border),

@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
@@ -17,7 +19,10 @@ import 'core/supabase/supabase_client_provider.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  if (!kIsWeb && StripeConfig.isConfigured) {
+  final stripeSupportedPlatform =
+      !kIsWeb && (Platform.isIOS || Platform.isAndroid);
+
+  if (stripeSupportedPlatform && StripeConfig.isConfigured) {
     Stripe.publishableKey = StripeConfig.publishableKey;
     await Stripe.instance.applySettings();
   }

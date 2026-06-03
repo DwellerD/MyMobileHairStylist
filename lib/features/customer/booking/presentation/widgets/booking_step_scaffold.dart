@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // used by bookingErrorMessage helper
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../../core/theme/app_colors.dart';
 
 // ── Brand colour for the booking flow ──────────────────────────────────────
-const Color _kPrimary   = Color(0xFF8B3838);
-const Color _kHeroBg    = Color(0xFFF5EDE4);
-const Color _kDivider   = Color(0xFFEEE8E2);
-const Color _kTextDark  = Color(0xFF1A1212);
-const Color _kTextMid   = Color(0xFF6B6260);
-const Color _kPlaceholder = Color(0xFFDDD6CE);
+const Color _kPrimary = AppColors.primary;
+const Color _kHeroBg = AppColors.showcaseSurfaceSoft;
+const Color _kDivider = AppColors.showcaseBorderPale;
+const Color _kTextDark = AppColors.textPrimary;
+const Color _kTextMid = AppColors.textSecondary;
+const Color _kPlaceholder = AppColors.showcaseSurfaceAlt;
 
 // ── Public error-message helper used by booking screens ────────────────────
 String? bookingErrorMessage(AsyncValue<dynamic> asyncValue) {
@@ -63,7 +64,7 @@ class BookingStepScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.onPrimary,
       appBar: _buildAppBar(context),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -101,7 +102,7 @@ class BookingStepScaffold extends StatelessWidget {
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.onPrimary,
       elevation: 0,
       surfaceTintColor: Colors.transparent,
       leading: IconButton(
@@ -146,7 +147,7 @@ class _BookingStepper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.white,
+      color: AppColors.onPrimary,
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -168,7 +169,7 @@ class _BookingStepper extends StatelessWidget {
                     height: 2,
                     color: i < displayStep - 1
                         ? _kPrimary
-                        : const Color(0xFFE2DAD4),
+                        : AppColors.border,
                   ),
                 ),
               ),
@@ -197,13 +198,13 @@ class _StepItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color circleColor =
-        (isActive || isCompleted) ? _kPrimary : Colors.white;
+        (isActive || isCompleted) ? _kPrimary : AppColors.onPrimary;
     final Color borderColor =
-        (isActive || isCompleted) ? _kPrimary : const Color(0xFFD0C8C0);
+        (isActive || isCompleted) ? _kPrimary : AppColors.border;
     final Color iconColor =
-        (isActive || isCompleted) ? Colors.white : const Color(0xFFB0A8A0);
+        (isActive || isCompleted) ? AppColors.onPrimary : AppColors.textMuted;
     final Color labelColor =
-        isActive ? _kPrimary : const Color(0xFFB0A8A0);
+        isActive ? _kPrimary : AppColors.textMuted;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -221,7 +222,7 @@ class _StepItem extends StatelessWidget {
               ),
               child: Center(
                 child: isCompleted
-                    ? const Icon(Icons.check, color: Colors.white, size: 16)
+                    ? const Icon(Icons.check, color: AppColors.onPrimary, size: 16)
                     : Icon(icon, color: iconColor, size: 16),
               ),
             ),
@@ -242,7 +243,7 @@ class _StepItem extends StatelessWidget {
                       style: GoogleFonts.manrope(
                           fontSize: 8,
                           fontWeight: FontWeight.w800,
-                          color: Colors.white),
+                          color: AppColors.onPrimary),
                     ),
                   ),
                 ),
@@ -377,9 +378,9 @@ class _ErrorBanner extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFF5F5),
+          color: AppColors.surfaceAlt,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFEECCCC)),
+          border: Border.all(color: AppColors.borderStrong),
         ),
         child: Row(
           children: [
@@ -390,7 +391,7 @@ class _ErrorBanner extends StatelessWidget {
               child: Text(
                 message,
                 style: GoogleFonts.manrope(
-                    fontSize: 13, color: const Color(0xFF6B2020)),
+                    fontSize: 13, color: AppColors.textPrimary),
               ),
             ),
           ],
@@ -425,10 +426,10 @@ class _ContinueBar extends StatelessWidget {
     final primaryButton = FilledButton(
       onPressed: onPressed,
       style: FilledButton.styleFrom(
-        backgroundColor: enabled ? _kPrimary : const Color(0xFFCEC9C5),
-        disabledBackgroundColor: const Color(0xFFCEC9C5),
-        foregroundColor: Colors.white,
-        disabledForegroundColor: Colors.white,
+        backgroundColor: enabled ? _kPrimary : AppColors.borderStrong,
+        disabledBackgroundColor: AppColors.borderStrong,
+        foregroundColor: AppColors.onPrimary,
+        disabledForegroundColor: AppColors.onPrimary,
         minimumSize: const Size.fromHeight(52),
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10)),
@@ -452,14 +453,14 @@ class _ContinueBar extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           if (!isBusy)
-            const Icon(Icons.arrow_forward, size: 20, color: Colors.white),
+            const Icon(Icons.arrow_forward, size: 20, color: AppColors.onPrimary),
           if (isBusy)
             const SizedBox(
               width: 18,
               height: 18,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                color: Colors.white,
+                color: AppColors.onPrimary,
               ),
             ),
         ],
@@ -471,7 +472,7 @@ class _ContinueBar extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
         decoration: const BoxDecoration(
-          color: Colors.white,
+          color: AppColors.onPrimary,
           border: Border(top: BorderSide(color: _kDivider)),
         ),
         child: SizedBox(

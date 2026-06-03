@@ -77,9 +77,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFFF6EEE6),
-              Color(0xFFF4E8DE),
-              Color(0xFFF8F3ED),
+              AppColors.showcaseGradientStart,
+              AppColors.showcaseGradientMid,
+              AppColors.showcaseGradientEnd,
             ],
           ),
         ),
@@ -91,12 +91,12 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                 constraints: BoxConstraints(maxWidth: maxContentWidth),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFDF8F2),
+                    color: AppColors.showcasePanel,
                     borderRadius: BorderRadius.circular(32),
-                    border: Border.all(color: const Color(0xFFEADACB)),
+                    border: Border.all(color: AppColors.showcaseBorderWarm),
                     boxShadow: const [
                       BoxShadow(
-                        color: Color(0x11000000),
+                        color: AppColors.showcaseShadowSoft,
                         blurRadius: 32,
                         offset: Offset(0, 14),
                       ),
@@ -135,7 +135,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                             gradient: const LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
-                              colors: [Color(0xFFFFFBF7), Color(0xFFF1E5DB)],
+                              colors: [AppColors.showcaseSurfaceBase, AppColors.showcaseGradientSoftEnd],
                             ),
                           ),
                           child: Padding(
@@ -185,10 +185,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                   key: _servicesKey,
                                   padding: EdgeInsets.all(isDesktop ? 24 : 18),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xCCFFFDF9),
+                                    color: AppColors.showcaseGlass,
                                     borderRadius: BorderRadius.circular(26),
                                     border: Border.all(
-                                      color: const Color(0xFFE7D8CB),
+                                      color: AppColors.showcaseBorderLight,
                                     ),
                                   ),
                                   child: Wrap(
@@ -453,9 +453,9 @@ class _MutedPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFF6ECE3),
+        color: AppColors.showcaseCardSoft,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: const Color(0xFFE8D6C8)),
+        border: Border.all(color: AppColors.showcaseBorderSoft),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -490,9 +490,9 @@ class _StatPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFAF5),
+        color: AppColors.showcaseSurfaceIvory,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: const Color(0xFFE7D8CB)),
+        border: Border.all(color: AppColors.showcaseBorderLight),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -527,7 +527,7 @@ class _HeroVisual extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFF9F2EA), Color(0xFFE9D8CA)],
+          colors: [AppColors.showcaseGradientWarmStart, AppColors.showcaseGradientWarmEnd],
         ),
       ),
       child: Align(
@@ -572,7 +572,7 @@ class _StepCard extends StatelessWidget {
             step,
             style: GoogleFonts.parisienne(
               fontSize: 38,
-              color: const Color(0xFFD6B2A2),
+              color: AppColors.showcaseAccentSoft,
             ),
           ),
           const SizedBox(height: 6),
@@ -581,8 +581,8 @@ class _StepCard extends StatelessWidget {
             height: 62,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: const Color(0xFFF8EFE7),
-              border: Border.all(color: const Color(0xFFE4D4C7)),
+              color: AppColors.showcaseCardWarm,
+              border: Border.all(color: AppColors.showcaseBorderMuted),
             ),
             child: Icon(icon, color: AppColors.textSecondary),
           ),
@@ -667,12 +667,12 @@ class _PrepBoard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(isDesktop ? 24 : 18),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFCF8),
+        color: AppColors.showcaseSurfaceHighlight,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFFE7D8CB)),
+        border: Border.all(color: AppColors.showcaseBorderLight),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x0A000000),
+            color: AppColors.showcaseShadowSubtle,
             blurRadius: 16,
             offset: Offset(0, 8),
           ),
@@ -779,7 +779,7 @@ class _PrepBoard extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFAF1E9),
+                      color: AppColors.showcaseChipBackground,
                       borderRadius: BorderRadius.circular(22),
                     ),
                     child: Row(
@@ -789,7 +789,7 @@ class _PrepBoard extends StatelessWidget {
                           height: 54,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            border: Border.all(color: const Color(0xFFD8BCAB)),
+                            border: Border.all(color: AppColors.showcaseChipBorder),
                           ),
                           child: const Icon(Icons.favorite_border, color: AppColors.accent),
                         ),
@@ -826,7 +826,7 @@ class _PrepBoard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFAF1E9),
+                    color: AppColors.showcaseChipBackground,
                     borderRadius: BorderRadius.circular(22),
                   ),
                   child: Row(
@@ -836,7 +836,7 @@ class _PrepBoard extends StatelessWidget {
                         height: 54,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(color: const Color(0xFFD8BCAB)),
+                          border: Border.all(color: AppColors.showcaseChipBorder),
                         ),
                         child: const Icon(Icons.favorite_border, color: AppColors.accent),
                       ),
@@ -879,8 +879,8 @@ class _PrepBoard extends StatelessWidget {
                       child: Text('SUBMIT MY PHOTOS & DETAILS'),
                     ),
                     style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF232125),
-                      foregroundColor: Colors.white,
+                      backgroundColor: AppColors.showcaseDarkSurface,
+                      foregroundColor: AppColors.onPrimary,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(18),
                       ),
@@ -896,8 +896,8 @@ class _PrepBoard extends StatelessWidget {
                     child: Text('SUBMIT MY PHOTOS & DETAILS'),
                   ),
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF232125),
-                    foregroundColor: Colors.white,
+                    backgroundColor: AppColors.showcaseDarkSurface,
+                    foregroundColor: AppColors.onPrimary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18),
                     ),
@@ -928,7 +928,7 @@ class _UploadPanel extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFE9DDD1)),
+        border: Border.all(color: AppColors.showcaseBorderPale),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -951,10 +951,10 @@ class _UploadPanel extends StatelessWidget {
           Container(
             height: 146,
             decoration: BoxDecoration(
-              color: const Color(0xFFFFFBF7),
+              color: AppColors.showcaseSurfaceBase,
               borderRadius: BorderRadius.circular(18),
               border: Border.all(
-                color: const Color(0xFFE1D1C5),
+                color: AppColors.showcaseBorderPaleAlt,
                 style: BorderStyle.solid,
               ),
             ),
@@ -979,7 +979,7 @@ class _UploadPanel extends StatelessWidget {
                     onPressed: () {},
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.accent,
-                      foregroundColor: Colors.white,
+                      foregroundColor: AppColors.onPrimary,
                       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                       minimumSize: Size.zero,
                     ),
@@ -1008,9 +1008,9 @@ class _MiniTag extends StatelessWidget {
       width: 84,
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFBF8),
+        color: AppColors.showcaseSurfaceBaseAlt,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE8DACE)),
+        border: Border.all(color: AppColors.showcaseBorderPaleSoft),
       ),
       child: Column(
         children: [
@@ -1045,7 +1045,7 @@ class _ReferenceThumb extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [tone, const Color(0xFFF2E8DD)],
+          colors: [tone, AppColors.showcaseGradientMist],
         ),
       ),
       child: Align(
@@ -1055,7 +1055,7 @@ class _ReferenceThumb extends StatelessWidget {
           height: 76,
           margin: const EdgeInsets.only(bottom: 10),
           decoration: const BoxDecoration(
-            color: Color(0xFFF7F2EC),
+            color: AppColors.showcaseCanvasWarm,
             borderRadius: BorderRadius.vertical(
               top: Radius.circular(30),
               bottom: Radius.circular(16),
@@ -1093,9 +1093,9 @@ class _FieldMock extends StatelessWidget {
             height: 48,
             padding: const EdgeInsets.symmetric(horizontal: 14),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFFBF8),
+              color: AppColors.showcaseSurfaceBaseAlt,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFFE8D9CB)),
+              border: Border.all(color: AppColors.showcaseBorderPaleSoftAlt),
             ),
             alignment: Alignment.centerLeft,
             child: Text(
@@ -1127,9 +1127,12 @@ class _GalleryStrip extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFFFFBF8), Color(0xFFF1E4D8)],
+          colors: [
+            AppColors.showcaseSurfaceBaseAlt,
+            AppColors.showcaseGradientCream,
+          ],
         ),
-        border: Border.all(color: const Color(0xFFE7D8CB)),
+        border: Border.all(color: AppColors.showcaseBorderLight),
       ),
       child: Flex(
         direction: isDesktop ? Axis.horizontal : Axis.vertical,
@@ -1149,7 +1152,7 @@ class _GalleryStrip extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFFBF8),
+                  color: AppColors.showcaseSurfaceBaseAlt,
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: Column(
@@ -1184,7 +1187,7 @@ class _GalleryStrip extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFFBF8),
+                color: AppColors.showcaseSurfaceBaseAlt,
                 borderRadius: BorderRadius.circular(24),
               ),
               child: Column(
@@ -1332,7 +1335,7 @@ class _GalleryPhotoCard extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [tone, const Color(0xFFF3E8DE)],
+                colors: [tone, AppColors.showcaseGradientGalleryEnd],
               ),
             ),
             child: Center(
@@ -1340,7 +1343,7 @@ class _GalleryPhotoCard extends StatelessWidget {
                 width: 118,
                 height: 150,
                 decoration: const BoxDecoration(
-                  color: Color(0xFFF8F4EE),
+                  color: AppColors.showcaseCanvasWarmSoft,
                   borderRadius: BorderRadius.vertical(
                     top: Radius.circular(60),
                     bottom: Radius.circular(24),
@@ -1413,7 +1416,7 @@ class _AboutBand extends StatelessWidget {
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFFE7D8CB)),
+        border: Border.all(color: AppColors.showcaseBorderLight),
       ),
       child: Flex(
         direction: isDesktop ? Axis.horizontal : Axis.vertical,
@@ -1468,7 +1471,7 @@ class _AboutBand extends StatelessWidget {
                   gradient: const LinearGradient(
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
-                    colors: [Color(0xFFF1E2D6), Color(0xFFF9F4ED)],
+                    colors: [AppColors.showcaseGradientPhotoStart, AppColors.showcaseGradientPhotoEnd],
                   ),
                 ),
                 child: Stack(
@@ -1481,7 +1484,7 @@ class _AboutBand extends StatelessWidget {
                         width: 110,
                         height: 126,
                         decoration: const BoxDecoration(
-                          color: Color(0xFFC79C79),
+                          color: AppColors.showcaseAccentBronze,
                           borderRadius: BorderRadius.vertical(
                             top: Radius.circular(54),
                             bottom: Radius.circular(26),
@@ -1498,12 +1501,12 @@ class _AboutBand extends StatelessWidget {
                           width: 82,
                           height: 126,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF27252A),
+                            color: AppColors.showcaseDarkSurfaceAlt,
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.white, width: 5),
+                            border: Border.all(color: AppColors.onPrimary, width: 5),
                           ),
                           child: const Center(
-                            child: Icon(Icons.photo_camera_front_outlined, color: Colors.white70),
+                            child: Icon(Icons.photo_camera_front_outlined, color: AppColors.onPrimaryMuted),
                           ),
                         ),
                       ),
@@ -1520,7 +1523,7 @@ class _AboutBand extends StatelessWidget {
                 gradient: const LinearGradient(
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
-                  colors: [Color(0xFFF1E2D6), Color(0xFFF9F4ED)],
+                  colors: [AppColors.showcaseGradientPhotoStart, AppColors.showcaseGradientPhotoEnd],
                 ),
               ),
               child: Stack(
@@ -1533,7 +1536,7 @@ class _AboutBand extends StatelessWidget {
                       width: 110,
                       height: 126,
                       decoration: const BoxDecoration(
-                        color: Color(0xFFC79C79),
+                        color: AppColors.showcaseAccentBronze,
                         borderRadius: BorderRadius.vertical(
                           top: Radius.circular(54),
                           bottom: Radius.circular(26),
@@ -1550,12 +1553,12 @@ class _AboutBand extends StatelessWidget {
                         width: 82,
                         height: 126,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF27252A),
+                          color: AppColors.showcaseDarkSurfaceAlt,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.white, width: 5),
+                          border: Border.all(color: AppColors.onPrimary, width: 5),
                         ),
                         child: const Center(
-                          child: Icon(Icons.photo_camera_front_outlined, color: Colors.white70),
+                          child: Icon(Icons.photo_camera_front_outlined, color: AppColors.onPrimaryMuted),
                         ),
                       ),
                     ),
@@ -1570,7 +1573,7 @@ class _AboutBand extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(22),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFBF3EB),
+                  color: AppColors.showcaseSurfaceRose,
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: Column(
@@ -1599,7 +1602,7 @@ class _AboutBand extends StatelessWidget {
                       label: const Text('Message us'),
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.accent,
-                        foregroundColor: Colors.white,
+                        foregroundColor: AppColors.onPrimary,
                       ),
                     ),
                   ],
@@ -1610,7 +1613,7 @@ class _AboutBand extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
-                color: const Color(0xFFFBF3EB),
+                color: AppColors.showcaseSurfaceRose,
                 borderRadius: BorderRadius.circular(24),
               ),
               child: Column(
@@ -1637,7 +1640,7 @@ class _AboutBand extends StatelessWidget {
                     onPressed: () => context.go('/signup'),
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.accent,
-                      foregroundColor: Colors.white,
+                      foregroundColor: AppColors.onPrimary,
                     ),
                     child: const Text('CONTACT ME'),
                   ),
@@ -1709,7 +1712,7 @@ class _FooterBand extends StatelessWidget {
         onPressed: onCreateAccountTap,
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
+          foregroundColor: AppColors.onPrimary,
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
         ),
         child: const Text('BOOK YOUR APPOINTMENT'),
@@ -1719,7 +1722,7 @@ class _FooterBand extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5E9DE),
+        color: AppColors.showcaseSurfaceFooter,
         borderRadius: BorderRadius.circular(24),
       ),
       child: isWide

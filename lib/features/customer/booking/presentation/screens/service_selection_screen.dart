@@ -3,18 +3,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../../core/theme/app_colors.dart';
 import '../../domain/booking_service_catalog.dart';
 import '../../domain/booking_flow_state.dart';
 import '../providers/booking_flow_controller.dart';
 import '../widgets/booking_step_scaffold.dart';
 
 // Matches the booking-flow primary defined in booking_step_scaffold.dart
-const Color _kPrimary    = Color(0xFF8B3838);
-const Color _kTextDark   = Color(0xFF1A1212);
-const Color _kTextMid    = Color(0xFF6B6260);
-const Color _kHeroBg     = Color(0xFFF5EDE4);
-const Color _kPlaceImg   = Color(0xFFE0D8D0);
-const Color _kDivider    = Color(0xFFF0EAE4);
+const Color _kPrimary = AppColors.primary;
+const Color _kTextDark = AppColors.textPrimary;
+const Color _kTextMid = AppColors.textSecondary;
+const Color _kHeroBg = AppColors.showcaseSurfaceSoft;
+const Color _kPlaceImg = AppColors.showcaseSurfaceAlt;
+const Color _kDivider = AppColors.showcaseBorderPale;
 
 // ─────────────────────────────────────────────────────────────────────────────
 class ServiceSelectionScreen extends ConsumerStatefulWidget {
@@ -50,7 +51,7 @@ class _ServiceSelectionScreenState
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.onPrimary,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -79,7 +80,7 @@ class _ServiceSelectionScreenState
 
     if (bookingState == null) {
       return const Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.onPrimary,
         body: Center(child: CircularProgressIndicator()),
       );
     }
@@ -249,10 +250,10 @@ class _ServiceModalState extends State<_ServiceModal> {
                     duration: const Duration(milliseconds: 150),
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
-                      color: selected ? _kPrimary : Colors.white,
+                      color: selected ? _kPrimary : AppColors.onPrimary,
                       borderRadius: BorderRadius.circular(999),
                       border: Border.all(
-                        color: selected ? _kPrimary : const Color(0xFFD0C8C0),
+                        color: selected ? _kPrimary : AppColors.border,
                       ),
                     ),
                     child: Text(
@@ -260,7 +261,7 @@ class _ServiceModalState extends State<_ServiceModal> {
                       style: GoogleFonts.manrope(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: selected ? Colors.white : _kTextDark,
+                        color: selected ? AppColors.onPrimary : _kTextDark,
                       ),
                     ),
                   ),
@@ -372,7 +373,7 @@ class _ServiceModalState extends State<_ServiceModal> {
                       style: GoogleFonts.manrope(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: Colors.white)),
+                          color: AppColors.onPrimary)),
                 ),
               ),
             ],
@@ -447,10 +448,10 @@ class _CategoryPill extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? _kPrimary : Colors.white,
+          color: isSelected ? _kPrimary : AppColors.onPrimary,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-            color: isSelected ? _kPrimary : const Color(0xFFD0C8C0),
+            color: isSelected ? _kPrimary : AppColors.border,
           ),
         ),
         child: Row(
@@ -458,7 +459,7 @@ class _CategoryPill extends StatelessWidget {
           children: [
             Icon(icon,
                 size: 14,
-                color: isSelected ? Colors.white : const Color(0xFF8B8178)),
+                color: isSelected ? AppColors.onPrimary : AppColors.textMuted),
             const SizedBox(width: 5),
             Text(
               label,
@@ -466,7 +467,7 @@ class _CategoryPill extends StatelessWidget {
                 fontSize: 12,
                 fontWeight:
                     isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? Colors.white : _kTextDark,
+                color: isSelected ? AppColors.onPrimary : _kTextDark,
               ),
             ),
           ],
@@ -518,7 +519,7 @@ class _ServiceTile extends StatelessWidget {
                       height: thumbSize,
                       decoration: BoxDecoration(
                         color: addedCount > 0
-                            ? const Color(0xFFEDD8D8)
+                            ? AppColors.surfaceAlt
                             : _kPlaceImg,
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -589,7 +590,7 @@ class _ServiceTile extends StatelessWidget {
                           Container(
                               width: 1,
                               height: 11,
-                              color: const Color(0xFFD8CFC8)),
+                              color: AppColors.border),
                           const SizedBox(width: 6),
                           Text(
                             'Starting at ${service.priceLabel}',
@@ -614,7 +615,7 @@ class _ServiceTile extends StatelessWidget {
                   size: 22,
                   color: addedCount > 0
                       ? _kPrimary
-                      : const Color(0xFFB8B0A8),
+                      : AppColors.textMuted,
                 ),
                   ],
                 ),
@@ -648,9 +649,9 @@ class _ServiceItemsSummary extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF5F0),
+        color: AppColors.showcaseSurfaceWarm,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFEED8D0)),
+        border: Border.all(color: AppColors.showcaseBorderSoft),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -709,7 +710,7 @@ class _SupportSection extends StatelessWidget {
       decoration: BoxDecoration(
         color: _kHeroBg,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2D8D0)),
+        border: Border.all(color: AppColors.showcaseBorderPaleSoftAlt),
       ),
       child: Row(
         children: [
@@ -718,9 +719,9 @@ class _SupportSection extends StatelessWidget {
             height: 42,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white,
+              color: AppColors.onPrimary,
               border:
-                  Border.all(color: const Color(0xFFD8D0C8)),
+                  Border.all(color: AppColors.border),
             ),
             child: const Icon(Icons.chat_bubble_outline,
                 size: 18, color: _kTextMid),
@@ -793,7 +794,7 @@ class _EmptyCatalog extends StatelessWidget {
       child: Column(
         children: [
           const Icon(Icons.content_cut_outlined,
-              size: 40, color: Color(0xFFD0C8C0)),
+              size: 40, color: AppColors.border),
           const SizedBox(height: 12),
           Text(
             'No services published yet',

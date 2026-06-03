@@ -106,9 +106,9 @@ class _AddressCheckScreenState extends ConsumerState<AddressCheckScreen> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFFCF8),
+              color: AppColors.showcaseSurfaceHighlight,
               borderRadius: BorderRadius.circular(26),
-              border: Border.all(color: const Color(0xFFE7D8CB)),
+              border: Border.all(color: AppColors.showcaseBorderLight),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -223,9 +223,9 @@ class _AddressCheckScreenState extends ConsumerState<AddressCheckScreen> {
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFFBF7),
+              color: AppColors.showcaseSurfaceBase,
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: const Color(0xFFE7D8CB)),
+              border: Border.all(color: AppColors.showcaseBorderLight),
             ),
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -344,7 +344,7 @@ class _AddressSelectionPanel extends StatelessWidget {
                     padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                     child: AppCard(
                       backgroundColor: bookingState.selectedAddressId == address.id
-                          ? const Color(0xFFF7EDE4)
+                          ? AppColors.showcaseSurfaceSoft
                           : null,
                       onTap: () => onSelectAddress(address.id),
                       child: Row(
@@ -425,9 +425,9 @@ class _AddressFormPanel extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFBF7),
+        color: AppColors.showcaseSurfaceBase,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFE7D8CB)),
+        border: Border.all(color: AppColors.showcaseBorderLight),
       ),
       child: Form(
         key: formKey,
@@ -547,7 +547,7 @@ class _BookingSupportCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFCF8),
+        color: AppColors.showcaseSurfaceHighlight,
         borderRadius: BorderRadius.circular(22),
       ),
       child: Column(
@@ -558,7 +558,7 @@ class _BookingSupportCard extends StatelessWidget {
             height: 52,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFE4D4C7)),
+              border: Border.all(color: AppColors.showcaseBorderMuted),
             ),
             child: Icon(icon, color: AppColors.textSecondary),
           ),

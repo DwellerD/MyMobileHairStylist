@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../../../../shared/widgets/empty_state.dart';
@@ -20,7 +21,7 @@ class FamilyScreen extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -147,7 +148,7 @@ class _FamilyMemberTile extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(Icons.edit_outlined, size: 18, color: Color(0xFF8B8178)),
+            const Icon(Icons.edit_outlined, size: 18, color: AppColors.textMuted),
           ],
         ),
       ),
