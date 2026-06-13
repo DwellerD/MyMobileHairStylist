@@ -5,12 +5,12 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/theme/app_colors.dart';
 
 // ── Brand colour for the booking flow ──────────────────────────────────────
-const Color _kPrimary = AppColors.primary;
-const Color _kHeroBg = AppColors.showcaseSurfaceSoft;
-const Color _kDivider = AppColors.showcaseBorderPale;
-const Color _kTextDark = AppColors.textPrimary;
-const Color _kTextMid = AppColors.textSecondary;
-const Color _kPlaceholder = AppColors.showcaseSurfaceAlt;
+Color get _kPrimary => AppColors.primary;
+Color get _kHeroBg => AppColors.showcaseSurfaceSoft;
+Color get _kDivider => AppColors.showcaseBorderPale;
+Color get _kTextDark => AppColors.textPrimary;
+Color get _kTextMid => AppColors.textSecondary;
+Color get _kPlaceholder => AppColors.showcaseSurfaceAlt;
 
 // ── Public error-message helper used by booking screens ────────────────────
 String? bookingErrorMessage(AsyncValue<dynamic> asyncValue) {
@@ -21,8 +21,9 @@ String? bookingErrorMessage(AsyncValue<dynamic> asyncValue) {
 // ─────────────────────────────────────────────────────────────────────────────
 /// Shared scaffold used by every booking-flow step.
 ///
-/// [displayStep] drives the 5-segment visual stepper:
-///   1 = Who   2 = Services   3 = Date & Time   4 = Details   5 = Review
+/// [displayStep] drives the 6-segment visual stepper:
+///   1 = Who   2 = Services   3 = Date & Time   4 = Stylist
+///   5 = Details   6 = Review
 // ─────────────────────────────────────────────────────────────────────────────
 class BookingStepScaffold extends StatelessWidget {
   const BookingStepScaffold({
@@ -82,7 +83,7 @@ class BookingStepScaffold extends StatelessWidget {
                 ),
                 if (errorMessage != null) _ErrorBanner(message: errorMessage!),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 120),
+                  padding: EdgeInsets.fromLTRB(16, 20, 16, 120),
                   child: child,
                 ),
               ],
@@ -106,7 +107,7 @@ class BookingStepScaffold extends StatelessWidget {
       elevation: 0,
       surfaceTintColor: Colors.transparent,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new,
+        icon: Icon(Icons.arrow_back_ios_new,
             size: 20, color: _kTextDark),
         onPressed: () =>
             context.canPop() ? context.pop() : context.go('/customer/home'),
@@ -121,7 +122,7 @@ class BookingStepScaffold extends StatelessWidget {
         ),
       ),
       bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(1),
+        preferredSize: Size.fromHeight(1),
         child: Container(height: 1, color: _kDivider),
       ),
     );
@@ -129,7 +130,7 @@ class BookingStepScaffold extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 4-step progress stepper
+// Booking progress stepper
 // ─────────────────────────────────────────────────────────────────────────────
 class _BookingStepper extends StatelessWidget {
   const _BookingStepper({required this.displayStep});
@@ -139,7 +140,8 @@ class _BookingStepper extends StatelessWidget {
   static const _steps = [
     (Icons.people_outline,             'Who'),
     (Icons.content_cut,                'Services'),
-    (Icons.calendar_today_outlined,    'Date & Time'),
+    (Icons.calendar_today_outlined,    'Date/Time'),
+    (Icons.person_outline,             'Stylist'),
     (Icons.home_outlined,              'Details'),
     (Icons.check_circle_outline,       'Review'),
   ];
@@ -148,7 +150,7 @@ class _BookingStepper extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: AppColors.onPrimary,
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+      padding: EdgeInsets.fromLTRB(16, 14, 16, 10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -164,7 +166,7 @@ class _BookingStepper extends StatelessWidget {
               Expanded(
                 child: Padding(
                   // 17 = half of 34px circle, aligns line to circle centre
-                  padding: const EdgeInsets.only(top: 17),
+                  padding: EdgeInsets.only(top: 17),
                   child: Container(
                     height: 2,
                     color: i < displayStep - 1
@@ -222,8 +224,8 @@ class _StepItem extends StatelessWidget {
               ),
               child: Center(
                 child: isCompleted
-                    ? const Icon(Icons.check, color: AppColors.onPrimary, size: 16)
-                    : Icon(icon, color: iconColor, size: 16),
+                  ? Icon(Icons.check, color: AppColors.onPrimary, size: 16)
+                  : Icon(icon, color: iconColor, size: 16),
               ),
             ),
             if (isActive)
@@ -233,7 +235,7 @@ class _StepItem extends StatelessWidget {
                 child: Container(
                   width: 14,
                   height: 14,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: _kPrimary,
                   ),
@@ -249,15 +251,14 @@ class _StepItem extends StatelessWidget {
                 ),
               ),
           ],
-        ),
-        const SizedBox(height: 5),
+        ), SizedBox(height: 5),
         SizedBox(
-          width: 60,
+          width: 48,
           child: Text(
             label,
             textAlign: TextAlign.center,
             style: GoogleFonts.manrope(
-              fontSize: 9,
+              fontSize: 8,
               fontWeight:
                   isActive ? FontWeight.w700 : FontWeight.w500,
               color: labelColor,
@@ -293,7 +294,7 @@ class _BookingHeroStrip extends StatelessWidget {
     }
     return Container(
       color: _kHeroBg,
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+      padding: EdgeInsets.fromLTRB(20, 20, 20, 24),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -311,8 +312,7 @@ class _BookingHeroStrip extends StatelessWidget {
                     letterSpacing: 1.6,
                     color: _kPrimary,
                   ),
-                ),
-                const SizedBox(height: 8),
+                ), SizedBox(height: 8),
                 Text(
                   title,
                   style: GoogleFonts.manrope(
@@ -321,8 +321,7 @@ class _BookingHeroStrip extends StatelessWidget {
                     color: _kTextDark,
                     height: 1.2,
                   ),
-                ),
-                const SizedBox(height: 6),
+                ), SizedBox(height: 6),
                 Text(
                   subtitle,
                   style: GoogleFonts.manrope(
@@ -333,9 +332,7 @@ class _BookingHeroStrip extends StatelessWidget {
                 ),
               ],
             ),
-          ),
-          const SizedBox(width: 14),
-          const _HeroImagePlaceholders(),
+          ), SizedBox(width: 14), _HeroImagePlaceholders(),
         ],
       ),
     );
@@ -374,19 +371,17 @@ class _ErrorBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: AppColors.surfaceAlt,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppColors.borderStrong),
         ),
         child: Row(
-          children: [
-            const Icon(Icons.error_outline,
-                color: _kPrimary, size: 20),
-            const SizedBox(width: 10),
+          children: [Icon(Icons.error_outline,
+                color: _kPrimary, size: 20), SizedBox(width: 10),
             Expanded(
               child: Text(
                 message,
@@ -430,7 +425,7 @@ class _ContinueBar extends StatelessWidget {
         disabledBackgroundColor: AppColors.borderStrong,
         foregroundColor: AppColors.onPrimary,
         disabledForegroundColor: AppColors.onPrimary,
-        minimumSize: const Size.fromHeight(52),
+        minimumSize: Size.fromHeight(52),
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10)),
         textStyle: GoogleFonts.manrope(
@@ -450,12 +445,11 @@ class _ContinueBar extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
             ),
-          ),
-          const SizedBox(width: 8),
+          ), SizedBox(width: 8),
           if (!isBusy)
-            const Icon(Icons.arrow_forward, size: 20, color: AppColors.onPrimary),
+            Icon(Icons.arrow_forward, size: 20, color: AppColors.onPrimary),
           if (isBusy)
-            const SizedBox(
+            SizedBox(
               width: 18,
               height: 18,
               child: CircularProgressIndicator(
@@ -470,8 +464,8 @@ class _ContinueBar extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-        decoration: const BoxDecoration(
+        padding: EdgeInsets.fromLTRB(16, 12, 16, 16),
+        decoration: BoxDecoration(
           color: AppColors.onPrimary,
           border: Border(top: BorderSide(color: _kDivider)),
         ),
@@ -490,8 +484,7 @@ class _ContinueBar extends StatelessWidget {
                         ),
                       ),
                       child: Text(secondaryLabel!),
-                    ),
-                    const SizedBox(width: 8),
+                    ), SizedBox(width: 8),
                     Expanded(child: primaryButton),
                   ],
                 )

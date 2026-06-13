@@ -1,72 +1,94 @@
 import 'package:flutter/material.dart';
 
+import 'theme_personalization.dart';
+
 /// Central color tokens for the entire application.
 ///
 /// The palette is intentionally calm and warm so the brand feels premium,
 /// trustworthy, and family-friendly without becoming overly decorative.
 abstract final class AppColors {
-  static const Color background = Color(0xFFF5F1F2);
-  static const Color surface = Color(0xFFFDFCFC);
-  static const Color surfaceAlt = Color(0xFFECE2E3);
-  static const Color border = Color(0xFFD8CACC);
-  static const Color borderStrong = Color(0xFFC5B2B5);
+  static AppThemePreset _activePreset = AppThemePreset.sageGarden;
 
-  static const Color primary = Color(0xFFA3787D);
-  static const Color primaryPressed = Color(0xFF8D676C);
-  static const Color accent = Color(0xFFC3A7AB);
+  static void usePreset(AppThemePreset preset) {
+    _activePreset = preset;
+  }
 
-  static const Color textPrimary = Color(0xFF463B3D);
-  static const Color textSecondary = Color(0xFF766A6D);
-  static const Color textMuted = Color(0xFF9A8F92);
-  static const Color onPrimary = Colors.white;
-  static const Color onPrimaryMuted = Colors.white70;
+  static ThemePalette get _palette => appThemePaletteFor(_activePreset);
 
-  static const Color success = Color(0xFF7F9685);
-  static const Color warning = Color(0xFFB6977A);
-  static const Color danger = Color(0xFFBA7E84);
-  static const Color info = Color(0xFF9B929A);
+  static Color get background => _palette.background;
+  static Color get surface => _palette.surface;
+  static Color get surfaceAlt => _palette.surfaceAlt;
+  static Color get border => _palette.border;
+  static Color get borderStrong => _palette.borderStrong;
+
+  static Color get primary => _palette.primary;
+  static Color get primaryPressed => _shade(_palette.primary, 0.14);
+  static Color get accent => _palette.accent;
+
+  static Color get textPrimary => _palette.textPrimary;
+  static Color get textSecondary => _palette.textSecondary;
+  static Color get textMuted => _palette.textMuted;
+  static Color get onPrimary => _palette.onPrimary;
+  static Color get onPrimaryMuted => _withOpacity(_palette.onPrimary, 0.7);
+
+  static Color get success => _palette.success;
+  static Color get warning => _palette.warning;
+  static Color get danger => _palette.danger;
+  static Color get info => _palette.info;
 
   // Showcase and decorative neutrals reused across customer/auth views.
-  static const Color showcaseGradientStart = Color(0xFFF6EEE6);
-  static const Color showcaseGradientMid = Color(0xFFF4E8DE);
-  static const Color showcaseGradientEnd = Color(0xFFF8F3ED);
-  static const Color showcasePanel = Color(0xFFFDF8F2);
-  static const Color showcaseCardSoft = Color(0xFFF6ECE3);
-  static const Color showcaseCardWarm = Color(0xFFF8EFE7);
-  static const Color showcaseSurfaceWarm = Color(0xFFF9F3ED);
-  static const Color showcaseSurfaceSoft = Color(0xFFF7EDE4);
-  static const Color showcaseSurfaceAlt = Color(0xFFF0E6DE);
-  static const Color showcaseSurfaceIvory = Color(0xFFFFFAF5);
-  static const Color showcaseSurfaceBase = Color(0xFFFFFBF7);
-  static const Color showcaseSurfaceBaseAlt = Color(0xFFFFFBF8);
-  static const Color showcaseSurfaceHighlight = Color(0xFFFFFCF8);
-  static const Color showcaseSurfaceRose = Color(0xFFFBF3EB);
-  static const Color showcaseSurfaceFooter = Color(0xFFF5E9DE);
-  static const Color showcaseBorderWarm = Color(0xFFEADACB);
-  static const Color showcaseBorderSoft = Color(0xFFE8D6C8);
-  static const Color showcaseBorderMuted = Color(0xFFE4D4C7);
-  static const Color showcaseBorderLight = Color(0xFFE7D8CB);
-  static const Color showcaseBorderPale = Color(0xFFE9DDD1);
-  static const Color showcaseBorderPaleAlt = Color(0xFFE1D1C5);
-  static const Color showcaseBorderPaleSoft = Color(0xFFE8DACE);
-  static const Color showcaseBorderPaleSoftAlt = Color(0xFFE8D9CB);
-  static const Color showcaseChipBackground = Color(0xFFFAF1E9);
-  static const Color showcaseChipBorder = Color(0xFFD8BCAB);
-  static const Color showcaseAccentSoft = Color(0xFFD6B2A2);
-  static const Color showcaseAccentBronze = Color(0xFFC79C79);
-  static const Color showcaseDarkSurface = Color(0xFF232125);
-  static const Color showcaseDarkSurfaceAlt = Color(0xFF27252A);
-  static const Color showcaseGradientWarmStart = Color(0xFFF9F2EA);
-  static const Color showcaseGradientWarmEnd = Color(0xFFE9D8CA);
-  static const Color showcaseGradientSoftEnd = Color(0xFFF1E5DB);
-  static const Color showcaseGradientCream = Color(0xFFF1E4D8);
-  static const Color showcaseGradientPhotoStart = Color(0xFFF1E2D6);
-  static const Color showcaseGradientPhotoEnd = Color(0xFFF9F4ED);
-  static const Color showcaseGradientMist = Color(0xFFF2E8DD);
-  static const Color showcaseGradientGalleryEnd = Color(0xFFF3E8DE);
-  static const Color showcaseCanvasWarm = Color(0xFFF7F2EC);
-  static const Color showcaseCanvasWarmSoft = Color(0xFFF8F4EE);
-  static const Color showcaseGlass = Color(0xCCFFFDF9);
-  static const Color showcaseShadowSoft = Color(0x11000000);
-  static const Color showcaseShadowSubtle = Color(0x0A000000);
+  static Color get showcaseGradientStart => _tint(background, 0.45);
+  static Color get showcaseGradientMid => _tint(surfaceAlt, 0.34);
+  static Color get showcaseGradientEnd => _tint(surface, 0.5);
+  static Color get showcasePanel => _tint(surface, 0.16);
+  static Color get showcaseCardSoft => _tint(surfaceAlt, 0.12);
+  static Color get showcaseCardWarm => _tint(surfaceAlt, 0.18);
+  static Color get showcaseSurfaceWarm => _tint(surfaceAlt, 0.26);
+  static Color get showcaseSurfaceSoft => _tint(surfaceAlt, 0.2);
+  static Color get showcaseSurfaceAlt => _tint(surfaceAlt, 0.08);
+  static Color get showcaseSurfaceIvory => _tint(surface, 0.2);
+  static Color get showcaseSurfaceBase => _tint(surface, 0.08);
+  static Color get showcaseSurfaceBaseAlt => _tint(surface, 0.14);
+  static Color get showcaseSurfaceHighlight => _tint(surface, 0.24);
+  static Color get showcaseSurfaceRose => _tint(surfaceAlt, 0.22);
+  static Color get showcaseSurfaceFooter => _shade(surfaceAlt, 0.05);
+  static Color get showcaseBorderWarm => _tint(border, 0.06);
+  static Color get showcaseBorderSoft => _tint(border, 0.03);
+  static Color get showcaseBorderMuted => border;
+  static Color get showcaseBorderLight => _tint(border, 0.1);
+  static Color get showcaseBorderPale => _tint(border, 0.12);
+  static Color get showcaseBorderPaleAlt => _shade(border, 0.03);
+  static Color get showcaseBorderPaleSoft => _tint(border, 0.08);
+  static Color get showcaseBorderPaleSoftAlt => _shade(border, 0.02);
+  static Color get showcaseChipBackground => _tint(surfaceAlt, 0.3);
+  static Color get showcaseChipBorder => _shade(accent, 0.14);
+  static Color get showcaseAccentSoft => _tint(accent, 0.12);
+  static Color get showcaseAccentBronze => _shade(accent, 0.22);
+  static Color get showcaseDarkSurface => _shade(textPrimary, 0.44);
+  static Color get showcaseDarkSurfaceAlt => _shade(textPrimary, 0.34);
+  static Color get showcaseGradientWarmStart => _tint(surface, 0.2);
+  static Color get showcaseGradientWarmEnd => _tint(surfaceAlt, 0.18);
+  static Color get showcaseGradientSoftEnd => _tint(surfaceAlt, 0.14);
+  static Color get showcaseGradientCream => _tint(surfaceAlt, 0.16);
+  static Color get showcaseGradientPhotoStart => _tint(surfaceAlt, 0.14);
+  static Color get showcaseGradientPhotoEnd => _tint(surface, 0.18);
+  static Color get showcaseGradientMist => _tint(surfaceAlt, 0.12);
+  static Color get showcaseGradientGalleryEnd => _tint(surfaceAlt, 0.1);
+  static Color get showcaseCanvasWarm => _tint(surfaceAlt, 0.24);
+  static Color get showcaseCanvasWarmSoft => _tint(surfaceAlt, 0.3);
+  static Color get showcaseGlass => _withOpacity(_tint(surface, 0.2), 0.78);
+  static Color get showcaseShadowSoft => _withOpacity(Colors.black, 0.07);
+  static Color get showcaseShadowSubtle => _withOpacity(Colors.black, 0.04);
+
+  static Color _tint(Color color, double amount) {
+    return Color.lerp(color, Colors.white, amount) ?? color;
+  }
+
+  static Color _shade(Color color, double amount) {
+    return Color.lerp(color, Colors.black, amount) ?? color;
+  }
+
+  static Color _withOpacity(Color color, double opacity) {
+    return color.withValues(alpha: opacity.clamp(0.0, 1.0));
+  }
 }

@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "mobile_hair_salon" "\0"
+            VALUE "CompanyName", "My Mobile Hair Stylist" "\0"
+            VALUE "FileDescription", "My Mobile Hair Stylist" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "mobile_hair_salon" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "mobile_hair_salon.exe" "\0"
-            VALUE "ProductName", "mobile_hair_salon" "\0"
+            VALUE "InternalName", "my_mobile_hair_stylist" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 Dallin. All rights reserved." "\0"
+            VALUE "OriginalFilename", "my_mobile_hair_stylist.exe" "\0"
+            VALUE "ProductName", "My Mobile Hair Stylist" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

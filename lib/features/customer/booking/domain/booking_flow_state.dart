@@ -4,6 +4,11 @@ import 'package:flutter/material.dart';
 
 import 'service_area_validation.dart';
 
+abstract final class StylistPreferenceType {
+  static const String any = 'any';
+  static const String specific = 'specific';
+}
+
 /// Simple address option used throughout the booking request flow.
 class BookingAddressOption {
   const BookingAddressOption({
@@ -230,6 +235,7 @@ class BookingFlowState {
     required this.acceptedPolicy,
     required this.submittedAppointmentId,
     this.customerPhone,
+    required this.stylistPreferenceType,
     this.requestedStylistId,
     this.requestedStylistName,
     this.selectedSlotStartAt,
@@ -257,6 +263,11 @@ class BookingFlowState {
   final String paymentStatus;
   final bool acceptedPolicy;
   final String? submittedAppointmentId;
+
+  /// Customer preference mode used by admin dispatch:
+  /// - any: customer accepts the first available stylist.
+  /// - specific: customer requested a specific stylist profile.
+  final String stylistPreferenceType;
 
   /// Stylist the customer explicitly requested during booking.
   /// Null means "no preference" — any available qualified stylist may be assigned.
@@ -297,6 +308,7 @@ class BookingFlowState {
       paymentStatus: 'not_started',
       acceptedPolicy: false,
       submittedAppointmentId: null,
+      stylistPreferenceType: StylistPreferenceType.any,
       requestedStylistId: null,
       requestedStylistName: null,
       selectedSlotStartAt: null,
@@ -375,6 +387,7 @@ class BookingFlowState {
     bool? acceptedPolicy,
     String? submittedAppointmentId,
     bool clearSubmittedAppointmentId = false,
+    String? stylistPreferenceType,
     String? requestedStylistId,
     bool clearRequestedStylist = false,
     String? requestedStylistName,
@@ -404,6 +417,9 @@ class BookingFlowState {
       submittedAppointmentId: clearSubmittedAppointmentId
           ? null
           : (submittedAppointmentId ?? this.submittedAppointmentId),
+        stylistPreferenceType: clearRequestedStylist
+          ? StylistPreferenceType.any
+          : (stylistPreferenceType ?? this.stylistPreferenceType),
       requestedStylistId: clearRequestedStylist
           ? null
           : (requestedStylistId ?? this.requestedStylistId),

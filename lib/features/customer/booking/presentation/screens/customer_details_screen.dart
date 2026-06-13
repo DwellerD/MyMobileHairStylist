@@ -70,16 +70,16 @@ class _CustomerDetailsScreenState
         _phoneController.text.trim().length >= 7;
 
     return BookingStepScaffold(
-      displayStep: 4,
-      stepNumber: 4,
-      totalSteps: 5,
+      displayStep: 5,
+      stepNumber: 5,
+      totalSteps: 6,
       title: 'Your details',
       subtitle:
           'Confirm the service address and share how we can reach you on the day.',
       errorMessage: bookingErrorMessage(bookingAsync),
       isBusy: bookingAsync.isLoading,
       secondaryLabel: 'Back',
-      onSecondaryPressed: () => context.go('/customer/book/time'),
+      onSecondaryPressed: () => context.go('/customer/book/stylist'),
       primaryLabel: 'Review & confirm',
       primaryIcon: Icons.arrow_forward,
       onPrimaryPressed: canContinue

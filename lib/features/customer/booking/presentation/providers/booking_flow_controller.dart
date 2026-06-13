@@ -138,13 +138,18 @@ class BookingFlowController extends AutoDisposeAsyncNotifier<BookingFlowState> {
   void setRequestedStylist({required String? stylistId, required String? stylistName}) {
     final current = _requireState();
     if (stylistId == null) {
-      state = AsyncData(current.copyWith(clearRequestedStylist: true, clearSelectedSlot: true));
+      state = AsyncData(
+        current.copyWith(
+          stylistPreferenceType: StylistPreferenceType.any,
+          clearRequestedStylist: true,
+        ),
+      );
     } else {
       state = AsyncData(
         current.copyWith(
+          stylistPreferenceType: StylistPreferenceType.specific,
           requestedStylistId: stylistId,
           requestedStylistName: stylistName,
-          clearSelectedSlot: true,
         ),
       );
     }

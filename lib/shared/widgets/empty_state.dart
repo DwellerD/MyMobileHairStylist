@@ -30,22 +30,19 @@ class EmptyState extends StatelessWidget {
           Container(
             width: 56,
             height: 56,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: AppColors.surfaceAlt,
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: AppColors.primary),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Text(title, style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: AppSpacing.xs),
+          ), SizedBox(height: AppSpacing.md),
+          Text(title, style: Theme.of(context).textTheme.titleLarge), SizedBox(height: AppSpacing.xs),
           Text(
             description,
             style: Theme.of(context).textTheme.bodyMedium,
             textAlign: TextAlign.center,
           ),
-          if (actionLabel != null && onActionPressed != null) ...[
-            const SizedBox(height: AppSpacing.lg),
+          if (actionLabel != null && onActionPressed != null) ...[SizedBox(height: AppSpacing.lg),
             AppSecondaryButton(
               label: actionLabel!,
               onPressed: onActionPressed,

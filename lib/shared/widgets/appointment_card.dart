@@ -14,7 +14,7 @@ class AppointmentCard extends StatelessWidget {
     this.subtitle,
     this.actionLabel,
     this.onActionPressed,
-    this.statusColor = AppColors.info,
+    this.statusColor,
     super.key,
   });
 
@@ -25,10 +25,11 @@ class AppointmentCard extends StatelessWidget {
   final String address;
   final String? actionLabel;
   final VoidCallback? onActionPressed;
-  final Color statusColor;
+  final Color? statusColor;
 
   @override
   Widget build(BuildContext context) {
+    final resolvedStatusColor = statusColor ?? AppColors.info;
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -53,13 +54,13 @@ class AppointmentCard extends StatelessWidget {
                   vertical: AppSpacing.xxs,
                 ),
                 decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.14),
+                  color: resolvedStatusColor.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
                   statusLabel,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: statusColor,
+                        color: resolvedStatusColor,
                       ),
                 ),
               ),

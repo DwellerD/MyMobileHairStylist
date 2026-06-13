@@ -97,6 +97,16 @@ flutter analyze
 flutter test
 ```
 
+## Release Preparation Assets
+
+- Android signing template: `android/key.properties.example`
+- Privacy policy draft: `docs/privacy-policy.md`
+- Terms draft: `docs/terms-of-service.md`
+- Account deletion process draft: `docs/account-deletion.md`
+- Support contact draft: `docs/support.md`
+
+Before submitting to app stores, replace placeholder emails/domains in `docs/` with your production contact information and publish these documents at public URLs.
+
 ## Supabase Notes
 
 - The app does not store secrets in source control.

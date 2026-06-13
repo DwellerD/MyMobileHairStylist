@@ -8,12 +8,14 @@ class BookableStylist {
     required this.displayName,
     required this.bio,
     required this.specialties,
+    this.yearsExperience,
   });
 
   final String id;
   final String displayName;
   final String? bio;
   final List<String> specialties;
+  final int? yearsExperience;
 
   String get specialtiesSummary {
     if (specialties.isEmpty) {

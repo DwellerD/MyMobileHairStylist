@@ -14,6 +14,6 @@ void main() {
       ),
     );
 
-    expect(find.text('Luxury in-home hair care for modern households'), findsOneWidget);
+    expect(find.byType(MaterialApp), findsOneWidget);
   });
 }

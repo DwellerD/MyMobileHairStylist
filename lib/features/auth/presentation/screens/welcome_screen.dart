@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 
 /// First screen shown to unauthenticated users.
@@ -20,10 +19,6 @@ class WelcomeScreen extends ConsumerStatefulWidget {
 
 class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   final _servicesKey = GlobalKey();
-  final _bookingKey = GlobalKey();
-  final _galleryKey = GlobalKey();
-  final _aboutKey = GlobalKey();
-  final _contactKey = GlobalKey();
 
   Future<void> _scrollToSection(GlobalKey key) async {
     final sectionContext = key.currentContext;
@@ -33,7 +28,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
 
     await Scrollable.ensureVisible(
       sectionContext,
-      duration: const Duration(milliseconds: 450),
+      duration: Duration(milliseconds: 450),
       curve: Curves.easeOutCubic,
       alignment: 0.06,
     );
@@ -41,7 +36,6 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isConfigured = ref.watch(supabaseConfiguredProvider);
     final width = MediaQuery.sizeOf(context).width;
     final isDesktop = width >= 1100;
     final isTablet = width >= 760;
@@ -56,23 +50,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       letterSpacing: 0.4,
     );
 
-    final scriptStyle = GoogleFonts.parisienne(
-      fontSize: isDesktop ? 74 : isTablet ? 62 : 46,
-      height: 0.95,
-      color: AppColors.accent,
-      fontWeight: FontWeight.w400,
-    );
-
-    final sectionTitleStyle = GoogleFonts.cormorantGaramond(
-      fontSize: isDesktop ? 34 : 28,
-      fontWeight: FontWeight.w600,
-      height: 1.05,
-      color: AppColors.textPrimary,
-    );
-
     return Scaffold(
       body: DecoratedBox(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -94,7 +74,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                     color: AppColors.showcasePanel,
                     borderRadius: BorderRadius.circular(32),
                     border: Border.all(color: AppColors.showcaseBorderWarm),
-                    boxShadow: const [
+                    boxShadow: [
                       BoxShadow(
                         color: AppColors.showcaseShadowSoft,
                         blurRadius: 32,
@@ -113,12 +93,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                           0,
                         ),
                         child: _TopBar(
-                          isDesktop: isTablet,
+                          isDesktop: isDesktop,
                           onServicesTap: () => _scrollToSection(_servicesKey),
-                          onBookingTap: () => _scrollToSection(_bookingKey),
-                          onGalleryTap: () => _scrollToSection(_galleryKey),
-                          onAboutTap: () => _scrollToSection(_aboutKey),
-                          onContactTap: () => _scrollToSection(_contactKey),
                           onBookNowTap: () => context.go('/signup'),
                         ),
                       ),
@@ -132,7 +108,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                         child: DecoratedBox(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(30),
-                            gradient: const LinearGradient(
+                            gradient: LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                               colors: [AppColors.showcaseSurfaceBase, AppColors.showcaseGradientSoftEnd],
@@ -152,23 +128,23 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                       Expanded(
                                         flex: 11,
                                         child: Padding(
-                                          padding: const EdgeInsets.only(right: 28),
+                                          padding: EdgeInsets.only(right: 28),
                                           child: _HeroCopy(
                                             headlineStyle: headlineStyle,
-                                            scriptStyle: scriptStyle,
                                             isTablet: isTablet,
-                                            onStartPrep: () => _scrollToSection(_bookingKey),
+                                            onBookNow: () => context.go('/signup'),
+                                            onViewServices: () => _scrollToSection(_servicesKey),
                                           ),
                                         ),
                                       )
                                     else
                                       Padding(
-                                        padding: const EdgeInsets.only(bottom: 24),
+                                        padding: EdgeInsets.only(bottom: 24),
                                         child: _HeroCopy(
                                           headlineStyle: headlineStyle,
-                                          scriptStyle: scriptStyle,
                                           isTablet: isTablet,
-                                          onStartPrep: () => _scrollToSection(_bookingKey),
+                                          onBookNow: () => context.go('/signup'),
+                                          onViewServices: () => _scrollToSection(_servicesKey),
                                         ),
                                       ),
                                     if (isDesktop)
@@ -177,114 +153,43 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                         child: _HeroVisual(isTablet: isTablet),
                                       )
                                     else
-                                      _HeroVisual(isTablet: isTablet),
+                                      const SizedBox.shrink(),
                                   ],
                                 ),
-                                const SizedBox(height: 24),
-                                Container(
-                                  key: _servicesKey,
-                                  padding: EdgeInsets.all(isDesktop ? 24 : 18),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.showcaseGlass,
-                                    borderRadius: BorderRadius.circular(26),
-                                    border: Border.all(
-                                      color: AppColors.showcaseBorderLight,
+                                if (isDesktop) ...[SizedBox(height: 24),
+                                  Container(
+                                    key: _servicesKey,
+                                    padding: EdgeInsets.all(isDesktop ? 24 : 18),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.showcaseGlass,
+                                      borderRadius: BorderRadius.circular(26),
+                                      border: Border.all(
+                                        color: AppColors.showcaseBorderLight,
+                                      ),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        _LandingSection(
+                                          eyebrow: 'How it works',
+                                          title: 'Simple booking in three steps.',
+                                          child: _HowItWorksSimple(),
+                                        ),
+                                        SizedBox(height: 20),
+                                        _LandingSection(
+                                          eyebrow: 'Services',
+                                          title: 'Book for any location and occasion.',
+                                          child: _ServiceCategoryTeaser(),
+                                        ),
+                                        SizedBox(height: 20),
+                                        _FinalBookingCta(),
+                                      ],
                                     ),
                                   ),
-                                  child: Wrap(
-                                    spacing: 16,
-                                    runSpacing: 16,
-                                    alignment: WrapAlignment.spaceBetween,
-                                    children: const [
-                                      _StepCard(
-                                        step: '01',
-                                        icon: Icons.photo_camera_outlined,
-                                        title: 'Upload your hair',
-                                        description:
-                                            'Share clear photos from the front, back, and sides.',
-                                      ),
-                                      _StepCard(
-                                        step: '02',
-                                        icon: Icons.favorite_border,
-                                        title: 'Add inspiration',
-                                        description:
-                                            'Show styles, cuts, or colours you love.',
-                                      ),
-                                      _StepCard(
-                                        step: '03',
-                                        icon: Icons.mode_comment_outlined,
-                                        title: 'Tell me more',
-                                        description:
-                                            'Include likes, dislikes, goals, and any notes.',
-                                      ),
-                                      _StepCard(
-                                        step: '04',
-                                        icon: Icons.event_note_outlined,
-                                        title: 'Arrive prepared',
-                                        description:
-                                            'I review everything before your appointment.',
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                                ],
                               ],
                             ),
                           ),
-                        ),
-                      ),
-                      Padding(
-                        key: _bookingKey,
-                        padding: EdgeInsets.fromLTRB(
-                          isDesktop ? 34 : 20,
-                          0,
-                          isDesktop ? 34 : 20,
-                          26,
-                        ),
-                        child: _LandingSection(
-                          title: 'A booking prep board that feels calm, personal, and high-touch.',
-                          eyebrow: 'Booking preview',
-                          child: _PrepBoard(isDesktop: isTablet),
-                        ),
-                      ),
-                      Padding(
-                        key: _galleryKey,
-                        padding: EdgeInsets.fromLTRB(
-                          isDesktop ? 34 : 20,
-                          0,
-                          isDesktop ? 34 : 20,
-                          26,
-                        ),
-                        child: _LandingSection(
-                          title: 'Reference imagery can stay warm, polished, and human.',
-                          eyebrow: 'Gallery mood',
-                          titleStyle: sectionTitleStyle,
-                          child: _GalleryStrip(isDesktop: isTablet),
-                        ),
-                      ),
-                      Padding(
-                        key: _aboutKey,
-                        padding: EdgeInsets.fromLTRB(
-                          isDesktop ? 34 : 20,
-                          0,
-                          isDesktop ? 34 : 20,
-                          26,
-                        ),
-                        child: _AboutBand(isDesktop: isTablet),
-                      ),
-                      Padding(
-                        key: _contactKey,
-                        padding: EdgeInsets.fromLTRB(
-                          isDesktop ? 34 : 20,
-                          0,
-                          isDesktop ? 34 : 20,
-                          isDesktop ? 34 : 24,
-                        ),
-                        child: _FooterBand(
-                          isConfigured: isConfigured,
-                          onCreateAccountTap: () => context.go('/signup'),
-                          onDeveloperTap: isConfigured
-                              ? null
-                              : () => context.go('/role-gate'),
                         ),
                       ),
                     ],
@@ -303,33 +208,25 @@ class _TopBar extends StatelessWidget {
   const _TopBar({
     required this.isDesktop,
     required this.onServicesTap,
-    required this.onBookingTap,
-    required this.onGalleryTap,
-    required this.onAboutTap,
-    required this.onContactTap,
     required this.onBookNowTap,
   });
 
   final bool isDesktop;
   final VoidCallback onServicesTap;
-  final VoidCallback onBookingTap;
-  final VoidCallback onGalleryTap;
-  final VoidCallback onAboutTap;
-  final VoidCallback onContactTap;
   final VoidCallback onBookNowTap;
 
   @override
   Widget build(BuildContext context) {
     final bookNowButton = ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 180),
+      constraints: BoxConstraints(maxWidth: 180),
       child: FilledButton(
         onPressed: onBookNowTap,
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.accent,
           foregroundColor: AppColors.onPrimary,
-          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+          padding: EdgeInsets.symmetric(horizontal: 22, vertical: 16),
         ),
-        child: const Text('BOOK NOW'),
+        child: Text('BOOK NOW'),
       ),
     );
 
@@ -342,13 +239,9 @@ class _TopBar extends StatelessWidget {
             spacing: 4,
             children: [
               _HeaderLink(label: 'SERVICES', onTap: onServicesTap),
-              _HeaderLink(label: 'BOOKING', onTap: onBookingTap),
-              _HeaderLink(label: 'GALLERY', onTap: onGalleryTap),
-              _HeaderLink(label: 'ABOUT', onTap: onAboutTap),
-              _HeaderLink(label: 'CONTACT', onTap: onContactTap),
+              _HeaderLink(label: 'BOOKING', onTap: onBookNowTap),
             ],
-          ),
-        const SizedBox(width: 14),
+          ), SizedBox(width: 14),
         Flexible(
           fit: FlexFit.loose,
           child: Align(
@@ -368,53 +261,16 @@ class _BrandLockup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          'My',
-          style: GoogleFonts.parisienne(
-            fontSize: isCompact ? 28 : 34,
-            color: AppColors.accent,
-          ),
+    return SizedBox(
+      height: isCompact ? 110 : 130,
+      child: AspectRatio(
+        aspectRatio: 1,
+        child: Image.asset(
+          'assets/images/logo.png',
+          fit: BoxFit.contain,
+          alignment: Alignment.topLeft,
         ),
-        Text.rich(
-          TextSpan(
-            children: [
-              WidgetSpan(
-                alignment: PlaceholderAlignment.middle,
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 6),
-                  child: Icon(
-                    Icons.home_work_outlined,
-                    size: isCompact ? 20 : 24,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-              TextSpan(
-                text: 'MOBILE',
-                style: GoogleFonts.cormorantGaramond(
-                  fontSize: isCompact ? 34 : 42,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                  letterSpacing: 1.2,
-                ),
-              ),
-            ],
-          ),
-        ),
-        Text(
-          'HAIR STYLIST',
-          style: GoogleFonts.manrope(
-            fontSize: isCompact ? 11 : 12,
-            color: AppColors.accent,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 3,
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
@@ -451,7 +307,7 @@ class _MutedPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: AppColors.showcaseCardSoft,
         borderRadius: BorderRadius.circular(999),
@@ -460,8 +316,7 @@ class _MutedPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: AppColors.accent),
-          const SizedBox(width: 8),
+          Icon(icon, size: 16, color: AppColors.accent), SizedBox(width: 8),
           Flexible(
             child: Text(
               label,
@@ -488,7 +343,7 @@ class _StatPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.showcaseSurfaceIvory,
         borderRadius: BorderRadius.circular(999),
@@ -497,8 +352,7 @@ class _StatPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: AppColors.primary),
-          const SizedBox(width: 8),
+          Icon(icon, size: 16, color: AppColors.primary), SizedBox(width: 8),
           Text(
             label,
             style: GoogleFonts.manrope(
@@ -524,7 +378,7 @@ class _HeroVisual extends StatelessWidget {
       height: isTablet ? 430 : 320,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [AppColors.showcaseGradientWarmStart, AppColors.showcaseGradientWarmEnd],
@@ -536,7 +390,7 @@ class _HeroVisual extends StatelessWidget {
           widthFactor: 0.5,
           heightFactor: 1.0,
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(20),
             child: Image.asset(
               'assets/images/logo.png',
               fit: BoxFit.contain,
@@ -548,6 +402,7 @@ class _HeroVisual extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _StepCard extends StatelessWidget {
   const _StepCard({
     required this.step,
@@ -574,8 +429,7 @@ class _StepCard extends StatelessWidget {
               fontSize: 38,
               color: AppColors.showcaseAccentSoft,
             ),
-          ),
-          const SizedBox(height: 6),
+          ), SizedBox(height: 6),
           Container(
             width: 62,
             height: 62,
@@ -585,8 +439,7 @@ class _StepCard extends StatelessWidget {
               border: Border.all(color: AppColors.showcaseBorderMuted),
             ),
             child: Icon(icon, color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: 12),
+          ), SizedBox(height: 12),
           Text(
             title.toUpperCase(),
             textAlign: TextAlign.center,
@@ -596,8 +449,7 @@ class _StepCard extends StatelessWidget {
               letterSpacing: 0.7,
               color: AppColors.textPrimary,
             ),
-          ),
-          const SizedBox(height: 8),
+          ), SizedBox(height: 8),
           Text(
             description,
             textAlign: TextAlign.center,
@@ -618,13 +470,11 @@ class _LandingSection extends StatelessWidget {
     required this.eyebrow,
     required this.title,
     required this.child,
-    this.titleStyle,
   });
 
   final String eyebrow;
   final String title;
   final Widget child;
-  final TextStyle? titleStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -639,24 +489,195 @@ class _LandingSection extends StatelessWidget {
             letterSpacing: 2.4,
             color: AppColors.accent,
           ),
-        ),
-        const SizedBox(height: 8),
+        ), SizedBox(height: 8),
         Text(
           title,
-          style: titleStyle ?? GoogleFonts.cormorantGaramond(
+          style: GoogleFonts.cormorantGaramond(
             fontSize: 32,
             fontWeight: FontWeight.w600,
             height: 1.05,
             color: AppColors.textPrimary,
           ),
-        ),
-        const SizedBox(height: 18),
+        ), SizedBox(height: 18),
         child,
       ],
     );
   }
 }
 
+class _HowItWorksSimple extends StatelessWidget {
+  const _HowItWorksSimple();
+
+  @override
+  Widget build(BuildContext context) {
+    final wide = MediaQuery.sizeOf(context).width >= 900;
+    final cards = [
+      _HowStepCard(
+        step: '01',
+        title: 'Choose your service',
+        body: 'Select the haircut, styling, color, or event service you need.',
+      ),
+      _HowStepCard(
+        step: '02',
+        title: 'Pick your date and location',
+        body: 'Choose from available appointment times and tell us where to come.',
+      ),
+      _HowStepCard(
+        step: '03',
+        title: 'We confirm the appointment',
+        body: 'Your request is reviewed and confirmed before your stylist arrives.',
+      ),
+    ];
+
+    if (wide) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (var i = 0; i < cards.length; i++) ...[
+            Expanded(child: cards[i]),
+            if (i < cards.length - 1) const SizedBox(width: 14),
+          ],
+        ],
+      );
+    }
+
+    return Column(
+      children: [
+        for (var i = 0; i < cards.length; i++) ...[
+          cards[i],
+          if (i < cards.length - 1) const SizedBox(height: 12),
+        ],
+      ],
+    );
+  }
+}
+
+class _HowStepCard extends StatelessWidget {
+  const _HowStepCard({
+    required this.step,
+    required this.title,
+    required this.body,
+  });
+
+  final String step;
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.showcaseSurfaceBase,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.showcaseBorderLight),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            step,
+            style: GoogleFonts.manrope(
+              fontSize: 11,
+              letterSpacing: 1.4,
+              fontWeight: FontWeight.w800,
+              color: AppColors.accent,
+            ),
+          ), SizedBox(height: 8),
+          Text(
+            title,
+            style: GoogleFonts.manrope(
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+            ),
+          ), SizedBox(height: 6),
+          Text(
+            body,
+            style: GoogleFonts.manrope(
+              fontSize: 13,
+              height: 1.55,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ServiceCategoryTeaser extends StatelessWidget {
+  const _ServiceCategoryTeaser();
+
+  @override
+  Widget build(BuildContext context) {
+    const categories = [
+      'Women',
+      'Men',
+      'Kids',
+      'Hair Color',
+      'Add-ons',
+      'Wedding / Special Events',
+    ];
+
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: [
+        for (final category in categories)
+          ActionChip(
+            onPressed: () => context.go('/signup'),
+            label: Text(category),
+            backgroundColor: AppColors.showcaseSurfaceIvory,
+            side: BorderSide(color: AppColors.showcaseBorderLight),
+            labelStyle: GoogleFonts.manrope(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _FinalBookingCta extends StatelessWidget {
+  const _FinalBookingCta();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.showcaseSurfaceHighlight,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.showcaseBorderLight),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Ready to book your appointment?',
+            style: GoogleFonts.cormorantGaramond(
+              fontSize: 30,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ), SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: () => context.go('/signup'),
+              child: Text('Start Booking'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ignore: unused_element
 class _PrepBoard extends StatelessWidget {
   const _PrepBoard({required this.isDesktop});
 
@@ -670,7 +691,7 @@ class _PrepBoard extends StatelessWidget {
         color: AppColors.showcaseSurfaceHighlight,
         borderRadius: BorderRadius.circular(28),
         border: Border.all(color: AppColors.showcaseBorderLight),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
             color: AppColors.showcaseShadowSubtle,
             blurRadius: 16,
@@ -734,8 +755,7 @@ class _PrepBoard extends StatelessWidget {
                   ],
                 ),
             ],
-          ),
-          const SizedBox(height: 22),
+          ), SizedBox(height: 22),
           Align(
             alignment: Alignment.centerLeft,
             child: Text(
@@ -746,8 +766,7 @@ class _PrepBoard extends StatelessWidget {
                 color: AppColors.textPrimary,
               ),
             ),
-          ),
-          const SizedBox(height: 6),
+          ), SizedBox(height: 6),
           Align(
             alignment: Alignment.centerLeft,
             child: Text(
@@ -757,27 +776,25 @@ class _PrepBoard extends StatelessWidget {
                 color: AppColors.textSecondary,
               ),
             ),
-          ),
-          const SizedBox(height: 18),
+          ), SizedBox(height: 18),
           Wrap(
             spacing: 14,
             runSpacing: 14,
-            children: const [
+            children: [
               _FieldMock(label: 'What are you looking to do?', hint: 'Select an option'),
               _FieldMock(label: 'What do you love about your hair?', hint: 'e.g. length, colour, texture...'),
               _FieldMock(label: 'What would you like to change?', hint: 'e.g. lighter, softer, more layers...'),
               _FieldMock(label: 'Any dislikes or things to avoid?', hint: 'e.g. brassy tones, too short, bulk...'),
               _FieldMock(label: 'Any other notes for me?', hint: 'Share anything else I should know...'),
             ],
-          ),
-          const SizedBox(height: 22),
+          ), SizedBox(height: 22),
           Flex(
             direction: isDesktop ? Axis.horizontal : Axis.vertical,
             children: [
               if (isDesktop)
                 Expanded(
                   child: Container(
-                    padding: const EdgeInsets.all(18),
+                    padding: EdgeInsets.all(18),
                     decoration: BoxDecoration(
                       color: AppColors.showcaseChipBackground,
                       borderRadius: BorderRadius.circular(22),
@@ -791,9 +808,8 @@ class _PrepBoard extends StatelessWidget {
                             shape: BoxShape.circle,
                             border: Border.all(color: AppColors.showcaseChipBorder),
                           ),
-                          child: const Icon(Icons.favorite_border, color: AppColors.accent),
-                        ),
-                        const SizedBox(width: 14),
+                          child: Icon(Icons.favorite_border, color: AppColors.accent),
+                        ), SizedBox(width: 14),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -805,8 +821,7 @@ class _PrepBoard extends StatelessWidget {
                                   fontWeight: FontWeight.w800,
                                   color: AppColors.textPrimary,
                                 ),
-                              ),
-                              const SizedBox(height: 4),
+                              ), SizedBox(height: 4),
                               Text(
                                 'This helps me prepare everything I need so you get the best in-home salon experience.',
                                 style: GoogleFonts.manrope(
@@ -824,7 +839,7 @@ class _PrepBoard extends StatelessWidget {
                 )
               else
                 Container(
-                  padding: const EdgeInsets.all(18),
+                  padding: EdgeInsets.all(18),
                   decoration: BoxDecoration(
                     color: AppColors.showcaseChipBackground,
                     borderRadius: BorderRadius.circular(22),
@@ -838,9 +853,8 @@ class _PrepBoard extends StatelessWidget {
                           shape: BoxShape.circle,
                           border: Border.all(color: AppColors.showcaseChipBorder),
                         ),
-                        child: const Icon(Icons.favorite_border, color: AppColors.accent),
-                      ),
-                      const SizedBox(width: 14),
+                        child: Icon(Icons.favorite_border, color: AppColors.accent),
+                      ), SizedBox(width: 14),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -852,8 +866,7 @@ class _PrepBoard extends StatelessWidget {
                                 fontWeight: FontWeight.w800,
                                 color: AppColors.textPrimary,
                               ),
-                            ),
-                            const SizedBox(height: 4),
+                            ), SizedBox(height: 4),
                             Text(
                               'This helps me prepare everything I need so you get the best in-home salon experience.',
                               style: GoogleFonts.manrope(
@@ -873,8 +886,8 @@ class _PrepBoard extends StatelessWidget {
                 Expanded(
                   child: FilledButton.icon(
                     onPressed: () => context.go('/signup'),
-                    icon: const Icon(Icons.favorite),
-                    label: const Padding(
+                    icon: Icon(Icons.favorite),
+                    label: Padding(
                       padding: EdgeInsets.symmetric(vertical: 18),
                       child: Text('SUBMIT MY PHOTOS & DETAILS'),
                     ),
@@ -890,8 +903,8 @@ class _PrepBoard extends StatelessWidget {
               else
                 FilledButton.icon(
                   onPressed: () => context.go('/signup'),
-                  icon: const Icon(Icons.favorite),
-                  label: const Padding(
+                  icon: Icon(Icons.favorite),
+                  label: Padding(
                     padding: EdgeInsets.symmetric(vertical: 18),
                     child: Text('SUBMIT MY PHOTOS & DETAILS'),
                   ),
@@ -925,7 +938,7 @@ class _UploadPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: EdgeInsets.all(18),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: AppColors.showcaseBorderPale),
@@ -941,13 +954,11 @@ class _UploadPanel extends StatelessWidget {
               fontWeight: FontWeight.w800,
               color: AppColors.textPrimary,
             ),
-          ),
-          const SizedBox(height: 4),
+          ), SizedBox(height: 4),
           Text(
             subtitle,
             style: GoogleFonts.manrope(fontSize: 13, color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: 14),
+          ), SizedBox(height: 14),
           Container(
             height: 146,
             decoration: BoxDecoration(
@@ -962,8 +973,7 @@ class _UploadPanel extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.cloud_upload_outlined, size: 34, color: AppColors.accent),
-                  const SizedBox(height: 10),
+                  Icon(Icons.cloud_upload_outlined, size: 34, color: AppColors.accent), SizedBox(height: 10),
                   Text(
                     'DRAG & DROP YOUR PHOTOS HERE',
                     textAlign: TextAlign.center,
@@ -973,23 +983,21 @@ class _UploadPanel extends StatelessWidget {
                       letterSpacing: 0.5,
                       color: AppColors.textSecondary,
                     ),
-                  ),
-                  const SizedBox(height: 8),
+                  ), SizedBox(height: 8),
                   FilledButton(
                     onPressed: () {},
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.accent,
                       foregroundColor: AppColors.onPrimary,
-                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                      padding: EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                       minimumSize: Size.zero,
                     ),
-                    child: const Text('CHOOSE FILES'),
+                    child: Text('CHOOSE FILES'),
                   ),
                 ],
               ),
             ),
-          ),
-          const SizedBox(height: 12),
+          ), SizedBox(height: 12),
           Wrap(spacing: 10, runSpacing: 10, children: footer),
         ],
       ),
@@ -1006,7 +1014,7 @@ class _MiniTag extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 84,
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.showcaseSurfaceBaseAlt,
         borderRadius: BorderRadius.circular(14),
@@ -1014,8 +1022,7 @@ class _MiniTag extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const Icon(Icons.face_retouching_natural_outlined, color: AppColors.textMuted),
-          const SizedBox(height: 6),
+          Icon(Icons.face_retouching_natural_outlined, color: AppColors.textMuted), SizedBox(height: 6),
           Text(
             label.toUpperCase(),
             style: GoogleFonts.manrope(
@@ -1053,8 +1060,8 @@ class _ReferenceThumb extends StatelessWidget {
         child: Container(
           width: 64,
           height: 76,
-          margin: const EdgeInsets.only(bottom: 10),
-          decoration: const BoxDecoration(
+          margin: EdgeInsets.only(bottom: 10),
+          decoration: BoxDecoration(
             color: AppColors.showcaseCanvasWarm,
             borderRadius: BorderRadius.vertical(
               top: Radius.circular(30),
@@ -1087,11 +1094,10 @@ class _FieldMock extends StatelessWidget {
               fontWeight: FontWeight.w700,
               color: AppColors.textSecondary,
             ),
-          ),
-          const SizedBox(height: 8),
+          ), SizedBox(height: 8),
           Container(
             height: 48,
-            padding: const EdgeInsets.symmetric(horizontal: 14),
+            padding: EdgeInsets.symmetric(horizontal: 14),
             decoration: BoxDecoration(
               color: AppColors.showcaseSurfaceBaseAlt,
               borderRadius: BorderRadius.circular(14),
@@ -1113,6 +1119,7 @@ class _FieldMock extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _GalleryStrip extends StatelessWidget {
   const _GalleryStrip({required this.isDesktop});
 
@@ -1121,10 +1128,10 @@ class _GalleryStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: EdgeInsets.all(22),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
@@ -1150,7 +1157,7 @@ class _GalleryStrip extends StatelessWidget {
             Expanded(
               flex: 4,
               child: Container(
-                padding: const EdgeInsets.all(20),
+                padding: EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: AppColors.showcaseSurfaceBaseAlt,
                   borderRadius: BorderRadius.circular(24),
@@ -1165,8 +1172,7 @@ class _GalleryStrip extends StatelessWidget {
                         fontWeight: FontWeight.w800,
                         color: AppColors.textPrimary,
                       ),
-                    ),
-                    const SizedBox(height: 10),
+                    ), SizedBox(height: 10),
                     Text(
                       'Because I could not directly extract the original screenshot assets, this version uses soft illustration-style placeholders and warm tonal blocks that can be swapped for real brand photos later.',
                       style: GoogleFonts.manrope(
@@ -1174,18 +1180,14 @@ class _GalleryStrip extends StatelessWidget {
                         height: 1.7,
                         color: AppColors.textSecondary,
                       ),
-                    ),
-                    const SizedBox(height: 18),
-                    const _BulletPoint(text: 'Warm ivory, sand, blush, cocoa, and soft black remain the anchor colors.'),
-                    const _BulletPoint(text: 'Typography leans editorial with a serif headline and script accent.'),
-                    const _BulletPoint(text: 'Cards and mock fields are intentionally quiet so future photography can take over.'),
+                    ), SizedBox(height: 18), _BulletPoint(text: 'Warm ivory, sand, blush, cocoa, and soft black remain the anchor colors.'), _BulletPoint(text: 'Typography leans editorial with a serif headline and script accent.'), _BulletPoint(text: 'Cards and mock fields are intentionally quiet so future photography can take over.'),
                   ],
                 ),
               ),
             )
           else
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: AppColors.showcaseSurfaceBaseAlt,
                 borderRadius: BorderRadius.circular(24),
@@ -1200,8 +1202,7 @@ class _GalleryStrip extends StatelessWidget {
                       fontWeight: FontWeight.w800,
                       color: AppColors.textPrimary,
                     ),
-                  ),
-                  const SizedBox(height: 10),
+                  ), SizedBox(height: 10),
                   Text(
                     'Because I could not directly extract the original screenshot assets, this version uses soft illustration-style placeholders and warm tonal blocks that can be swapped for real brand photos later.',
                     style: GoogleFonts.manrope(
@@ -1209,11 +1210,7 @@ class _GalleryStrip extends StatelessWidget {
                       height: 1.7,
                       color: AppColors.textSecondary,
                     ),
-                  ),
-                  const SizedBox(height: 18),
-                  const _BulletPoint(text: 'Warm ivory, sand, blush, cocoa, and soft black remain the anchor colors.'),
-                  const _BulletPoint(text: 'Typography leans editorial with a serif headline and script accent.'),
-                  const _BulletPoint(text: 'Cards and mock fields are intentionally quiet so future photography can take over.'),
+                  ), SizedBox(height: 18), _BulletPoint(text: 'Warm ivory, sand, blush, cocoa, and soft black remain the anchor colors.'), _BulletPoint(text: 'Typography leans editorial with a serif headline and script accent.'), _BulletPoint(text: 'Cards and mock fields are intentionally quiet so future photography can take over.'),
                 ],
               ),
             ),
@@ -1226,70 +1223,65 @@ class _GalleryStrip extends StatelessWidget {
 class _HeroCopy extends StatelessWidget {
   const _HeroCopy({
     required this.headlineStyle,
-    required this.scriptStyle,
     required this.isTablet,
-    required this.onStartPrep,
+    required this.onBookNow,
+    required this.onViewServices,
   });
 
   final TextStyle headlineStyle;
-  final TextStyle scriptStyle;
   final bool isTablet;
-  final VoidCallback onStartPrep;
+  final VoidCallback onBookNow;
+  final VoidCallback onViewServices;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const _MutedPill(
-          icon: Icons.favorite_border,
-          label: 'Luxury in-home hair care for modern households',
-        ),
-        const SizedBox(height: 22),
-        Text('HELP YOUR', style: headlineStyle),
-        Transform.translate(
-          offset: const Offset(0, -8),
-          child: Text('Stylist Prepare', style: scriptStyle),
-        ),
-        const SizedBox(height: 4),
+      children: [_MutedPill(
+          icon: Icons.home_outlined,
+          label: 'In-home hair appointments',
+        ), SizedBox(height: 22),
+        Text('Hair appointments\nat your home.', style: headlineStyle), SizedBox(height: 14),
         Text(
-          'The more detail you share, the better I can understand your hair goals and create a plan before I arrive. This home page mirrors that calm, elevated prep experience.',
+          'Professional hair services brought directly to your home, hotel, workplace, or event location.',
           style: GoogleFonts.manrope(
             fontSize: isTablet ? 18 : 16,
             height: 1.65,
             color: AppColors.textSecondary,
           ),
-        ),
-        const SizedBox(height: 26),
+        ), SizedBox(height: 26),
         Wrap(
           spacing: 12,
           runSpacing: 12,
           children: [
             FilledButton.icon(
-              onPressed: onStartPrep,
-              icon: const Icon(Icons.photo_camera_outlined),
-              label: const Text('Start The Prep'),
+              onPressed: onBookNow,
+              icon: Icon(Icons.calendar_month_outlined),
+              label: Text('Book an Appointment'),
+            ),
+            OutlinedButton.icon(
+              onPressed: onViewServices,
+              icon: Icon(Icons.design_services_outlined),
+              label: Text('View Services'),
             ),
             OutlinedButton.icon(
               onPressed: () => context.go('/login'),
-              icon: const Icon(Icons.login),
-              label: const Text('Log In'),
-            ),
-            TextButton.icon(
-              onPressed: () => context.go('/stylist/portal'),
-              icon: const Icon(Icons.content_cut_outlined),
-              label: const Text('Stylist Portal'),
+              icon: Icon(Icons.login),
+              label: Text('Log In'),
             ),
           ],
-        ),
-        const SizedBox(height: 26),
-        const Wrap(
-          spacing: 12,
-          runSpacing: 12,
+        ), SizedBox(height: 14),
+        TextButton.icon(
+          onPressed: () => context.go('/stylist/portal'),
+          icon: Icon(Icons.content_cut_outlined),
+          label: Text('Stylist Portal'),
+        ), SizedBox(height: 10), Wrap(
+          spacing: 8,
+          runSpacing: 8,
           children: [
-            _StatPill(label: 'Private photo upload', icon: Icons.lock_outline),
-            _StatPill(label: 'Tailored consultation', icon: Icons.chat_bubble_outline),
-            _StatPill(label: 'Prepared before arrival', icon: Icons.event_available_outlined),
+            _StatPill(label: 'In-home appointments', icon: Icons.home_outlined),
+            _StatPill(label: 'Professional stylists', icon: Icons.verified_outlined),
+            _StatPill(label: 'Simple booking', icon: Icons.check_circle_outline),
           ],
         ),
       ],
@@ -1342,7 +1334,7 @@ class _GalleryPhotoCard extends StatelessWidget {
               child: Container(
                 width: 118,
                 height: 150,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: AppColors.showcaseCanvasWarmSoft,
                   borderRadius: BorderRadius.vertical(
                     top: Radius.circular(60),
@@ -1351,8 +1343,7 @@ class _GalleryPhotoCard extends StatelessWidget {
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 10),
+          ), SizedBox(height: 10),
           Text(
             title,
             style: GoogleFonts.manrope(
@@ -1375,20 +1366,19 @@ class _BulletPoint extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: EdgeInsets.only(bottom: 10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             width: 7,
             height: 7,
-            margin: const EdgeInsets.only(top: 8),
-            decoration: const BoxDecoration(
+            margin: EdgeInsets.only(top: 8),
+            decoration: BoxDecoration(
               color: AppColors.accent,
               shape: BoxShape.circle,
             ),
-          ),
-          const SizedBox(width: 10),
+          ), SizedBox(width: 10),
           Expanded(
             child: Text(
               text,
@@ -1405,6 +1395,7 @@ class _BulletPoint extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _AboutBand extends StatelessWidget {
   const _AboutBand({required this.isDesktop});
 
@@ -1413,7 +1404,7 @@ class _AboutBand extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: EdgeInsets.all(22),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
         border: Border.all(color: AppColors.showcaseBorderLight),
@@ -1434,11 +1425,7 @@ class _AboutBand extends StatelessWidget {
                       fontWeight: FontWeight.w800,
                       color: AppColors.textPrimary,
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  const _BulletPoint(text: 'Use natural lighting and avoid harsh overhead shadows.'),
-                  const _BulletPoint(text: 'Keep filters off so colour and texture stay accurate.'),
-                  const _BulletPoint(text: 'Show your hair down and include recent salon work when possible.'),
+                  ), SizedBox(height: 12), _BulletPoint(text: 'Use natural lighting and avoid harsh overhead shadows.'), _BulletPoint(text: 'Keep filters off so colour and texture stay accurate.'), _BulletPoint(text: 'Show your hair down and include recent salon work when possible.'),
                 ],
               ),
             )
@@ -1453,11 +1440,7 @@ class _AboutBand extends StatelessWidget {
                     fontWeight: FontWeight.w800,
                     color: AppColors.textPrimary,
                   ),
-                ),
-                const SizedBox(height: 12),
-                const _BulletPoint(text: 'Use natural lighting and avoid harsh overhead shadows.'),
-                const _BulletPoint(text: 'Keep filters off so colour and texture stay accurate.'),
-                const _BulletPoint(text: 'Show your hair down and include recent salon work when possible.'),
+                ), SizedBox(height: 12), _BulletPoint(text: 'Use natural lighting and avoid harsh overhead shadows.'), _BulletPoint(text: 'Keep filters off so colour and texture stay accurate.'), _BulletPoint(text: 'Show your hair down and include recent salon work when possible.'),
               ],
             ),
           
@@ -1468,7 +1451,7 @@ class _AboutBand extends StatelessWidget {
                 height: 180,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(24),
-                  gradient: const LinearGradient(
+                  gradient: LinearGradient(
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                     colors: [AppColors.showcaseGradientPhotoStart, AppColors.showcaseGradientPhotoEnd],
@@ -1483,7 +1466,7 @@ class _AboutBand extends StatelessWidget {
                       child: Container(
                         width: 110,
                         height: 126,
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           color: AppColors.showcaseAccentBronze,
                           borderRadius: BorderRadius.vertical(
                             top: Radius.circular(54),
@@ -1505,7 +1488,7 @@ class _AboutBand extends StatelessWidget {
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(color: AppColors.onPrimary, width: 5),
                           ),
-                          child: const Center(
+                          child: Center(
                             child: Icon(Icons.photo_camera_front_outlined, color: AppColors.onPrimaryMuted),
                           ),
                         ),
@@ -1520,7 +1503,7 @@ class _AboutBand extends StatelessWidget {
               height: 180,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(24),
-                gradient: const LinearGradient(
+                gradient: LinearGradient(
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                   colors: [AppColors.showcaseGradientPhotoStart, AppColors.showcaseGradientPhotoEnd],
@@ -1535,7 +1518,7 @@ class _AboutBand extends StatelessWidget {
                     child: Container(
                       width: 110,
                       height: 126,
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: AppColors.showcaseAccentBronze,
                         borderRadius: BorderRadius.vertical(
                           top: Radius.circular(54),
@@ -1557,7 +1540,7 @@ class _AboutBand extends StatelessWidget {
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(color: AppColors.onPrimary, width: 5),
                         ),
-                        child: const Center(
+                        child: Center(
                           child: Icon(Icons.photo_camera_front_outlined, color: AppColors.onPrimaryMuted),
                         ),
                       ),
@@ -1571,7 +1554,7 @@ class _AboutBand extends StatelessWidget {
           if (isDesktop)
             Expanded(
               child: Container(
-                padding: const EdgeInsets.all(22),
+                padding: EdgeInsets.all(22),
                 decoration: BoxDecoration(
                   color: AppColors.showcaseSurfaceRose,
                   borderRadius: BorderRadius.circular(24),
@@ -1580,13 +1563,12 @@ class _AboutBand extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      children: const [
+                      children: [
                         Icon(Icons.chat_bubble_outline, color: AppColors.textSecondary),
                         SizedBox(width: 10),
                         Text('Questions?'),
                       ],
-                    ),
-                    const SizedBox(height: 12),
+                    ), SizedBox(height: 12),
                     Text(
                       'I’m here to help. Send a message anytime and I can guide you on what photos or notes will give the best result.',
                       style: GoogleFonts.manrope(
@@ -1594,12 +1576,11 @@ class _AboutBand extends StatelessWidget {
                         height: 1.7,
                         color: AppColors.textSecondary,
                       ),
-                    ),
-                    const SizedBox(height: 16),
+                    ), SizedBox(height: 16),
                     FilledButton.icon(
                       onPressed: () => context.go('/signup'),
-                      icon: const Icon(Icons.send_outlined),
-                      label: const Text('Message us'),
+                      icon: Icon(Icons.send_outlined),
+                      label: Text('Message us'),
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.accent,
                         foregroundColor: AppColors.onPrimary,
@@ -1611,7 +1592,7 @@ class _AboutBand extends StatelessWidget {
             )
           else
             Container(
-              padding: const EdgeInsets.all(22),
+              padding: EdgeInsets.all(22),
               decoration: BoxDecoration(
                 color: AppColors.showcaseSurfaceRose,
                 borderRadius: BorderRadius.circular(24),
@@ -1620,13 +1601,12 @@ class _AboutBand extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    children: const [
+                    children: [
                       Icon(Icons.chat_bubble_outline, color: AppColors.textSecondary),
                       SizedBox(width: 10),
                       Text('Questions?'),
                     ],
-                  ),
-                  const SizedBox(height: 12),
+                  ), SizedBox(height: 12),
                   Text(
                     'I’m here to help. Send a message anytime and I can guide you on what photos or notes will give the best result.',
                     style: GoogleFonts.manrope(
@@ -1634,15 +1614,14 @@ class _AboutBand extends StatelessWidget {
                       height: 1.6,
                       color: AppColors.textSecondary,
                     ),
-                  ),
-                  const SizedBox(height: 18),
+                  ), SizedBox(height: 18),
                   FilledButton(
                     onPressed: () => context.go('/signup'),
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.accent,
                       foregroundColor: AppColors.onPrimary,
                     ),
-                    child: const Text('CONTACT ME'),
+                    child: Text('CONTACT ME'),
                   ),
                 ],
               ),
@@ -1654,6 +1633,7 @@ class _AboutBand extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _FooterBand extends StatelessWidget {
   const _FooterBand({
     required this.isConfigured,
@@ -1677,8 +1657,7 @@ class _FooterBand extends StatelessWidget {
             fontSize: 34,
             color: AppColors.primary,
           ),
-        ),
-        const SizedBox(height: 10),
+        ), SizedBox(height: 10),
         Text(
           AppConstants.appTagline,
           style: GoogleFonts.manrope(
@@ -1687,14 +1666,12 @@ class _FooterBand extends StatelessWidget {
             height: 1.6,
           ),
         ),
-        if (!isConfigured) ...[
-          const SizedBox(height: 16),
+        if (!isConfigured) ...[SizedBox(height: 16),
           OutlinedButton.icon(
             onPressed: onDeveloperTap,
-            icon: const Icon(Icons.admin_panel_settings_outlined),
-            label: const Text('OPEN ROLE SWITCHER'),
-          ),
-          const SizedBox(height: 8),
+            icon: Icon(Icons.admin_panel_settings_outlined),
+            label: Text('OPEN ROLE SWITCHER'),
+          ), SizedBox(height: 8),
           Text(
             AppConstants.mockAuthNote,
             style: GoogleFonts.manrope(
@@ -1707,20 +1684,20 @@ class _FooterBand extends StatelessWidget {
     );
 
     final cta = ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 320),
+      constraints: BoxConstraints(maxWidth: 320),
       child: FilledButton(
         onPressed: onCreateAccountTap,
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: AppColors.onPrimary,
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
+          padding: EdgeInsets.symmetric(horizontal: 28, vertical: 18),
         ),
-        child: const Text('BOOK YOUR APPOINTMENT'),
+        child: Text('BOOK YOUR APPOINTMENT'),
       ),
     );
 
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: EdgeInsets.all(22),
       decoration: BoxDecoration(
         color: AppColors.showcaseSurfaceFooter,
         borderRadius: BorderRadius.circular(24),
@@ -1729,16 +1706,14 @@ class _FooterBand extends StatelessWidget {
           ? Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(child: details),
-                const SizedBox(width: 18),
+                Expanded(child: details), SizedBox(width: 18),
                 cta,
               ],
             )
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                details,
-                const SizedBox(height: 18),
+                details, SizedBox(height: 18),
                 Align(
                   alignment: Alignment.centerLeft,
                   child: cta,

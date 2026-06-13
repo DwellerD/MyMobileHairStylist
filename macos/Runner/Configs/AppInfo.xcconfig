@@ -8,7 +8,7 @@
 PRODUCT_NAME = mobile_hair_salon
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.mobileHairSalon
+PRODUCT_BUNDLE_IDENTIFIER = com.dallin.mymobilehairstylist.macos
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 com.example. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 Dallin. All rights reserved.

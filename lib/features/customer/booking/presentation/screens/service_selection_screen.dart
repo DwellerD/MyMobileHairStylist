@@ -10,12 +10,12 @@ import '../providers/booking_flow_controller.dart';
 import '../widgets/booking_step_scaffold.dart';
 
 // Matches the booking-flow primary defined in booking_step_scaffold.dart
-const Color _kPrimary = AppColors.primary;
-const Color _kTextDark = AppColors.textPrimary;
-const Color _kTextMid = AppColors.textSecondary;
-const Color _kHeroBg = AppColors.showcaseSurfaceSoft;
-const Color _kPlaceImg = AppColors.showcaseSurfaceAlt;
-const Color _kDivider = AppColors.showcaseBorderPale;
+Color get _kPrimary => AppColors.primary;
+Color get _kTextDark => AppColors.textPrimary;
+Color get _kTextMid => AppColors.textSecondary;
+Color get _kHeroBg => AppColors.showcaseSurfaceSoft;
+Color get _kPlaceImg => AppColors.showcaseSurfaceAlt;
+Color get _kDivider => AppColors.showcaseBorderPale;
 
 // ─────────────────────────────────────────────────────────────────────────────
 class ServiceSelectionScreen extends ConsumerStatefulWidget {
@@ -52,7 +52,7 @@ class _ServiceSelectionScreenState
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColors.onPrimary,
-      shape: const RoundedRectangleBorder(
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (_) => _ServiceModal(
@@ -79,7 +79,7 @@ class _ServiceSelectionScreenState
     final bookingState = bookingAsync.valueOrNull;
 
     if (bookingState == null) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: AppColors.onPrimary,
         body: Center(child: CircularProgressIndicator()),
       );
@@ -101,7 +101,7 @@ class _ServiceSelectionScreenState
     return BookingStepScaffold(
       displayStep: 2,
       stepNumber: 2,
-      totalSteps: 5,
+      totalSteps: 6,
       title: 'Choose your services',
       subtitle: 'Tap a service to add it. You can add multiple services.',
       heroWidget: Image.asset(
@@ -123,8 +123,7 @@ class _ServiceSelectionScreenState
           _CategoryPillsBar(
             selectedCategory: _selectedCategory,
             onCategoryTap: (cat) => setState(() => _selectedCategory = cat),
-          ),
-          const SizedBox(height: 20),
+          ), SizedBox(height: 20),
 
           // ── Service list ───────────────────────────────────────────────
           if (bookingState.services.isEmpty)
@@ -146,9 +145,7 @@ class _ServiceSelectionScreenState
                         context, bookingState, activeServices[i]),
                   ),
               ],
-            ),
-
-          const SizedBox(height: 28),
+            ), SizedBox(height: 28),
 
           // ── Selected summary (if any) ──────────────────────────────────
           if (hasSelection)
@@ -161,9 +158,7 @@ class _ServiceSelectionScreenState
               onRemove: (itemId) => ref
                   .read(bookingFlowControllerProvider.notifier)
                   .removeServiceItem(itemId),
-            ),
-
-          const SizedBox(height: 20),
+            ), SizedBox(height: 20),
 
           // ── Support section ────────────────────────────────────────────
           const _SupportSection(),
@@ -222,13 +217,11 @@ class _ServiceModalState extends State<_ServiceModal> {
               fontWeight: FontWeight.w700,
               color: _kTextDark,
             ),
-          ),
-          const SizedBox(height: 4),
+          ), SizedBox(height: 4),
           Text(
             '${widget.service.durationMinutes} min  ·  Starting at ${widget.service.priceLabel}',
             style: GoogleFonts.manrope(fontSize: 13, color: _kTextMid),
-          ),
-          const SizedBox(height: 20),
+          ), SizedBox(height: 20),
 
           // For whom?
           if (widget.householdMembers.isNotEmpty) ...[
@@ -236,8 +229,7 @@ class _ServiceModalState extends State<_ServiceModal> {
               'For whom?',
               style: GoogleFonts.manrope(
                   fontSize: 13, fontWeight: FontWeight.w700, color: _kTextDark),
-            ),
-            const SizedBox(height: 10),
+            ), SizedBox(height: 10),
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -247,8 +239,8 @@ class _ServiceModalState extends State<_ServiceModal> {
                   onTap: () =>
                       setState(() => _selectedMemberId = selected ? null : m.id),
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    duration: Duration(milliseconds: 150),
+                    padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
                       color: selected ? _kPrimary : AppColors.onPrimary,
                       borderRadius: BorderRadius.circular(999),
@@ -267,8 +259,7 @@ class _ServiceModalState extends State<_ServiceModal> {
                   ),
                 );
               }).toList(),
-            ),
-            const SizedBox(height: 20),
+            ), SizedBox(height: 20),
           ],
 
           // Notes
@@ -276,8 +267,7 @@ class _ServiceModalState extends State<_ServiceModal> {
             'Notes (optional)',
             style: GoogleFonts.manrope(
                 fontSize: 13, fontWeight: FontWeight.w700, color: _kTextDark),
-          ),
-          const SizedBox(height: 8),
+          ), SizedBox(height: 8),
           TextField(
             controller: _notesController,
             maxLines: 3,
@@ -291,12 +281,10 @@ class _ServiceModalState extends State<_ServiceModal> {
                 borderRadius: BorderRadius.circular(10),
                 borderSide: BorderSide.none,
               ),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             ),
             style: GoogleFonts.manrope(fontSize: 13, color: _kTextDark),
-          ),
-          const SizedBox(height: 20),
+          ), SizedBox(height: 20),
 
           // Existing items with remove
           if (widget.existingItems.isNotEmpty) ...[
@@ -304,15 +292,12 @@ class _ServiceModalState extends State<_ServiceModal> {
               'Already added',
               style: GoogleFonts.manrope(
                   fontSize: 13, fontWeight: FontWeight.w700, color: _kTextDark),
-            ),
-            const SizedBox(height: 8),
+            ), SizedBox(height: 8),
             ...widget.existingItems.map((item) => Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
+                  padding: EdgeInsets.only(bottom: 6),
                   child: Row(
-                    children: [
-                      const Icon(Icons.check_circle,
-                          size: 16, color: _kPrimary),
-                      const SizedBox(width: 8),
+                    children: [Icon(Icons.check_circle,
+                          size: 16, color: _kPrimary), SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           item.notes.isEmpty
@@ -327,13 +312,12 @@ class _ServiceModalState extends State<_ServiceModal> {
                           widget.onRemove(item.id);
                           Navigator.of(context).pop();
                         },
-                        child: const Icon(Icons.close,
+                        child: Icon(Icons.close,
                             size: 18, color: _kTextMid),
                       ),
                     ],
                   ),
-                )),
-            const SizedBox(height: 12),
+                )), SizedBox(height: 12),
           ],
 
           // Buttons
@@ -343,10 +327,10 @@ class _ServiceModalState extends State<_ServiceModal> {
                 child: OutlinedButton(
                   onPressed: () => Navigator.of(context).pop(),
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: _kPrimary),
+                    side: BorderSide(color: _kPrimary),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    padding: EdgeInsets.symmetric(vertical: 14),
                   ),
                   child: Text('Cancel',
                       style: GoogleFonts.manrope(
@@ -354,8 +338,7 @@ class _ServiceModalState extends State<_ServiceModal> {
                           fontWeight: FontWeight.w700,
                           color: _kPrimary)),
                 ),
-              ),
-              const SizedBox(width: 12),
+              ), SizedBox(width: 12),
               Expanded(
                 flex: 2,
                 child: ElevatedButton(
@@ -367,7 +350,7 @@ class _ServiceModalState extends State<_ServiceModal> {
                     backgroundColor: _kPrimary,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    padding: EdgeInsets.symmetric(vertical: 14),
                   ),
                   child: Text('Add service',
                       style: GoogleFonts.manrope(
@@ -418,8 +401,7 @@ class _CategoryPillsBar extends StatelessWidget {
               label: _displayLabel(cat),
               isSelected: selectedCategory == cat,
               onTap: () => onCategoryTap(cat),
-            ),
-            const SizedBox(width: 8),
+            ), SizedBox(width: 8),
           ],
         ],
       ),
@@ -445,8 +427,8 @@ class _CategoryPill extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        duration: Duration(milliseconds: 180),
+        padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected ? _kPrimary : AppColors.onPrimary,
           borderRadius: BorderRadius.circular(999),
@@ -459,8 +441,7 @@ class _CategoryPill extends StatelessWidget {
           children: [
             Icon(icon,
                 size: 14,
-                color: isSelected ? AppColors.onPrimary : AppColors.textMuted),
-            const SizedBox(width: 5),
+                color: isSelected ? AppColors.onPrimary : AppColors.textMuted), SizedBox(width: 5),
             Text(
               label,
               style: GoogleFonts.manrope(
@@ -509,7 +490,7 @@ class _ServiceTile extends StatelessWidget {
                   (constraints.maxWidth * 0.16).clamp(64.0, 84.0);
 
               return Container(
-                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 2),
+                padding: EdgeInsets.symmetric(vertical: 14, horizontal: 2),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -526,8 +507,8 @@ class _ServiceTile extends StatelessWidget {
                       clipBehavior: Clip.antiAlias,
                       child: addedCount > 0
                           ? Center(
-                              child: addedCount == 1
-                                  ? const Icon(Icons.check,
+                                child: addedCount == 1
+                                  ? Icon(Icons.check,
                                       color: _kPrimary, size: 26)
                                   : Text(
                                       '×$addedCount',
@@ -546,8 +527,7 @@ class _ServiceTile extends StatelessWidget {
                                   ),
                                 )
                               : null,
-                    ),
-                const SizedBox(width: 14),
+                    ), SizedBox(width: 14),
 
                 // ── Text ───────────────────────────────────────────────
                 Expanded(
@@ -562,8 +542,7 @@ class _ServiceTile extends StatelessWidget {
                           color: _kTextDark,
                         ),
                       ),
-                      if ((service.description ?? '').isNotEmpty) ...[
-                        const SizedBox(height: 3),
+                      if ((service.description ?? '').isNotEmpty) ...[SizedBox(height: 3),
                         Text(
                           service.description!,
                           maxLines: 2,
@@ -574,8 +553,7 @@ class _ServiceTile extends StatelessWidget {
                             height: 1.45,
                           ),
                         ),
-                      ],
-                      const SizedBox(height: 6),
+                      ], SizedBox(height: 6),
                       Row(
                         children: [
                           Text(
@@ -585,13 +563,11 @@ class _ServiceTile extends StatelessWidget {
                               fontWeight: FontWeight.w600,
                               color: _kPrimary,
                             ),
-                          ),
-                          const SizedBox(width: 6),
+                          ), SizedBox(width: 6),
                           Container(
                               width: 1,
                               height: 11,
-                              color: AppColors.border),
-                          const SizedBox(width: 6),
+                              color: AppColors.border), SizedBox(width: 6),
                           Text(
                             'Starting at ${service.priceLabel}',
                             style: GoogleFonts.manrope(
@@ -647,7 +623,7 @@ class _ServiceItemsSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.showcaseSurfaceWarm,
         borderRadius: BorderRadius.circular(12),
@@ -663,15 +639,12 @@ class _ServiceItemsSummary extends StatelessWidget {
               fontWeight: FontWeight.w700,
               color: _kPrimary,
             ),
-          ),
-          const SizedBox(height: 8),
+          ), SizedBox(height: 8),
           ...serviceItems.map(
             (item) => Padding(
-              padding: const EdgeInsets.only(bottom: 6),
+              padding: EdgeInsets.only(bottom: 6),
               child: Row(
-                children: [
-                  const Icon(Icons.check_circle, size: 14, color: _kPrimary),
-                  const SizedBox(width: 6),
+                children: [Icon(Icons.check_circle, size: 14, color: _kPrimary), SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       [
@@ -685,7 +658,7 @@ class _ServiceItemsSummary extends StatelessWidget {
                   ),
                   GestureDetector(
                     onTap: () => onRemove(item.id),
-                    child: const Icon(Icons.close, size: 18, color: _kTextMid),
+                    child: Icon(Icons.close, size: 18, color: _kTextMid),
                   ),
                 ],
               ),
@@ -706,7 +679,7 @@ class _SupportSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: _kHeroBg,
         borderRadius: BorderRadius.circular(14),
@@ -723,10 +696,9 @@ class _SupportSection extends StatelessWidget {
               border:
                   Border.all(color: AppColors.border),
             ),
-            child: const Icon(Icons.chat_bubble_outline,
+            child: Icon(Icons.chat_bubble_outline,
                 size: 18, color: _kTextMid),
-          ),
-          const SizedBox(width: 12),
+          ), SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -738,8 +710,7 @@ class _SupportSection extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                     color: _kTextDark,
                   ),
-                ),
-                const SizedBox(height: 2),
+                ), SizedBox(height: 2),
                 Text(
                   "Message us and we'll help you choose the perfect service.",
                   style: GoogleFonts.manrope(
@@ -747,12 +718,10 @@ class _SupportSection extends StatelessWidget {
                 ),
               ],
             ),
-          ),
-          const SizedBox(width: 10),
+          ), SizedBox(width: 10),
           OutlinedButton(
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: Text(
                     'Select a service or continue to notes if you want to describe what you need.',
                   ),
@@ -760,19 +729,19 @@ class _SupportSection extends StatelessWidget {
               );
             },
             style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(
+              padding: EdgeInsets.symmetric(
                   horizontal: 10, vertical: 6),
-              side: const BorderSide(color: _kPrimary),
+              side: BorderSide(color: _kPrimary),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8)),
-              minimumSize: const Size(0, 36),
+              minimumSize: Size(0, 36),
               textStyle: GoogleFonts.manrope(
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 1.2,
               ),
             ),
-            child: const Text('MESSAGE US',
+            child: Text('MESSAGE US',
                 style: TextStyle(color: _kPrimary)),
           ),
         ],
@@ -790,20 +759,17 @@ class _EmptyCatalog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 40),
+      padding: EdgeInsets.symmetric(vertical: 40),
       child: Column(
-        children: [
-          const Icon(Icons.content_cut_outlined,
-              size: 40, color: AppColors.border),
-          const SizedBox(height: 12),
+        children: [Icon(Icons.content_cut_outlined,
+              size: 40, color: AppColors.border), SizedBox(height: 12),
           Text(
             'No services published yet',
             style: GoogleFonts.manrope(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
                 color: _kTextMid),
-          ),
-          const SizedBox(height: 4),
+          ), SizedBox(height: 4),
           Text(
             'Run the seed migration or add services in Supabase.',
             textAlign: TextAlign.center,
@@ -823,7 +789,7 @@ class _EmptyCategory extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 32),
+      padding: EdgeInsets.symmetric(vertical: 32),
       child: Text(
         'No ${_displayLabel(category).toLowerCase()} services are currently available.',
         style: GoogleFonts.manrope(fontSize: 13, color: _kTextMid),

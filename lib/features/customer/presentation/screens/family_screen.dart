@@ -148,7 +148,7 @@ class _FamilyMemberTile extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(Icons.edit_outlined, size: 18, color: AppColors.textMuted),
+            Icon(Icons.edit_outlined, size: 18, color: AppColors.textMuted),
           ],
         ),
       ),

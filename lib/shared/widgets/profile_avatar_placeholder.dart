@@ -23,7 +23,7 @@ class ProfileAvatarPlaceholder extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surfaceAlt,
         shape: BoxShape.circle,
       ),

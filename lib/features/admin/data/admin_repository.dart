@@ -75,6 +75,7 @@ id,
 status,
 preferred_date,
 preferred_time_window,
+requested_stylist_profile_id,
 estimated_total_cents,
 customer_notes,
 assigned_stylist_profile_id,
@@ -177,6 +178,9 @@ next_stylist:stylist_profiles!appointment_dispatch_events_next_stylist_profile_i
           .toList(growable: false),
       preferredDate: response['preferred_date'] as String?,
       preferredTimeWindow: response['preferred_time_window'] as String?,
+        stylistPreferenceType:
+          response['requested_stylist_profile_id'] == null ? 'any' : 'specific',
+      requestedStylistId: response['requested_stylist_profile_id'] as String?,
       estimatedTotalCents: response['estimated_total_cents'] as int?,
       assignedStylistName: _joinName(
         assignedStylistUser?['first_name'] as String?,
@@ -494,6 +498,7 @@ user_roles(id, role, status, is_primary, market_id, territory_id)
   Future<List<AdminStylistOption>> loadStylistOptions({
     String? marketId,
     String? territoryId,
+    String? requestedStylistId,
   }) async {
     var query = _requireClient().from('stylist_profiles').select('''
 id,
@@ -520,6 +525,7 @@ user_profile:user_profiles!stylist_profiles_user_profile_id_fkey(first_name, las
               userProfile?['first_name'] as String?,
               userProfile?['last_name'] as String?,
             ),
+            isRequested: (row['id'] as String) == requestedStylistId,
           );
         })
         .toList(growable: false);
@@ -536,6 +542,7 @@ user_profile:user_profiles!stylist_profiles_user_profile_id_fkey(first_name, las
     final scopedStylists = await loadStylistOptions(
       marketId: window.marketId,
       territoryId: window.territoryId,
+      requestedStylistId: window.requestedStylistId,
     );
 
     if (scopedStylists.isEmpty) {
@@ -1022,7 +1029,7 @@ appointment:appointments!safety_events_appointment_id_fkey(
     final row = await _requireClient()
         .from('appointments')
         .select(
-          'market_id, territory_id, requested_start_at, requested_end_at, scheduled_start_at, estimated_duration_minutes',
+          'market_id, territory_id, requested_start_at, requested_end_at, scheduled_start_at, estimated_duration_minutes, requested_stylist_profile_id',
         )
         .eq('id', appointmentId)
         .single();
@@ -1039,6 +1046,7 @@ appointment:appointments!safety_events_appointment_id_fkey(
     return _AssignmentWindow(
       marketId: row['market_id'] as String?,
       territoryId: row['territory_id'] as String?,
+      requestedStylistId: row['requested_stylist_profile_id'] as String?,
       startAt: startAt,
       endAt: endAt,
     );
@@ -1049,12 +1057,14 @@ class _AssignmentWindow {
   const _AssignmentWindow({
     required this.marketId,
     required this.territoryId,
+    required this.requestedStylistId,
     required this.startAt,
     required this.endAt,
   });
 
   final String? marketId;
   final String? territoryId;
+  final String? requestedStylistId;
   final DateTime startAt;
   final DateTime endAt;
 

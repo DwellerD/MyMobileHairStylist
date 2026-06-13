@@ -62,7 +62,6 @@ class _AvailableSlotsScreenState extends ConsumerState<AvailableSlotsScreen> {
           durationMinutes: bookingState.estimatedDurationMinutes,
           marketId: marketId,
           territoryId: bookingState.territoryId,
-          requestedStylistId: bookingState.requestedStylistId,
         );
 
         final slotsAsync = ref.watch(_availableSlotsProvider(query));
@@ -70,11 +69,9 @@ class _AvailableSlotsScreenState extends ConsumerState<AvailableSlotsScreen> {
         return BookingStepScaffold(
           displayStep: 3,
           stepNumber: 3,
-          totalSteps: 5,
+          totalSteps: 6,
           title: 'Choose your appointment time',
-          subtitle: bookingState.requestedStylistId != null
-              ? 'Showing availability for ${bookingState.requestedStylistName ?? 'your preferred stylist'}.'
-              : 'Showing available times for any stylist in your area.',
+            subtitle: 'Showing available times in your area for this service request.',
           primaryLabel: _pendingSlot != null ? 'Confirm this time' : 'Select a time to continue',
           onPrimaryPressed: _pendingSlot != null
               ? () {
@@ -85,7 +82,7 @@ class _AvailableSlotsScreenState extends ConsumerState<AvailableSlotsScreen> {
                         slot.startAt,
                         slot.durationMinutes,
                       );
-                  context.go('/customer/book/details');
+                  context.go('/customer/book/stylist');
                 }
               : null,
           secondaryLabel: 'Back',
@@ -101,8 +98,7 @@ class _AvailableSlotsScreenState extends ConsumerState<AvailableSlotsScreen> {
                     _pendingSlot = null;
                   });
                 },
-              ),
-              const SizedBox(height: AppSpacing.md),
+              ), SizedBox(height: AppSpacing.md),
               slotsAsync.when(
                 loading: () =>
                     const Center(child: CircularProgressIndicator()),
@@ -127,8 +123,7 @@ class _AvailableSlotsScreenState extends ConsumerState<AvailableSlotsScreen> {
                     onSlotTap: (slot) {
                       setState(() => _pendingSlot = slot);
                     },
-                    showStylistName:
-                        bookingState.requestedStylistId == null,
+                    showStylistName: true,
                   );
                 },
               ),
@@ -155,15 +150,15 @@ class _DatePickerRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final now = DateTime.now();
     final firstDate = DateTime(now.year, now.month, now.day + 1);
-    final lastDate = firstDate.add(const Duration(days: 59));
+    final lastDate = firstDate.add(Duration(days: 59));
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+      padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
       child: Row(
         children: [
           Expanded(
             child: OutlinedButton.icon(
-              icon: const Icon(Icons.calendar_month_outlined),
+              icon: Icon(Icons.calendar_month_outlined),
               label: Text(
                 '${_monthName(selectedDate.month)} ${selectedDate.day}, '
                 '${selectedDate.year}',
@@ -181,7 +176,7 @@ class _DatePickerRow extends StatelessWidget {
               },
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.primary,
-                side: const BorderSide(color: AppColors.primary),
+                side: BorderSide(color: AppColors.primary),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -231,12 +226,12 @@ class _SlotList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      padding: const EdgeInsets.symmetric(
+      padding: EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
         vertical: AppSpacing.xs,
       ),
       shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
+      physics: NeverScrollableScrollPhysics(),
       itemCount: slots.length,
       separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.xs),
       itemBuilder: (context, index) {
@@ -249,7 +244,7 @@ class _SlotList extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             onTap: () => onSlotTap(slot),
             child: Padding(
-              padding: const EdgeInsets.symmetric(
+              padding: EdgeInsets.symmetric(
                 horizontal: AppSpacing.md,
                 vertical: AppSpacing.sm,
               ),
@@ -271,8 +266,7 @@ class _SlotList extends StatelessWidget {
                                     : null,
                               ),
                         ),
-                        if (showStylistName) ...[
-                          const SizedBox(height: 2),
+                        if (showStylistName) ...[SizedBox(height: 2),
                           Text(
                             'with ${slot.stylistName}',
                             style: Theme.of(context)
@@ -287,7 +281,7 @@ class _SlotList extends StatelessWidget {
                     ),
                   ),
                   if (isSelected)
-                    const Icon(
+                    Icon(
                       Icons.check_circle_rounded,
                       color: AppColors.success,
                       size: 22,
@@ -316,14 +310,12 @@ class _SlotsQuery {
     required this.durationMinutes,
     required this.marketId,
     required this.territoryId,
-    this.requestedStylistId,
   });
 
   final DateTime date;
   final int durationMinutes;
   final String marketId;
   final String? territoryId;
-  final String? requestedStylistId;
 
   @override
   bool operator ==(Object other) =>
@@ -331,8 +323,7 @@ class _SlotsQuery {
       other.date == date &&
       other.durationMinutes == durationMinutes &&
       other.marketId == marketId &&
-      other.territoryId == territoryId &&
-      other.requestedStylistId == requestedStylistId;
+      other.territoryId == territoryId;
 
   @override
   int get hashCode => Object.hash(
@@ -340,7 +331,6 @@ class _SlotsQuery {
         durationMinutes,
         marketId,
         territoryId,
-        requestedStylistId,
       );
 }
 
@@ -350,7 +340,6 @@ final _availableSlotsProvider = FutureProvider.autoDispose
         date: query.date,
         durationMinutes: query.durationMinutes,
         marketId: query.marketId,
-      territoryId: query.territoryId,
-        requestedStylistId: query.requestedStylistId,
+        territoryId: query.territoryId,
       );
 });

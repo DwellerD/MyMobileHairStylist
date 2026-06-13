@@ -69,7 +69,7 @@ class _StylistAvailabilityScreenState
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                 child: Text(
                   'Error: $mutationError',
-                  style: const TextStyle(color: AppColors.danger),
+                  style: TextStyle(color: AppColors.danger),
                 ),
               ),
             Expanded(
@@ -576,7 +576,7 @@ class _DateTimeTile extends StatelessWidget {
       onPressed: onTap,
       style: OutlinedButton.styleFrom(
         foregroundColor: AppColors.primary,
-        side: const BorderSide(color: AppColors.primary),
+        side: BorderSide(color: AppColors.primary),
       ),
     );
   }

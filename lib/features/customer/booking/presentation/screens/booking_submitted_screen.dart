@@ -25,7 +25,7 @@ class BookingSubmittedScreen extends ConsumerWidget {
         const AppScreenHeader(
           title: 'Request submitted',
           subtitle:
-              'Your appointment request has been saved. Admin will review availability, confirm scope, and follow up with the final schedule.',
+            'Your appointment request has been received. We\'ll confirm your stylist and appointment details soon.',
         ),
         const SizedBox(height: AppSpacing.sectionGap),
         AppCard(

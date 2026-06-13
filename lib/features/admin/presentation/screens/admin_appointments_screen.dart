@@ -112,6 +112,9 @@ class _AdminAppointmentsScreenState extends ConsumerState<AdminAppointmentsScree
   }
 
   Future<void> _showAssignStylistSheet(String appointmentId) async {
+    final detail = await ref
+      .read(adminRepositoryProvider)
+      .loadAppointmentDetail(appointmentId);
     final options = await ref
         .read(adminRepositoryProvider)
         .loadStylistOptionsForAppointment(appointmentId);
@@ -131,17 +134,35 @@ class _AdminAppointmentsScreenState extends ConsumerState<AdminAppointmentsScree
     final stylistId = await showModalBottomSheet<String>(
       context: context,
       builder: (context) {
+        final requestedIsStillAvailable = detail.requestedStylistId != null &&
+            options.any((stylist) => stylist.id == detail.requestedStylistId);
+
         return SafeArea(
           child: ListView(
             padding: const EdgeInsets.all(AppSpacing.pagePadding),
-            children: options
-                .map(
-                  (stylist) => ListTile(
-                    title: Text(stylist.name),
-                    onTap: () => Navigator.of(context).pop(stylist.id),
+            children: [
+              if (detail.requestedStylistName != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  child: Text(
+                    requestedIsStillAvailable
+                        ? 'Customer requested: ${detail.requestedStylistName}'
+                        : 'Requested stylist is no longer available. Please assign another available stylist.',
                   ),
-                )
-                .toList(growable: false),
+                ),
+              ...options.map(
+                (stylist) => ListTile(
+                  title: Text(stylist.name),
+                  subtitle: stylist.isRequested
+                      ? const Text('Customer requested this stylist')
+                      : null,
+                  trailing: stylist.isRequested
+                      ? const Icon(Icons.star_border_rounded)
+                      : null,
+                  onTap: () => Navigator.of(context).pop(stylist.id),
+                ),
+              ),
+            ],
           ),
         );
       },

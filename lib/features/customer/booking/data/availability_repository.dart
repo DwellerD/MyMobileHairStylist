@@ -48,6 +48,7 @@ class AvailabilityRepository {
 id,
 bio,
 specialties,
+  years_experience,
 is_accepting_bookings,
 status,
 user_profile:user_profiles!stylist_profiles_user_profile_id_fkey(first_name, last_name)
@@ -62,13 +63,68 @@ user_profile:user_profiles!stylist_profiles_user_profile_id_fkey(first_name, las
       );
     }
 
-    final response = requestedStylistId != null
-        ? await selectBuilder.eq('id', requestedStylistId)
-        : await selectBuilder;
+    List<dynamic> response;
+    try {
+      response = requestedStylistId != null
+          ? await selectBuilder.eq('id', requestedStylistId)
+          : await selectBuilder;
+    } on PostgrestException {
+      // Fallback for environments where years_experience hasn't been migrated
+      // yet. Keep the booking flow functional and omit the optional field.
+      var fallbackBuilder = _requireClient()
+          .from('stylist_profiles')
+          .select('''
+id,
+bio,
+specialties,
+is_accepting_bookings,
+status,
+user_profile:user_profiles!stylist_profiles_user_profile_id_fkey(first_name, last_name)
+''')
+          .eq('market_id', marketId)
+          .eq('status', 'active')
+          .eq('is_accepting_bookings', true);
 
-    return (response as List<dynamic>)
-        .map((dynamic row) => _mapStylist(row as Map<String, dynamic>))
-        .toList(growable: false);
+      if (territoryId != null) {
+        fallbackBuilder = fallbackBuilder.or(
+          'territory_id.is.null,territory_id.eq.$territoryId',
+        );
+      }
+
+      response = requestedStylistId != null
+          ? await fallbackBuilder.eq('id', requestedStylistId)
+          : await fallbackBuilder;
+    }
+
+    final stylists = response
+      .whereType<Map<String, dynamic>>()
+      .map(_mapStylist)
+      .where((stylist) => stylist.specialties.isNotEmpty)
+      .toList(growable: false);
+
+    if (stylists.isEmpty) {
+      return const <BookableStylist>[];
+    }
+
+    // Only show stylists who have at least one open availability block ahead.
+    final futureAvailabilityResponse = await _requireClient()
+      .from('availability_blocks')
+      .select('stylist_profile_id')
+      .inFilter(
+        'stylist_profile_id',
+        stylists.map((s) => s.id).toList(growable: false),
+      )
+      .eq('block_type', 'available')
+      .gt('end_at', DateTime.now().toUtc().toIso8601String());
+
+    final stylistIdsWithAvailability = (futureAvailabilityResponse as List<dynamic>)
+      .map((dynamic row) =>
+        (row as Map<String, dynamic>)['stylist_profile_id'] as String)
+      .toSet();
+
+    return stylists
+      .where((stylist) => stylistIdsWithAvailability.contains(stylist.id))
+      .toList(growable: false);
   }
 
   /// Calculates available time slots for a given date and service duration.
@@ -138,6 +194,42 @@ user_profile:user_profiles!stylist_profiles_user_profile_id_fkey(first_name, las
 
     allSlots.sort((a, b) => a.startAt.compareTo(b.startAt));
     return allSlots;
+  }
+
+  /// Returns stylists who can serve the exact selected [slotStartAt].
+  ///
+  /// This keeps the customer-facing stylist list aligned with the actual
+  /// appointment time they just chose.
+  Future<List<BookableStylist>> loadStylistsAvailableForSlot({
+    required DateTime slotStartAt,
+    required int durationMinutes,
+    required String marketId,
+    String? territoryId,
+  }) async {
+    final daySlots = await getAvailableSlots(
+      date: slotStartAt,
+      durationMinutes: durationMinutes,
+      marketId: marketId,
+      territoryId: territoryId,
+    );
+
+    final availableStylistIds = daySlots
+        .where((slot) => slot.startAt.isAtSameMomentAs(slotStartAt))
+        .map((slot) => slot.stylistId)
+        .toSet();
+
+    if (availableStylistIds.isEmpty) {
+      return const <BookableStylist>[];
+    }
+
+    final stylists = await loadBookableStylists(
+      marketId: marketId,
+      territoryId: territoryId,
+    );
+
+    return stylists
+        .where((stylist) => availableStylistIds.contains(stylist.id))
+        .toList(growable: false);
   }
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -234,6 +326,7 @@ user_profile:user_profiles!stylist_profiles_user_profile_id_fkey(first_name, las
       specialties: ((row['specialties'] as List<dynamic>?) ?? const [])
           .map((dynamic v) => v.toString())
           .toList(growable: false),
+      yearsExperience: row['years_experience'] as int?,
     );
   }
 

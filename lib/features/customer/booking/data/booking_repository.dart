@@ -236,30 +236,46 @@ class BookingRepository {
       throw Exception('Appointments cannot be requested during blocked hours.');
     }
 
-    final appointment = await _requireClient()
-        .from('appointments')
-        .insert({
-          'market_id': address.marketId ?? appUser.defaultMarketId,
-          'territory_id': address.territoryId ?? appUser.defaultTerritoryId,
-          'customer_profile_id': customerProfileId,
-          'household_id': bookingState.householdId,
-          'address_id': address.id,
-          'requested_by_user_profile_id': appUser.profileId,
-          'status': 'pending_assignment',
-          'requested_start_at': requestedWindow.start.toIso8601String(),
-          'requested_end_at': requestedWindow.end.toIso8601String(),
-          'preferred_date': bookingState.preferredDate!.toIso8601String().substring(0, 10),
-          'preferred_time_window': bookingState.preferredTimeWindow,
-          'estimated_total_cents': bookingState.estimatedTotalCents,
-          'estimated_duration_minutes': bookingState.estimatedDurationMinutes,
-          'customer_notes': _nullableText(bookingState.customerNotes),
-          'customer_phone': _nullableText(bookingState.customerPhone),
-          'source': 'mobile_app',
-          if (bookingState.requestedStylistId != null)
-            'requested_stylist_profile_id': bookingState.requestedStylistId,
-        })
-        .select('id, market_id, territory_id')
-        .single();
+    final appointmentPayload = <String, dynamic>{
+      'market_id': address.marketId ?? appUser.defaultMarketId,
+      'territory_id': address.territoryId ?? appUser.defaultTerritoryId,
+      'customer_profile_id': customerProfileId,
+      'household_id': bookingState.householdId,
+      'address_id': address.id,
+      'requested_by_user_profile_id': appUser.profileId,
+      'status': 'pending_assignment',
+      'requested_start_at': requestedWindow.start.toIso8601String(),
+      'requested_end_at': requestedWindow.end.toIso8601String(),
+      'preferred_date': bookingState.preferredDate!.toIso8601String().substring(0, 10),
+      'preferred_time_window': bookingState.preferredTimeWindow,
+      'stylist_preference_type': bookingState.stylistPreferenceType,
+      'estimated_total_cents': bookingState.estimatedTotalCents,
+      'estimated_duration_minutes': bookingState.estimatedDurationMinutes,
+      'customer_notes': _nullableText(bookingState.customerNotes),
+      'customer_phone': _nullableText(bookingState.customerPhone),
+      'source': 'mobile_app',
+      if (bookingState.requestedStylistId != null)
+        'requested_stylist_profile_id': bookingState.requestedStylistId,
+    };
+
+    Map<String, dynamic> appointment;
+    try {
+      appointment = await _requireClient()
+          .from('appointments')
+          .insert(appointmentPayload)
+          .select('id, market_id, territory_id')
+          .single();
+    } on PostgrestException {
+      // Backward compatibility for environments that have not applied the
+      // stylist_preference_type migration yet.
+      final fallbackPayload = Map<String, dynamic>.from(appointmentPayload)
+        ..remove('stylist_preference_type');
+      appointment = await _requireClient()
+          .from('appointments')
+          .insert(fallbackPayload)
+          .select('id, market_id, territory_id')
+          .single();
+    }
 
     final appointmentId = appointment['id'] as String;
     final marketId = appointment['market_id'] as String?;

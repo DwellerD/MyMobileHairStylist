@@ -119,10 +119,10 @@ class _BookingPaymentPlaceholderScreenState
         bookingState.paymentStatus == 'captured';
 
     return BookingStepScaffold(
-      displayStep: 5,
+      displayStep: 6,
       showProgress: false,
-      stepNumber: 5,
-      totalSteps: 5,
+      stepNumber: 6,
+      totalSteps: 6,
       title: 'Secure deposit',
       subtitle:
           supportsLivePayment

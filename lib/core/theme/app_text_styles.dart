@@ -7,49 +7,49 @@ import 'app_colors.dart';
 /// These styles are also fed into [ThemeData] so widgets can use the standard
 /// Flutter text theme where appropriate.
 abstract final class AppTextStyles {
-  static const TextStyle display = TextStyle(
+  static TextStyle get display => TextStyle(
     fontSize: 30,
     height: 1.15,
     fontWeight: FontWeight.w700,
     color: AppColors.textPrimary,
   );
 
-  static const TextStyle headline = TextStyle(
+  static TextStyle get headline => TextStyle(
     fontSize: 24,
     height: 1.2,
     fontWeight: FontWeight.w700,
     color: AppColors.textPrimary,
   );
 
-  static const TextStyle title = TextStyle(
+  static TextStyle get title => TextStyle(
     fontSize: 18,
     height: 1.3,
     fontWeight: FontWeight.w600,
     color: AppColors.textPrimary,
   );
 
-  static const TextStyle body = TextStyle(
+  static TextStyle get body => TextStyle(
     fontSize: 15,
     height: 1.45,
     fontWeight: FontWeight.w400,
     color: AppColors.textPrimary,
   );
 
-  static const TextStyle bodyMuted = TextStyle(
+  static TextStyle get bodyMuted => TextStyle(
     fontSize: 14,
     height: 1.45,
     fontWeight: FontWeight.w400,
     color: AppColors.textSecondary,
   );
 
-  static const TextStyle label = TextStyle(
+  static TextStyle get label => TextStyle(
     fontSize: 13,
     height: 1.25,
     fontWeight: FontWeight.w600,
     color: AppColors.textSecondary,
   );
 
-  static const TextStyle caption = TextStyle(
+  static TextStyle get caption => TextStyle(
     fontSize: 12,
     height: 1.3,
     fontWeight: FontWeight.w500,
@@ -62,7 +62,7 @@ abstract final class AppTextStyles {
     fontWeight: FontWeight.w600,
   );
 
-  static TextTheme get textTheme => const TextTheme(
+  static TextTheme get textTheme => TextTheme(
         displaySmall: display,
         headlineMedium: headline,
         titleLarge: title,

@@ -256,10 +256,12 @@ class AdminStylistOption {
   const AdminStylistOption({
     required this.id,
     required this.name,
+    this.isRequested = false,
   });
 
   final String id;
   final String name;
+  final bool isRequested;
 }
 
 /// Internal note displayed on the admin appointment detail screen.
@@ -389,6 +391,8 @@ class AdminAppointmentDetail {
     required this.safetyEvents,
     required this.availableStylists,
     required this.dispatchEvents,
+    this.stylistPreferenceType,
+    this.requestedStylistId,
     this.requestedStylistName,
   });
 
@@ -404,6 +408,8 @@ class AdminAppointmentDetail {
   final String? preferredTimeWindow;
   final int? estimatedTotalCents;
   final String? assignedStylistName;
+  final String? stylistPreferenceType;
+  final String? requestedStylistId;
   final String? requestedStylistName;
   final List<AdminCheckInEvent> checkInEvents;
   final List<AdminInternalNote> internalNotes;

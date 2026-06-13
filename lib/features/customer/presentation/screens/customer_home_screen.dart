@@ -2,7 +2,36 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../core/theme/app_colors.dart';
+Color _themePrimary(BuildContext context) =>
+  Theme.of(context).colorScheme.primary;
+Color _themeAccent(BuildContext context) =>
+  Theme.of(context).colorScheme.secondary;
+Color _themeOnPrimary(BuildContext context) =>
+  Theme.of(context).colorScheme.onPrimary;
+Color _themeTextPrimary(BuildContext context) =>
+  Theme.of(context).colorScheme.onSurface;
+Color _themeTextSecondary(BuildContext context) =>
+  Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8);
+Color _themeTextMuted(BuildContext context) =>
+  Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.62);
+Color _themeBorder(BuildContext context) =>
+  Theme.of(context).colorScheme.outline;
+Color _themeSurface(BuildContext context) =>
+  Theme.of(context).colorScheme.surface;
+Color _themeSurfaceAlt(BuildContext context) =>
+  Theme.of(context).colorScheme.secondaryContainer;
+Color _themeSurfaceSoft(BuildContext context) =>
+  Color.lerp(_themeSurface(context), _themeSurfaceAlt(context), 0.55) ??
+  _themeSurfaceAlt(context);
+Color _themeSurfaceBase(BuildContext context) =>
+  Color.lerp(_themeSurface(context), Colors.white, 0.08) ??
+  _themeSurface(context);
+Color _themeSurfaceWarm(BuildContext context) =>
+  Color.lerp(_themeSurface(context), _themeSurfaceAlt(context), 0.38) ??
+  _themeSurfaceAlt(context);
+Color _themeGradientGalleryEnd(BuildContext context) =>
+  Color.lerp(_themeSurfaceAlt(context), _themeSurface(context), 0.3) ??
+  _themeSurfaceAlt(context);
 
 /// Customer-facing marketing home screen.
 ///
@@ -33,12 +62,12 @@ class CustomerHomeScreen extends StatelessWidget {
 class _SectionWrapper extends StatelessWidget {
   const _SectionWrapper({
     required this.child,
-    this.color = AppColors.surface,
+    this.color,
     this.padding,
   });
 
   final Widget child;
-  final Color color;
+  final Color? color;
   final EdgeInsetsGeometry? padding;
 
   @override
@@ -47,7 +76,7 @@ class _SectionWrapper extends StatelessWidget {
     final hPad = width >= 980 ? 64.0 : 24.0;
 
     return Container(
-      color: color,
+      color: color ?? Theme.of(context).colorScheme.surface,
       width: double.infinity,
       padding: padding ??
           EdgeInsets.symmetric(horizontal: hPad, vertical: 56),
@@ -86,7 +115,7 @@ class _EyebrowLabel extends StatelessWidget {
         fontSize: 11,
         fontWeight: FontWeight.w800,
         letterSpacing: 2.4,
-        color: AppColors.accent,
+        color: _themeAccent(context),
       ),
     );
   }
@@ -108,7 +137,7 @@ class _HeadingText extends StatelessWidget {
         fontSize: wide ? 48 : 36,
         height: 1.08,
         fontWeight: FontWeight.w600,
-        color: AppColors.textPrimary,
+        color: _themeTextPrimary(context),
       ),
     );
   }
@@ -128,7 +157,7 @@ class _BodyText extends StatelessWidget {
       style: GoogleFonts.manrope(
         fontSize: 15,
         height: 1.75,
-        color: AppColors.textSecondary,
+        color: _themeTextSecondary(context),
       ),
     );
   }
@@ -145,8 +174,8 @@ class _BookNowButton extends StatelessWidget {
     return FilledButton(
       onPressed: () => context.go('/customer/book'),
       style: FilledButton.styleFrom(
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.onPrimary,
+        backgroundColor: _themePrimary(context),
+        foregroundColor: _themeOnPrimary(context),
         minimumSize: Size.zero,
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         padding: EdgeInsets.symmetric(
@@ -178,10 +207,10 @@ class _OutlinedLinkButton extends StatelessWidget {
     return OutlinedButton(
       onPressed: () => context.go(route),
       style: OutlinedButton.styleFrom(
-        foregroundColor: AppColors.primary,
+        foregroundColor: _themePrimary(context),
         minimumSize: Size.zero,
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        side: const BorderSide(color: AppColors.border, width: 1.5),
+        side: BorderSide(color: _themeBorder(context), width: 1.5),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(50),
@@ -206,7 +235,7 @@ class _HeroSection extends StatelessWidget {
     final wide = MediaQuery.sizeOf(context).width >= 780;
 
     return _SectionWrapper(
-      color: AppColors.showcaseSurfaceBase,
+      color: _themeSurfaceBase(context),
       padding: EdgeInsets.symmetric(
         horizontal: MediaQuery.sizeOf(context).width >= 980 ? 64 : 24,
         vertical: 72,
@@ -248,16 +277,16 @@ class _HeroCopy extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
           decoration: BoxDecoration(
-            color: AppColors.showcaseSurfaceSoft,
+            color: _themeSurfaceSoft(context),
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: _themeBorder(context)),
           ),
           child: Text(
             'In-home hair appointments',
             style: GoogleFonts.manrope(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: AppColors.textSecondary,
+              color: _themeTextSecondary(context),
               letterSpacing: 0.3,
             ),
           ),
@@ -270,7 +299,7 @@ class _HeroCopy extends StatelessWidget {
             fontSize: wide ? 58 : 44,
             height: 1.05,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: _themeTextPrimary(context),
           ),
         ),
         const SizedBox(height: 18),
@@ -347,7 +376,7 @@ class _HowItWorksSection extends StatelessWidget {
     final wide = MediaQuery.sizeOf(context).width >= 700;
 
     return _SectionWrapper(
-      color: AppColors.surface,
+      color: _themeSurface(context),
       child: _MaxWidth(
         child: Column(
           children: [
@@ -412,9 +441,9 @@ class _StepCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.showcaseSurfaceBase,
+        color: _themeSurfaceBase(context),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: _themeBorder(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -425,10 +454,10 @@ class _StepCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: AppColors.showcaseSurfaceSoft,
+                  color: _themeSurfaceSoft(context),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(icon, color: AppColors.primary, size: 20),
+                child: Icon(icon, color: _themePrimary(context), size: 20),
               ),
               const Spacer(),
               Text(
@@ -436,7 +465,7 @@ class _StepCard extends StatelessWidget {
                 style: GoogleFonts.cormorantGaramond(
                   fontSize: 32,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.border,
+                  color: _themeBorder(context),
                 ),
               ),
             ],
@@ -447,7 +476,7 @@ class _StepCard extends StatelessWidget {
             style: GoogleFonts.manrope(
               fontSize: 15,
               fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
+              color: _themeTextPrimary(context),
             ),
           ),
           const SizedBox(height: 8),
@@ -456,7 +485,7 @@ class _StepCard extends StatelessWidget {
             style: GoogleFonts.manrope(
               fontSize: 13,
               height: 1.65,
-              color: AppColors.textSecondary,
+              color: _themeTextSecondary(context),
             ),
           ),
         ],
@@ -506,7 +535,7 @@ class _FeaturedServicesSection extends StatelessWidget {
     final width = MediaQuery.sizeOf(context).width;
 
     return _SectionWrapper(
-      color: AppColors.showcaseSurfaceWarm,
+      color: _themeSurfaceWarm(context),
       child: _MaxWidth(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -598,9 +627,9 @@ class _ServiceCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: _themeSurface(context),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: _themeBorder(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -612,17 +641,17 @@ class _ServiceCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: AppColors.showcaseSurfaceAlt,
+                  color: _themeSurfaceAlt(context),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(icon, color: AppColors.primary, size: 20),
+                child: Icon(icon, color: _themePrimary(context), size: 20),
               ),
               const Spacer(),
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppColors.showcaseSurfaceSoft,
+                  color: _themeSurfaceSoft(context),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
@@ -630,7 +659,7 @@ class _ServiceCard extends StatelessWidget {
                   style: GoogleFonts.manrope(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.primary,
+                    color: _themePrimary(context),
                   ),
                 ),
               ),
@@ -642,7 +671,7 @@ class _ServiceCard extends StatelessWidget {
             style: GoogleFonts.cormorantGaramond(
               fontSize: 22,
               fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+              color: _themeTextPrimary(context),
             ),
           ),
           const SizedBox(height: 6),
@@ -651,7 +680,7 @@ class _ServiceCard extends StatelessWidget {
             style: GoogleFonts.manrope(
               fontSize: 13,
               height: 1.6,
-              color: AppColors.textSecondary,
+              color: _themeTextSecondary(context),
             ),
           ),
           const SizedBox(height: 18),
@@ -660,10 +689,10 @@ class _ServiceCard extends StatelessWidget {
             child: OutlinedButton(
               onPressed: () => context.go('/customer/book'),
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.primary,
+                foregroundColor: _themePrimary(context),
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                side: const BorderSide(color: AppColors.border),
+                side: BorderSide(color: _themeBorder(context)),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -690,7 +719,7 @@ class _MobileServiceNoteSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _SectionWrapper(
-      color: AppColors.surface,
+      color: _themeSurface(context),
       child: _MaxWidth(
         max: 720,
         child: Column(
@@ -699,12 +728,12 @@ class _MobileServiceNoteSection extends StatelessWidget {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: AppColors.showcaseSurfaceSoft,
+                color: _themeSurfaceSoft(context),
                 borderRadius: BorderRadius.circular(18),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.directions_car_outlined,
-                color: AppColors.primary,
+                color: _themePrimary(context),
                 size: 26,
               ),
             ),
@@ -720,15 +749,15 @@ class _MobileServiceNoteSection extends StatelessWidget {
               padding:
                   const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
               decoration: BoxDecoration(
-                color: AppColors.showcaseSurfaceBase,
+                color: _themeSurfaceBase(context),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: _themeBorder(context)),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.info_outline,
-                      size: 16, color: AppColors.textMuted),
+                  Icon(Icons.info_outline,
+                      size: 16, color: _themeTextMuted(context)),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -736,7 +765,7 @@ class _MobileServiceNoteSection extends StatelessWidget {
                       style: GoogleFonts.manrope(
                         fontSize: 13,
                         height: 1.55,
-                        color: AppColors.textSecondary,
+                        color: _themeTextSecondary(context),
                       ),
                     ),
                   ),
@@ -781,7 +810,7 @@ class _TrustSection extends StatelessWidget {
     final wide = MediaQuery.sizeOf(context).width >= 700;
 
     return _SectionWrapper(
-      color: AppColors.showcaseSurfaceWarm,
+      color: _themeSurfaceWarm(context),
       child: _MaxWidth(
         child: Column(
           children: [
@@ -850,10 +879,10 @@ class _TrustPoint extends StatelessWidget {
           width: 52,
           height: 52,
           decoration: BoxDecoration(
-            color: AppColors.showcaseSurfaceAlt,
+            color: _themeSurfaceAlt(context),
             borderRadius: BorderRadius.circular(16),
           ),
-          child: Icon(icon, color: AppColors.primary, size: 22),
+          child: Icon(icon, color: _themePrimary(context), size: 22),
         ),
         const SizedBox(height: 14),
         Text(
@@ -862,7 +891,7 @@ class _TrustPoint extends StatelessWidget {
           style: GoogleFonts.manrope(
             fontSize: 14,
             fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
+            color: _themeTextPrimary(context),
           ),
         ),
         const SizedBox(height: 8),
@@ -872,7 +901,7 @@ class _TrustPoint extends StatelessWidget {
           style: GoogleFonts.manrope(
             fontSize: 13,
             height: 1.65,
-            color: AppColors.textSecondary,
+            color: _themeTextSecondary(context),
           ),
         ),
       ],
@@ -888,22 +917,22 @@ class _FinalCtaSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _SectionWrapper(
-      color: AppColors.surface,
+      color: _themeSurface(context),
       child: _MaxWidth(
         max: 680,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
+            gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                AppColors.showcaseSurfaceBase,
-                AppColors.showcaseGradientGalleryEnd,
+                _themeSurfaceBase(context),
+                _themeGradientGalleryEnd(context),
               ],
             ),
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: _themeBorder(context)),
           ),
           child: Column(
             children: [
@@ -934,7 +963,7 @@ class _Footer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.textPrimary,
+      color: _themeTextPrimary(context),
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
       child: Center(
         child: Text(

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/theme_personalization.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../../../../shared/widgets/app_screen_header.dart';
@@ -18,6 +19,7 @@ class CustomerProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final accountAsync = ref.watch(customerAccountSummaryProvider);
     final authActionState = ref.watch(authActionControllerProvider);
+    final selectedPreset = ref.watch(themePresetProvider);
 
     return accountAsync.when(
       data: (account) {
@@ -71,10 +73,33 @@ class CustomerProfileScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.md),
-            const EmptyState(
-              title: 'Preferences coming next',
-              description: 'Communication settings and richer household preferences can now build on your live profile instead of mock data.',
-              icon: Icons.settings_outlined,
+            AppCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Personalization',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    'Choose your app color theme. Changes apply instantly and stay saved on this device.',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  for (final preset in AppThemePreset.values) ...[
+                    _ThemePresetTile(
+                      preset: preset,
+                      isSelected: preset == selectedPreset,
+                      onTap: () => ref
+                          .read(themePresetProvider.notifier)
+                          .setPreset(preset),
+                    ),
+                    if (preset != AppThemePreset.values.last)
+                      const SizedBox(height: AppSpacing.sm),
+                  ],
+                ],
+              ),
             ),
             const SizedBox(height: AppSpacing.sectionGap),
             FilledButton.tonalIcon(
@@ -103,6 +128,81 @@ class CustomerProfileScreen extends ConsumerWidget {
             actionLabel: 'Retry',
             onActionPressed: () => ref.invalidate(customerAccountSummaryProvider),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ThemePresetTile extends StatelessWidget {
+  const _ThemePresetTile({
+    required this.preset,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final AppThemePreset preset;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? colorScheme.primary : colorScheme.outline,
+            width: isSelected ? 1.4 : 1,
+          ),
+          color: isSelected
+              ? colorScheme.secondaryContainer.withValues(alpha: 0.45)
+              : colorScheme.surface,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [preset.previewPrimary, preset.previewAccent],
+                ),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    preset.label,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    preset.description,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              isSelected
+                  ? Icons.check_circle_rounded
+                  : Icons.radio_button_unchecked_rounded,
+              color:
+                  isSelected ? colorScheme.primary : colorScheme.onSurfaceVariant,
+            ),
+          ],
         ),
       ),
     );

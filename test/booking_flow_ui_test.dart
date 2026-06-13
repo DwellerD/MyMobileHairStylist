@@ -269,5 +269,6 @@ BookingFlowState _buildSeedState() {
     paymentStatus: 'not_started',
     acceptedPolicy: false,
     submittedAppointmentId: null,
+    stylistPreferenceType: StylistPreferenceType.any,
   );
 }

@@ -327,8 +327,8 @@ class _StylistApplicationScreenState
                 TextFormField(
                   controller: _specialtiesController,
                   decoration: const InputDecoration(
-                    labelText: 'Specialties',
-                    hintText: 'Comma-separated, e.g. balayage, bridal, kids',
+                    labelText: 'Services offered',
+                    hintText: 'Comma-separated, e.g. haircut, color, bridal',
                   ),
                   validator: (value) => _required(value, 'At least one specialty'),
                 ),
@@ -342,11 +342,22 @@ class _StylistApplicationScreenState
                 const SizedBox(height: AppSpacing.sm),
                 TextFormField(
                   controller: _motivationController,
+                  maxLength: 300,
                   maxLines: 4,
                   decoration: const InputDecoration(
-                    labelText: 'Tell us about your experience and why you want to join',
+                    labelText: 'Short public bio',
+                    hintText: 'Visible to customers after approval (max 300 chars).',
                   ),
-                  validator: (value) => _required(value, 'A short application note'),
+                  validator: (value) {
+                    final requiredError = _required(value, 'A short public bio');
+                    if (requiredError != null) {
+                      return requiredError;
+                    }
+                    if (value!.trim().length > 300) {
+                      return 'Bio must be 300 characters or fewer.';
+                    }
+                    return null;
+                  },
                 ),
                 if (_localError != null || authActionState.hasError || applicationActionState.hasError) ...[
                   const SizedBox(height: AppSpacing.sm),
@@ -439,7 +450,7 @@ class _StylistApplicationScreenState
                 .where((value) => value.isNotEmpty)
                 .toList(growable: false),
             portfolioUrl: _portfolioController.text,
-            motivation: _motivationController.text,
+            motivation: _sanitizePlainText(_motivationController.text),
           );
     } catch (error) {
       if (!mounted) {
@@ -471,6 +482,20 @@ class _StylistApplicationScreenState
     }
 
     return null;
+  }
+
+  String _sanitizePlainText(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return trimmed;
+    }
+
+    final noHtmlAngleBrackets = trimmed.replaceAll(RegExp(r'[<>]'), '');
+    if (noHtmlAngleBrackets.length <= 300) {
+      return noHtmlAngleBrackets;
+    }
+
+    return noHtmlAngleBrackets.substring(0, 300);
   }
 
   Future<void> _authenticateApplicant() async {
@@ -511,7 +536,7 @@ class _StylistApplicationScreenState
                   .where((value) => value.isNotEmpty)
                   .toList(growable: false),
               'stylist_portfolio_url': _portfolioController.text.trim(),
-              'stylist_motivation': _motivationController.text.trim(),
+              'stylist_motivation': _sanitizePlainText(_motivationController.text),
             },
           );
 

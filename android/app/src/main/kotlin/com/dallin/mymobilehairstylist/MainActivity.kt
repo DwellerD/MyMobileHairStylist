@@ -1,4 +1,4 @@
-package com.example.mobile_hair_salon
+package com.dallin.mymobilehairstylist
 
 import io.flutter.embedding.android.FlutterActivity
 

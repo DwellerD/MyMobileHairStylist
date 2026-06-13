@@ -90,6 +90,12 @@ class _AdminAppointmentDetailScreenState
                     _DetailRow(label: 'Preferred window', value: detail.preferredTimeWindow ?? 'No preferred time window provided'),
                     _DetailRow(label: 'Estimated total', value: formatMoneyCents(detail.estimatedTotalCents)),
                     _DetailRow(label: 'Assigned stylist', value: detail.assignedStylistName ?? 'Unassigned'),
+                    _DetailRow(
+                      label: 'Stylist preference',
+                      value: detail.stylistPreferenceType == 'specific'
+                          ? 'Specific stylist requested'
+                          : 'Any Available Stylist',
+                    ),
                     if (detail.requestedStylistName != null)
                       _DetailRow(label: 'Requested stylist', value: detail.requestedStylistName!),
                   ],
@@ -339,17 +345,38 @@ class _AdminAppointmentDetailScreenState
     final stylistId = await showModalBottomSheet<String>(
       context: context,
       builder: (context) {
+        final requestedIsStillAvailable = detail.requestedStylistId != null &&
+            detail.availableStylists.any(
+              (stylist) => stylist.id == detail.requestedStylistId,
+            );
+
         return SafeArea(
           child: ListView(
             padding: const EdgeInsets.all(AppSpacing.pagePadding),
-            children: detail.availableStylists
-                .map(
-                  (stylist) => ListTile(
-                    title: Text(stylist.name),
-                    onTap: () => Navigator.of(context).pop(stylist.id),
+            children: [
+              if (detail.requestedStylistName != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  child: Text(
+                    requestedIsStillAvailable
+                        ? 'Customer requested: ${detail.requestedStylistName}'
+                        : 'Requested stylist is no longer available. Please assign another available stylist.',
+                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
-                )
-                .toList(growable: false),
+                ),
+              ...detail.availableStylists.map(
+                (stylist) => ListTile(
+                  title: Text(stylist.name),
+                  subtitle: stylist.isRequested
+                      ? const Text('Customer requested this stylist')
+                      : null,
+                  trailing: stylist.isRequested
+                      ? const Icon(Icons.star_border_rounded)
+                      : null,
+                  onTap: () => Navigator.of(context).pop(stylist.id),
+                ),
+              ),
+            ],
           ),
         );
       },

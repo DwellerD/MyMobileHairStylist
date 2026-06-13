@@ -42,6 +42,15 @@ class FakeAvailabilityRepository extends AvailabilityRepository {
     String? requestedStylistId,
   }) async =>
       _slots;
+
+  @override
+  Future<List<BookableStylist>> loadStylistsAvailableForSlot({
+    required DateTime slotStartAt,
+    required int durationMinutes,
+    required String marketId,
+    String? territoryId,
+  }) async =>
+      _stylists;
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -108,8 +117,8 @@ Widget _buildStylistSelectionApp({
         builder: (_, _) => const StylistSelectionScreen(),
       ),
       GoRoute(
-        path: '/customer/book/photos',
-        builder: (_, _) => const Scaffold(body: Text('photos screen')),
+        path: '/customer/book/details',
+        builder: (_, _) => const Scaffold(body: Text('details screen')),
       ),
       GoRoute(
         path: '/customer/book/time',
@@ -149,6 +158,10 @@ Widget _buildSlotsApp({
         path: '/customer/book/details',
         builder: (_, _) => const Scaffold(body: Text('details screen')),
       ),
+      GoRoute(
+        path: '/customer/book/stylist',
+        builder: (_, _) => const Scaffold(body: Text('stylist screen')),
+      ),
     ],
   );
 
@@ -168,6 +181,8 @@ BookingFlowState _seedState({
   String? requestedStylistId,
   String? requestedStylistName,
 }) {
+  final selectedSlotStartAt = DateTime.now().add(const Duration(days: 1));
+
   return BookingFlowState(
     householdId: 'household-1',
     householdName: 'The Tester Family',
@@ -221,13 +236,17 @@ BookingFlowState _seedState({
       ),
     ],
     customerNotes: '',
-    preferredDate: null,
+    preferredDate: selectedSlotStartAt,
     preferredTimeWindow: null,
     paymentStatus: 'not_started',
     acceptedPolicy: false,
     submittedAppointmentId: null,
+    stylistPreferenceType: requestedStylistId == null
+        ? StylistPreferenceType.any
+        : StylistPreferenceType.specific,
     requestedStylistId: requestedStylistId,
     requestedStylistName: requestedStylistName,
+    selectedSlotStartAt: selectedSlotStartAt,
   );
 }
 
@@ -237,12 +256,19 @@ BookingFlowState _seedState({
 
 void main() {
   group('StylistSelectionScreen', () {
-    testWidgets('shows subtitle and No preference button', (tester) async {
+    testWidgets('shows subtitle and Any Available Stylist button', (tester) async {
       await tester.binding.setSurfaceSize(const Size(430, 932));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
       final controller = TestBookingController(_seedState());
-      final repo = FakeAvailabilityRepository();
+      final repo = FakeAvailabilityRepository(stylists: const [
+        BookableStylist(
+          id: 'stylist-1',
+          displayName: 'Alice Johnson',
+          bio: null,
+          specialties: ['Color'],
+        ),
+      ]);
 
       await tester.pumpWidget(_buildStylistSelectionApp(
         controller: controller,
@@ -252,10 +278,10 @@ void main() {
 
       // The subtitle is rendered inside the BookingStepScaffold (title is not
       // rendered as visible text — it's a scaffold parameter used elsewhere).
-      expect(find.textContaining('optional'), findsOneWidget);
+      expect(find.textContaining('request a specific stylist'), findsOneWidget);
       // The primary button is always rendered regardless of scroll position
       // because we can find it via finder even if off-screen.
-      expect(find.text('No preference, continue'), findsOneWidget);
+      expect(find.text('Continue with any available stylist'), findsOneWidget);
     });
 
     testWidgets('shows empty state when no stylists returned', (tester) async {
@@ -271,7 +297,8 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      expect(find.text('No stylists available'), findsOneWidget);
+      expect(find.text('No stylists are available'), findsOneWidget);
+      expect(find.text('Choose another time'), findsOneWidget);
     });
 
     testWidgets('lists stylists returned by repository', (tester) async {
@@ -330,21 +357,21 @@ void main() {
       await tester.pumpAndSettle();
 
       // Scroll the stylist card into view before tapping (scaffold uses ListView)
-      await tester.ensureVisible(find.text('Alice Johnson'));
+      await tester.ensureVisible(find.text('Book with Alice Johnson'));
       await tester.pump();
-      await tester.tap(find.text('Alice Johnson'));
+      await tester.tap(find.text('Book with Alice Johnson'));
       await tester.pumpAndSettle();
 
       // Controller captured the selection
       expect(controller.capturedStylistId, 'stylist-1');
       expect(controller.capturedStylistName, 'Alice Johnson');
 
-      // Navigated to time screen
-      expect(find.text('time screen'), findsOneWidget);
+      // Navigated to details screen
+      expect(find.text('details screen'), findsOneWidget);
     });
 
     testWidgets(
-        '"No preference, continue" clears stylist and navigates to time',
+        '"Continue with any available stylist" clears stylist and navigates to details',
         (tester) async {
       await tester.binding.setSurfaceSize(const Size(430, 932));
       addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -370,13 +397,13 @@ void main() {
       await tester.pumpAndSettle();
 
       // The primary button is in the footer section — scroll it into view.
-      await tester.ensureVisible(find.text('No preference, continue'));
+      await tester.ensureVisible(find.text('Continue with any available stylist'));
       await tester.pump();
-      await tester.tap(find.text('No preference, continue'));
+      await tester.tap(find.text('Continue with any available stylist'));
       await tester.pumpAndSettle();
 
       expect(controller.capturedStylistId, isNull);
-      expect(find.text('time screen'), findsOneWidget);
+      expect(find.text('details screen'), findsOneWidget);
     });
 
     testWidgets('selected stylist shows checkmark', (tester) async {
@@ -417,7 +444,7 @@ void main() {
       );
     });
 
-    testWidgets('"Back" navigates to photos screen', (tester) async {
+    testWidgets('"Back" navigates to time screen', (tester) async {
       await tester.binding.setSurfaceSize(const Size(430, 932));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -436,7 +463,7 @@ void main() {
       await tester.tap(find.text('Back'));
       await tester.pumpAndSettle();
 
-      expect(find.text('photos screen'), findsOneWidget);
+      expect(find.text('time screen'), findsOneWidget);
     });
   });
 
@@ -458,7 +485,7 @@ void main() {
 
       // The title parameter is not rendered as visible text in BookingStepScaffold.
       // Check the rendered subtitle and date picker UI instead.
-      expect(find.textContaining('any stylist'), findsOneWidget);
+      expect(find.textContaining('Showing available times in your area'), findsOneWidget);
       // Date picker button exists somewhere in the tree
       expect(find.byIcon(Icons.calendar_month_outlined), findsOneWidget);
     });
@@ -624,8 +651,8 @@ void main() {
       expect(controller.capturedSlotStart, slotStart);
       expect(controller.capturedSlotDuration, 60);
 
-      // Should have navigated to details
-      expect(find.text('details screen'), findsOneWidget);
+      // Should have navigated to stylist selection
+      expect(find.text('stylist screen'), findsOneWidget);
     });
 
     testWidgets('"Back" navigates to services screen', (tester) async {
@@ -650,7 +677,7 @@ void main() {
       expect(find.text('services screen'), findsOneWidget);
     });
 
-    testWidgets('shows preferred stylist name in subtitle when set',
+    testWidgets('shows generic availability subtitle when a preference is set',
         (tester) async {
       await tester.binding.setSurfaceSize(const Size(430, 1400));
       addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -667,8 +694,8 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      // The subtitle renders the stylist name when a preference is set
-      expect(find.textContaining('Alice Johnson'), findsWidgets);
+      // Subtitle stays generic after moving stylist choice to the next step.
+      expect(find.textContaining('Showing available times in your area'), findsOneWidget);
     });
   });
 }

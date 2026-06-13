@@ -174,5 +174,6 @@ BookingFlowState _seedState() {
     paymentStatus: 'failed',
     acceptedPolicy: true,
     submittedAppointmentId: null,
+    stylistPreferenceType: StylistPreferenceType.any,
   );
 }

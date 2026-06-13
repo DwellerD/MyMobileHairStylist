@@ -23,9 +23,9 @@ class BookingReviewScreen extends ConsumerWidget {
     }
 
     return BookingStepScaffold(
-      displayStep: 5,
-      stepNumber: 5,
-      totalSteps: 5,
+      displayStep: 6,
+      stepNumber: 6,
+      totalSteps: 6,
       title: 'Review your request',
       subtitle:
           'Confirm the request details, then continue to the secure deposit step.',
@@ -135,10 +135,11 @@ class BookingReviewScreen extends ConsumerWidget {
                         : '${bookingState.preferredDate!.month}/${bookingState.preferredDate!.day}/${bookingState.preferredDate!.year}',
                   ),
                 const SizedBox(height: AppSpacing.xxs),
-                if (bookingState.requestedStylistName != null)
+                if (bookingState.stylistPreferenceType == StylistPreferenceType.specific &&
+                    bookingState.requestedStylistName != null)
                   Text('Preferred stylist: ${bookingState.requestedStylistName}')
                 else
-                  const Text('No stylist preference — we will assign the best match.'),
+                  const Text('Stylist preference: Any Available Stylist'),
               ],
             ),
           ),

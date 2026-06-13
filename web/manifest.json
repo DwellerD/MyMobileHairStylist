@@ -1,11 +1,11 @@
 {
-    "name": "mobile_hair_salon",
-    "short_name": "mobile_hair_salon",
+    "name": "My Mobile Hair Stylist",
+    "short_name": "MMHS",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#F7EFF2",
+    "theme_color": "#C48A9A",
+    "description": "My Mobile Hair Stylist booking and appointment management app.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
